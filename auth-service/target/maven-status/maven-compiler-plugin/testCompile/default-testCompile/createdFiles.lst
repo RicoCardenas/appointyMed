@@ -1,0 +1,7 @@
+com/appointymed/auth/infrastructure/controller/AuthControllerIntegrationTest.class
+com/appointymed/auth/TestcontainersConfiguration.class
+com/appointymed/auth/domain/usecase/AuthenticateUserUseCaseTest.class
+com/appointymed/auth/PostgreSqlStartupIntegrationTest.class
+com/appointymed/auth/application/service/AuthApplicationServiceTest.class
+com/appointymed/auth/domain/usecase/RegisterUserUseCaseTest.class
+com/appointymed/auth/infrastructure/messaging/TestMessagingConfig.class

@@ -1,0 +1,18 @@
+flowchart LR
+  planner["planner<br/>planner<br/>complete"]
+  plan_review_f9c8["plan-review<br/>plan-review<br/>complete"]
+  http_jwt_audit_76e0["http-jwt-audit<br/>implementation<br/>cached"]
+  credentials_sessions_audit_2d63["credentials-sessions-audit<br/>implementation<br/>cached"]
+  rbac_persistence_config_audit_096f["rbac-persistence-config-audit<br/>implementation<br/>cached"]
+  quality_tests_5243["quality-tests<br/>validation<br/>complete"]
+  reviewer["reviewer<br/>validation<br/>complete"]
+  synthesis["synthesis<br/>synthesis<br/>complete"]
+  planner --> plan_review_f9c8
+  plan_review_f9c8 --> http_jwt_audit_76e0
+  plan_review_f9c8 --> credentials_sessions_audit_2d63
+  plan_review_f9c8 --> rbac_persistence_config_audit_096f
+  http_jwt_audit_76e0 --> quality_tests_5243
+  credentials_sessions_audit_2d63 --> quality_tests_5243
+  rbac_persistence_config_audit_096f --> quality_tests_5243
+  quality_tests_5243 --> reviewer
+  reviewer --> synthesis

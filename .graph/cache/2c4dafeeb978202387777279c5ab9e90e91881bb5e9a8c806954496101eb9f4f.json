@@ -1,0 +1,12 @@
+{
+  "key": "2c4dafeeb978202387777279c5ab9e90e91881bb5e9a8c806954496101eb9f4f",
+  "run": "753950cb3d",
+  "node": "http-jwt-audit",
+  "created_at": "2026-08-21T21:33:57Z",
+  "files": [
+    "auth-service/src/main/java/com/appointymed/auth/infrastructure/controller",
+    "auth-service/src/main/java/com/appointymed/auth/infrastructure/security",
+    "auth-service/src/main/java/com/appointymed/auth/application/dto"
+  ],
+  "result": "Hallazgos: confusi\u00f3n access/reset; secretos fallback; change-password 401; enumeraci\u00f3n; sin rate limit; actuator/CORS"
+}

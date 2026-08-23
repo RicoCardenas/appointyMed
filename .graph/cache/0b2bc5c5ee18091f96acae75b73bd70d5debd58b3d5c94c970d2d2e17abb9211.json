@@ -1,0 +1,14 @@
+{
+  "key": "0b2bc5c5ee18091f96acae75b73bd70d5debd58b3d5c94c970d2d2e17abb9211",
+  "run": "753950cb3d",
+  "node": "credentials-sessions-audit",
+  "created_at": "2026-08-21T21:34:00Z",
+  "files": [
+    "auth-service/src/main/java/com/appointymed/auth/domain/usecase",
+    "auth-service/src/main/java/com/appointymed/auth/domain/model/Password.java",
+    "auth-service/src/main/java/com/appointymed/auth/domain/model/RefreshToken.java",
+    "auth-service/src/main/java/com/appointymed/auth/infrastructure/persistence/entity/RefreshTokenJpaEntity.java",
+    "auth-service/src/main/java/com/appointymed/auth/infrastructure/persistence/repository/RefreshTokenRepositoryImpl.java"
+  ],
+  "result": "Hallazgos: reset roto/reutilizable; sesiones sobreviven; cambio clave roto; refresh concurrente; tokens DB claros"
+}
