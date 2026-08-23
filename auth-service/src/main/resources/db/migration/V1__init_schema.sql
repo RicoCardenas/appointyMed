@@ -82,10 +82,8 @@ CREATE INDEX idx_audit_logs_action ON audit_logs(action);
 -- Insert default roles
 INSERT INTO roles (name, description) VALUES
     ('ADMIN', 'System administrator with full access'),
-    ('DEVELOPER', 'Developer with restricted user-management access'),
     ('DOCTOR', 'Medical doctor with patient and appointment access'),
     ('PATIENT', 'Patient with appointment access'),
-    ('CLIENT', 'Client with appointment access'),
     ('RECEPTIONIST', 'Receptionist with patient and appointment management access')
 ON CONFLICT (name) DO NOTHING;
 

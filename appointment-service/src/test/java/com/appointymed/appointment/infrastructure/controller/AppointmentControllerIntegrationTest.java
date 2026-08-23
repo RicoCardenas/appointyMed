@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,4 +48,16 @@ class AppointmentControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
+    @Test
+    @WithMockUser(roles = "CLIENT")
+    void shouldRejectClientFromAppointmentHistory() throws Exception {
+        UUID patientId = UUID.randomUUID();
+
+        mockMvc.perform(get("/api/v1/appointments/patient/" + patientId))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/appointments/patient/" + patientId + "/history"))
+                .andExpect(status().isForbidden());
+    }
+
 }

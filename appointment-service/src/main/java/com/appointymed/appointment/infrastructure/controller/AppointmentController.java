@@ -58,6 +58,7 @@ public class AppointmentController {
 
     @GetMapping("/patient/{patientId}")
     @Operation(summary = "Get all appointments for a patient")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER', 'DOCTOR', 'RECEPTIONIST', 'PATIENT')")
     public ResponseEntity<List<AppointmentResponse>> getPatientAppointments(@PathVariable UUID patientId) {
         return ResponseEntity.ok(appointmentService.getPatientAppointments(patientId));
     }
@@ -70,6 +71,7 @@ public class AppointmentController {
 
     @GetMapping("/patient/{patientId}/history")
     @Operation(summary = "Get appointment history for a patient")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER', 'DOCTOR', 'RECEPTIONIST', 'PATIENT')")
     public ResponseEntity<List<AppointmentResponse>> getPatientAppointmentHistory(@PathVariable UUID patientId) {
         return ResponseEntity.ok(appointmentService.getPatientAppointmentHistory(patientId));
     }

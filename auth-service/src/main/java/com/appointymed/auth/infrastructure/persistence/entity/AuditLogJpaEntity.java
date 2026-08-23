@@ -1,11 +1,14 @@
 package com.appointymed.auth.infrastructure.persistence.entity;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -34,11 +37,13 @@ public class AuditLogJpaEntity {
     @Column(name = "entity_id", columnDefinition = "UUID")
     private UUID entityId;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "old_value", columnDefinition = "JSONB")
-    private String oldValue;
+    private JsonNode oldValue;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "new_value", columnDefinition = "JSONB")
-    private String newValue;
+    private JsonNode newValue;
 
     @Column(name = "ip_address", length = 45)
     private String ipAddress;

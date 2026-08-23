@@ -1,5 +1,8 @@
 package com.appointymed.auth.infrastructure.persistence.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.appointymed.auth.domain.model.AuditLog;
 import com.appointymed.auth.domain.repository.AuditLogRepository;
 import com.appointymed.auth.infrastructure.persistence.entity.AuditLogJpaEntity;
@@ -14,9 +17,11 @@ import java.util.UUID;
 @Repository
 public class AuditLogRepositoryImpl implements AuditLogRepository {
     private final SpringDataAuditLogRepository springDataAuditLogRepository;
+    private final ObjectMapper objectMapper;
 
-    public AuditLogRepositoryImpl(SpringDataAuditLogRepository springDataAuditLogRepository) {
+    public AuditLogRepositoryImpl(SpringDataAuditLogRepository springDataAuditLogRepository, ObjectMapper objectMapper) {
         this.springDataAuditLogRepository = springDataAuditLogRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -76,8 +81,8 @@ public class AuditLogRepositoryImpl implements AuditLogRepository {
                 .action(entity.getAction())
                 .entityType(entity.getEntityType())
                 .entityId(entity.getEntityId())
-                .oldValue(entity.getOldValue())
-                .newValue(entity.getNewValue())
+                .oldValue(jsonToString(entity.getOldValue()))
+                .newValue(jsonToString(entity.getNewValue()))
                 .ipAddress(entity.getIpAddress())
                 .timestamp(entity.getTimestamp())
                 .build();
@@ -90,10 +95,25 @@ public class AuditLogRepositoryImpl implements AuditLogRepository {
         entity.setAction(domain.getAction());
         entity.setEntityType(domain.getEntityType());
         entity.setEntityId(domain.getEntityId());
-        entity.setOldValue(domain.getOldValue());
-        entity.setNewValue(domain.getNewValue());
+        entity.setOldValue(jsonToNode(domain.getOldValue()));
+        entity.setNewValue(jsonToNode(domain.getNewValue()));
         entity.setIpAddress(domain.getIpAddress());
         entity.setTimestamp(domain.getTimestamp());
         return entity;
     }
+    private String jsonToString(JsonNode value) {
+        return value == null ? null : value.toString();
+    }
+
+    private JsonNode jsonToNode(String value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return objectMapper.readTree(value);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalArgumentException("Audit value must be valid JSON", ex);
+        }
+    }
+
 }

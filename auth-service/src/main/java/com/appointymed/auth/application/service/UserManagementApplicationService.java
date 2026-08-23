@@ -104,11 +104,19 @@ public class UserManagementApplicationService {
                 "USER_ROLES_UPDATED",
                 "USER",
                 targetUserId,
-                target.getRoles().stream().map(Enum::name).sorted().toList().toString(),
-                requestedRoles.stream().map(Enum::name).sorted().toList().toString(),
+                rolesAsJson(target.getRoles()),
+                rolesAsJson(requestedRoles),
                 ipAddress
         ));
         return userMapper.toDto(saved);
+    }
+
+    private static String rolesAsJson(Set<Role> roles) {
+        return roles.stream()
+                .map(Enum::name)
+                .sorted()
+                .map(role -> "\"" + role + "\"")
+                .collect(Collectors.joining(",", "[", "]"));
     }
 
     @Transactional(readOnly = true)
