@@ -1,7 +1,0 @@
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/auth-service/src/test/java/com/appointymed/auth/PostgreSqlStartupIntegrationTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/auth-service/src/test/java/com/appointymed/auth/TestcontainersConfiguration.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/auth-service/src/test/java/com/appointymed/auth/application/service/AuthApplicationServiceTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/auth-service/src/test/java/com/appointymed/auth/domain/usecase/AuthenticateUserUseCaseTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/auth-service/src/test/java/com/appointymed/auth/domain/usecase/RegisterUserUseCaseTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/auth-service/src/test/java/com/appointymed/auth/infrastructure/controller/AuthControllerIntegrationTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/auth-service/src/test/java/com/appointymed/auth/infrastructure/messaging/TestMessagingConfig.java

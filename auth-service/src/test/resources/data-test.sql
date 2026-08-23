@@ -2,8 +2,10 @@
 -- Insert default roles
 INSERT INTO roles (id, name, description) VALUES
     (RANDOM_UUID(), 'ADMIN', 'System administrator with full access'),
+    (RANDOM_UUID(), 'DEVELOPER', 'Developer with restricted user-management access'),
     (RANDOM_UUID(), 'DOCTOR', 'Medical doctor with patient and appointment access'),
     (RANDOM_UUID(), 'PATIENT', 'Patient with appointment access'),
+    (RANDOM_UUID(), 'CLIENT', 'Client with appointment access'),
     (RANDOM_UUID(), 'RECEPTIONIST', 'Receptionist with patient and appointment management access');
 
 -- Insert default permissions

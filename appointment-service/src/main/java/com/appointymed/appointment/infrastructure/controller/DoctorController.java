@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/doctors")
 @Tag(name = "Doctors", description = "Doctor registration, schedules, and availability endpoints")
+@PreAuthorize("isAuthenticated()")
 public class DoctorController {
 
     private final DoctorApplicationService doctorService;
@@ -26,6 +28,7 @@ public class DoctorController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     @Operation(summary = "Register new doctor")
     public ResponseEntity<DoctorResponse> registerDoctor(@Valid @RequestBody RegisterDoctorRequest request) {
         DoctorResponse response = doctorService.registerDoctor(request);
@@ -51,6 +54,7 @@ public class DoctorController {
     }
 
     @PutMapping("/{id}/schedules")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER', 'DOCTOR')")
     @Operation(summary = "Configure weekly working schedule for doctor")
     public ResponseEntity<List<ScheduleResponse>> updateDoctorSchedules(
             @PathVariable UUID id,

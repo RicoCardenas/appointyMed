@@ -41,7 +41,8 @@ public class RegisterUserUseCase {
 
         PhoneNumber phone = command.phone() != null ? PhoneNumber.of(command.phone()) : null;
 
-        Role defaultRole = roleRepository.findByName(Role.PATIENT.name())
+        Role defaultRole = roleRepository.findByName(Role.CLIENT.name())
+                .or(() -> roleRepository.findByName(Role.PATIENT.name()))
                 .orElseThrow(() -> new DomainException("Default role not found", "ROLE_NOT_FOUND"));
 
         User user = User.builder()

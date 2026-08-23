@@ -72,8 +72,8 @@ management:
 
 app:
   jwt:
-    access-token-secret: ${JWT_ACCESS_SECRET:your-super-secret-access-token-key-min-32-chars-long}
-    refresh-token-secret: ${JWT_REFRESH_SECRET:your-super-secret-refresh-token-key-min-32-chars-long}
+    access-token-secret: ${JWT_ACCESS_SECRET}
+    refresh-token-secret: ${JWT_REFRESH_SECRET}
     access-token-expiry-ms: ${JWT_ACCESS_EXPIRY:900000} # 15 minutes
     refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY:604800000} # 7 days
 

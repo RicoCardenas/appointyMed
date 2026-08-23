@@ -44,17 +44,20 @@
         <button onclick="switchTab('tab-auth')" id="btn-tab-auth" class="tab-btn active py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
           <i class="fa-solid fa-key mr-2"></i> 1. Autenticación & Acceso
         </button>
-        <button onclick="switchTab('tab-specialties-doctors')" id="btn-tab-specialties-doctors" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
+        <button onclick="switchTab('tab-specialties-doctors')" id="btn-tab-specialties-doctors" data-roles="ADMIN,DEVELOPER,DOCTOR,RECEPTIONIST" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
           <i class="fa-solid fa-user-doctor mr-2"></i> 2. Especialidades & Médicos
         </button>
-        <button onclick="switchTab('tab-patients')" id="btn-tab-patients" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
+        <button onclick="switchTab('tab-patients')" id="btn-tab-patients" data-roles="ADMIN,DEVELOPER,DOCTOR,RECEPTIONIST" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
           <i class="fa-solid fa-hospital-user mr-2"></i> 3. Pacientes
         </button>
-        <button onclick="switchTab('tab-booking')" id="btn-tab-booking" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
+        <button onclick="switchTab('tab-booking')" id="btn-tab-booking" data-roles="ADMIN,DEVELOPER,DOCTOR,RECEPTIONIST,CLIENT,PATIENT" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
           <i class="fa-solid fa-calendar-check mr-2"></i> 4. Disponibilidad & Reserva
         </button>
-        <button onclick="switchTab('tab-appointments')" id="btn-tab-appointments" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
+        <button onclick="switchTab('tab-appointments')" id="btn-tab-appointments" data-roles="ADMIN,DEVELOPER,DOCTOR,RECEPTIONIST,CLIENT,PATIENT" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center">
           <i class="fa-solid fa-list-check mr-2"></i> 5. Gestión de Citas & Historial
+        </button>
+        <button onclick="switchTab('tab-admin')" id="btn-tab-admin" data-roles="ADMIN,DEVELOPER" class="tab-btn py-4 px-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition flex items-center hidden">
+          <i class="fa-solid fa-user-shield mr-2"></i> 6. Administración
         </button>
       </nav>
     </div>
@@ -72,12 +75,16 @@
     <div id="tab-auth" class="tab-content block space-y-6">
       <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5">
         <h2 class="text-lg font-bold text-blue-900 flex items-center"><i class="fa-solid fa-circle-info mr-2"></i> Microservicio Auth Service (Puerto 8081)</h2>
-        <p class="text-sm text-blue-700 mt-1">Crea cuentas de usuario con JWT (Access & Refresh tokens), BCrypt hashing y roles (ADMIN, DOCTOR, PATIENT, RECEPTIONIST).</p>
+        <p class="text-sm text-blue-700 mt-1">Acceso seguro con JWT, perfiles por rol y gestión médica protegida.</p>
+        <div class="mt-4 flex gap-2">
+          <button type="button" onclick="showAuthMode('login')" id="authModeLogin" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold">Iniciar sesión</button>
+          <button type="button" onclick="showAuthMode('register')" id="authModeRegister" class="px-4 py-2 rounded-lg bg-white text-slate-700 text-sm font-semibold border">Crear cuenta</button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Registro -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div id="registerPanel" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
           <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center"><i class="fa-solid fa-user-plus text-blue-600 mr-2"></i> Registro de Cuenta</h3>
           <form id="formRegister" onsubmit="handleRegister(event)" class="space-y-4">
             <div>
@@ -94,7 +101,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña (Mín. 8 caracteres, mayúscula, minúscula, número y símbolo)</label>
-              <input type="password" id="regPassword" required value="SecurePass123!" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <div class="flex"><input type="password" id="regPassword" required value="SecurePass123!" class="w-full px-3 py-2 rounded-l-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"><button type="button" onclick="togglePassword('regPassword', this)" class="px-3 border border-l-0 rounded-r-lg text-slate-500" aria-label="Mostrar contraseña"><i class="fa-solid fa-eye"></i></button></div>
             </div>
             <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-md shadow-blue-200">
               Registrar Usuario
@@ -103,7 +110,7 @@
         </div>
 
         <!-- Login -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div id="loginPanel" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center"><i class="fa-solid fa-right-to-bracket text-emerald-600 mr-2"></i> Iniciar Sesión</h3>
           <form id="formLogin" onsubmit="handleLogin(event)" class="space-y-4">
             <div>
@@ -112,7 +119,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña</label>
-              <input type="password" id="loginPassword" required value="SecurePass123!" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+              <div class="flex"><input type="password" id="loginPassword" required value="SecurePass123!" class="w-full px-3 py-2 rounded-l-lg border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"><button type="button" onclick="togglePassword('loginPassword', this)" class="px-3 border border-l-0 rounded-r-lg text-slate-500" aria-label="Mostrar contraseña"><i class="fa-solid fa-eye"></i></button></div>
             </div>
             <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-md shadow-emerald-200">
               Ingresar & Obtener Token JWT
@@ -128,6 +135,26 @@
               <button onclick="handleLogout()" class="text-xs text-rose-600 hover:underline"><i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Cerrar Sesión</button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TAB 6: ADMINISTRACIÓN -->
+    <div id="tab-admin" class="tab-content hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex justify-between items-center mb-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-user-shield text-indigo-600 mr-2"></i>Panel de usuarios</h2>
+            <p class="text-sm text-slate-500">Solo DEVELOPER/ADMIN. Cambios pasan por backend y quedan auditados.</p>
+          </div>
+          <button onclick="loadAdminUsers()" class="text-sm bg-slate-100 px-3 py-2 rounded-lg border"><i class="fa-solid fa-rotate-right mr-1"></i>Actualizar</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead><tr class="border-b text-slate-500"><th class="py-2">Usuario</th><th class="py-2">Estado</th><th class="py-2">Roles</th><th class="py-2">Nuevo rol</th><th class="py-2"></th></tr></thead>
+            <tbody id="adminUsersBody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -445,8 +472,85 @@
     const AUTH_API = 'http://localhost:8081/api/v1/auth';
     const CORE_API = '/api/v1';
 
+
+    const AUTH_ROOT = "http://localhost:8081/api/v1";
+
+    function apiFetch(url, options = {}) {
+      const headers = new Headers(options.headers || {});
+      if (authToken) headers.set("Authorization", "Bearer " + authToken);
+      if (!headers.has("Content-Type") && options.body) headers.set("Content-Type", "application/json");
+      return fetch(url, { ...options, headers });
+    }
+
+    function showAuthMode(mode) {
+      document.getElementById("registerPanel").classList.toggle("hidden", mode !== "register");
+      document.getElementById("loginPanel").classList.toggle("hidden", mode !== "login");
+    }
+
+    function togglePassword(inputId, button) {
+      const input = document.getElementById(inputId);
+      input.type = input.type === "password" ? "text" : "password";
+      button.setAttribute("aria-label", input.type === "password" ? "Show password" : "Hide password");
+      button.innerHTML = input.type === "password" ? "<i class=\"fa-solid fa-eye\"></i>" : "<i class=\"fa-solid fa-eye-slash\"></i>";
+    }
+
+    function applyRoleInterface() {
+      const roles = currentUser && currentUser.roles ? currentUser.roles : [];
+      document.querySelectorAll("[data-roles]").forEach(element => {
+        const allowed = element.dataset.roles.split(",");
+        element.classList.toggle("hidden", !authToken || !roles.some(role => allowed.includes(role)));
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      }[character]));
+    }
+
+    async function loadAdminUsers() {
+      if (!currentUser || !currentUser.roles?.some(role => ["ADMIN", "DEVELOPER"].includes(role))) return;
+      const response = await apiFetch(AUTH_ROOT + "/users?page=0&size=100");
+      if (!response.ok) {
+        showToast("Not authorized to list users", true);
+        return;
+      }
+      const users = await response.json();
+      document.getElementById("adminUsersBody").innerHTML = users.map(user => {
+        const roles = user.roles || [];
+        const options = ["CLIENT", "DOCTOR", "RECEPTIONIST", "PATIENT"]
+          .map(role => "<option value=\"" + role + "\" " + (roles.includes(role) ? "selected" : "") + ">" + role + "</option>").join("");
+        return "<tr class=\"border-b\"><td class=\"py-2\">" + escapeHtml(user.fullName)
+          + "<div class=\"text-xs text-slate-400\">" + escapeHtml(user.email)
+          + "</div></td><td class=\"py-2\">" + escapeHtml(user.status)
+          + "</td><td class=\"py-2\">" + escapeHtml(roles.join(", "))
+          + "</td><td class=\"py-2\"><select id=\"role-" + user.id
+          + "\" class=\"border rounded px-2 py-1\">" + options
+          + "</select></td><td class=\"py-2 text-right\"><button onclick=\"saveAdminRoles('" + user.id
+          + "')\" class=\"bg-indigo-600 text-white px-3 py-1 rounded\">Save</button></td></tr>";
+      }).join("");
+    }
+
+    async function saveAdminRoles(userId) {
+      const roleName = document.getElementById("role-" + userId).value;
+      const response = await apiFetch(AUTH_ROOT + "/users/" + userId + "/roles", {
+        method: "PUT",
+        body: JSON.stringify({ roleNames: [roleName] })
+      });
+      if (response.ok) {
+        showToast("Roles updated and audited");
+        loadAdminUsers();
+      } else {
+        const error = await response.json().catch(() => ({}));
+        showToast(error.message || "Role change rejected", true);
+      }
+    }
+
     // Tabs
     function switchTab(tabId) {
+      if (tabId !== "tab-auth" && !authToken) { showToast("Inicia sesión primero", true); return; }
+      const tabButton = document.getElementById("btn-" + tabId);
+      if (tabButton && tabButton.classList.contains("hidden")) { showToast("Tu rol no tiene acceso a esta interfaz", true); return; }
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(tabId).classList.remove('hidden');
@@ -456,6 +560,7 @@
       if (tabId === 'tab-patients') { loadPatients(); }
       if (tabId === 'tab-booking') { loadBookingPrerequisites(); }
       if (tabId === 'tab-appointments') { loadPatientsForFilter(); }
+      if (tabId === "tab-admin") { loadAdminUsers(); }
     }
 
     function showToast(msg, isError = false) {
@@ -533,6 +638,7 @@
     }
 
     function updateAuthUI() {
+      applyRoleInterface();
       const badge = document.getElementById('authBadge');
       const card = document.getElementById('sessionCard');
       if (authToken && currentUser) {
@@ -552,7 +658,7 @@
     // Specialties & Doctors
     async function loadSpecialties() {
       try {
-        const res = await fetch(`${CORE_API}/specialties`);
+        const res = await apiFetch(`${CORE_API}/specialties`);
         specialties = await res.json();
         const container = document.getElementById('specialtiesList');
         const select = document.getElementById('docSpecialtySelect');
@@ -580,7 +686,7 @@
         description: document.getElementById('specDesc').value,
         consultationDurationMinutes: parseInt(document.getElementById('specDuration').value)
       };
-      const res = await fetch(`${CORE_API}/specialties`, {
+      const res = await apiFetch(`${CORE_API}/specialties`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -598,7 +704,7 @@
 
     async function loadDoctors() {
       try {
-        const res = await fetch(`${CORE_API}/doctors`);
+        const res = await apiFetch(`${CORE_API}/doctors`);
         doctors = await res.json();
         const container = document.getElementById('doctorsList');
         const scheduleSelect = document.getElementById('scheduleDoctorSelect');
@@ -636,7 +742,7 @@
         phone: document.getElementById('docPhone').value,
         consultationRoom: document.getElementById('docRoom').value
       };
-      const res = await fetch(`${CORE_API}/doctors`, {
+      const res = await apiFetch(`${CORE_API}/doctors`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -680,7 +786,7 @@
         }
       });
 
-      const res = await fetch(`${CORE_API}/doctors/${doctorId}/schedules`, {
+      const res = await apiFetch(`${CORE_API}/doctors/${doctorId}/schedules`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ schedules })
@@ -698,7 +804,7 @@
     // Patients
     async function loadPatients() {
       try {
-        const res = await fetch(`${CORE_API}/patients`);
+        const res = await apiFetch(`${CORE_API}/patients`);
         patients = await res.json();
         const tbody = document.getElementById('patientsTableBody');
         tbody.innerHTML = patients.length ? patients.map(p => `
@@ -736,7 +842,7 @@
         emergencyContactName: document.getElementById('patEmergName').value,
         emergencyContactPhone: document.getElementById('patEmergPhone').value
       };
-      const res = await fetch(`${CORE_API}/patients`, {
+      const res = await apiFetch(`${CORE_API}/patients`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -776,7 +882,7 @@
         return;
       }
       try {
-        const res = await fetch(`${CORE_API}/doctors/${doctorId}/availability?date=${date}`);
+        const res = await apiFetch(`${CORE_API}/doctors/${doctorId}/availability?date=${date}`);
         const slots = await res.json();
         const container = document.getElementById('slotsContainer');
 
@@ -848,7 +954,7 @@
         notes
       };
 
-      const res = await fetch(`${CORE_API}/appointments`, {
+      const res = await apiFetch(`${CORE_API}/appointments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -879,7 +985,7 @@
         return;
       }
       try {
-        const res = await fetch(`${CORE_API}/appointments/patient/${patientId}`);
+        const res = await apiFetch(`${CORE_API}/appointments/patient/${patientId}`);
         const list = await res.json();
         const container = document.getElementById('appointmentsList');
 
@@ -926,7 +1032,7 @@
     async function handlePromptCancel(appointmentId) {
       const reason = prompt('Indica el motivo de cancelación de la cita médica:');
       if (!reason) return;
-      const res = await fetch(`${CORE_API}/appointments/${appointmentId}/cancel`, {
+      const res = await apiFetch(`${CORE_API}/appointments/${appointmentId}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cancellationReason: reason })
@@ -943,7 +1049,7 @@
     async function handlePromptReschedule(appointmentId) {
       const newDate = prompt('Ingresa la nueva fecha y hora (formato: YYYY-MM-DDTHH:MM:SS):', '2026-08-25T09:00:00');
       if (!newDate) return;
-      const res = await fetch(`${CORE_API}/appointments/${appointmentId}/reschedule`, {
+      const res = await apiFetch(`${CORE_API}/appointments/${appointmentId}/reschedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newAppointmentDateTime: newDate })

@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/patients")
 @Tag(name = "Patients", description = "Patient registration and profile management endpoints")
+@PreAuthorize("isAuthenticated()")
 public class PatientController {
 
     private final PatientApplicationService patientService;
@@ -26,6 +28,7 @@ public class PatientController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER', 'RECEPTIONIST', 'CLIENT', 'PATIENT')")
     @Operation(summary = "Register patient profile")
     public ResponseEntity<PatientResponse> registerPatient(@Valid @RequestBody RegisterPatientRequest request) {
         PatientResponse response = patientService.registerPatient(request);
@@ -33,6 +36,7 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER', 'RECEPTIONIST', 'CLIENT', 'PATIENT')")
     @Operation(summary = "Update patient profile information")
     public ResponseEntity<PatientResponse> updatePatient(
             @PathVariable UUID id,
@@ -54,6 +58,7 @@ public class PatientController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER', 'RECEPTIONIST', 'DOCTOR')")
     @Operation(summary = "List all patients (paginated)")
     public ResponseEntity<List<PatientResponse>> getAllPatients(
             @RequestParam(defaultValue = "0") int page,

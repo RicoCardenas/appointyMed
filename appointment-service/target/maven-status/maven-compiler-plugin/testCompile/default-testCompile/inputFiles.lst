@@ -1,4 +1,0 @@
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/appointment-service/src/test/java/com/appointymed/appointment/PostgreSqlStartupIntegrationTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/appointment-service/src/test/java/com/appointymed/appointment/domain/usecase/BookAppointmentUseCaseTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/appointment-service/src/test/java/com/appointymed/appointment/domain/usecase/GetDoctorAvailabilityUseCaseTest.java
-/home/julian-cardenas/Documentos/profundizacion-frank/appointyMed/appointment-service/src/test/java/com/appointymed/appointment/infrastructure/controller/AppointmentControllerIntegrationTest.java

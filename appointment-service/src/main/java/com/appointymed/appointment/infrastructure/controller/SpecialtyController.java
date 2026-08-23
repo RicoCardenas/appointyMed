@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/specialties")
 @Tag(name = "Specialties", description = "Medical specialties management endpoints")
+@PreAuthorize("isAuthenticated()")
 public class SpecialtyController {
 
     private final SpecialtyApplicationService specialtyService;
@@ -25,6 +27,7 @@ public class SpecialtyController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'DEVELOPER')")
     @Operation(summary = "Create medical specialty")
     public ResponseEntity<SpecialtyResponse> createSpecialty(@Valid @RequestBody CreateSpecialtyRequest request) {
         SpecialtyResponse response = specialtyService.createSpecialty(request);

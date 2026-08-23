@@ -21,12 +21,12 @@ public interface SpringDataAppointmentRepository extends JpaRepository<Appointme
                                                           @Param("start") LocalDateTime start,
                                                           @Param("end") LocalDateTime end);
 
-    @Query("SELECT a FROM AppointmentJpaEntity a WHERE a.doctorId = :doctorId AND a.status NOT IN ('CANCELLED', 'RESCHEDULED') AND a.appointmentDateTime >= :startOfDay AND a.appointmentDateTime <= :endOfDay ORDER BY a.appointmentDateTime ASC")
+    @Query("SELECT a FROM AppointmentJpaEntity a WHERE a.doctorId = :doctorId AND a.status <> 'CANCELLED' AND a.appointmentDateTime >= :startOfDay AND a.appointmentDateTime <= :endOfDay ORDER BY a.appointmentDateTime ASC")
     List<AppointmentJpaEntity> findActiveAppointmentsByDoctorAndDate(@Param("doctorId") UUID doctorId,
                                                                     @Param("startOfDay") LocalDateTime startOfDay,
                                                                     @Param("endOfDay") LocalDateTime endOfDay);
 
-    @Query("SELECT COUNT(a) > 0 FROM AppointmentJpaEntity a WHERE a.doctorId = :doctorId AND a.status NOT IN ('CANCELLED', 'RESCHEDULED') AND ((a.appointmentDateTime < :endDateTime AND a.endDateTime > :startDateTime)) AND (:excludeId IS NULL OR a.id != :excludeId)")
+    @Query("SELECT COUNT(a) > 0 FROM AppointmentJpaEntity a WHERE a.doctorId = :doctorId AND a.status <> 'CANCELLED' AND ((a.appointmentDateTime < :endDateTime AND a.endDateTime > :startDateTime)) AND (:excludeId IS NULL OR a.id != :excludeId)")
     boolean hasConflict(@Param("doctorId") UUID doctorId,
                         @Param("startDateTime") LocalDateTime startDateTime,
                         @Param("endDateTime") LocalDateTime endDateTime,

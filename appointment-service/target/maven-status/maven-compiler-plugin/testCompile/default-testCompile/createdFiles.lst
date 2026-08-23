@@ -1,4 +1,0 @@
-com/appointymed/appointment/domain/usecase/BookAppointmentUseCaseTest.class
-com/appointymed/appointment/infrastructure/controller/AppointmentControllerIntegrationTest.class
-com/appointymed/appointment/domain/usecase/GetDoctorAvailabilityUseCaseTest.class
-com/appointymed/appointment/PostgreSqlStartupIntegrationTest.class

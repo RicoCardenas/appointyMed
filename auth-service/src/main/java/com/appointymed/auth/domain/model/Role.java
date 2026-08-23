@@ -14,6 +14,13 @@ public enum Role {
             Permission.READ_APPOINTMENT,
             Permission.WRITE_APPOINTMENT
     )),
+    DEVELOPER(Set.of(
+            Permission.MANAGE_USERS,
+            Permission.VIEW_AUDIT,
+            Permission.READ_PATIENT,
+            Permission.READ_DOCTOR,
+            Permission.READ_APPOINTMENT
+    )),
     DOCTOR(Set.of(
             Permission.READ_PATIENT,
             Permission.READ_DOCTOR,
@@ -21,6 +28,10 @@ public enum Role {
             Permission.WRITE_APPOINTMENT
     )),
     PATIENT(Set.of(
+            Permission.READ_APPOINTMENT,
+            Permission.WRITE_APPOINTMENT
+    )),
+    CLIENT(Set.of(
             Permission.READ_APPOINTMENT,
             Permission.WRITE_APPOINTMENT
     )),

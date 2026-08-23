@@ -1,0 +1,30 @@
+# Build output
+**/target/
+*.orig
+
+# IDE and local tooling
+.idea/
+.vscode/
+*.iml
+.claude/
+.agents/
+.codex/
+.graph/
+
+# Local instructions
+AGENTS.md
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+**/application-local.yml
+**/application-local.yaml
+
+# Logs and runtime files
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db

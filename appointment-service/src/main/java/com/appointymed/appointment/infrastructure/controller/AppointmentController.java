@@ -9,6 +9,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/appointments")
 @Tag(name = "Appointments", description = "Medical appointments booking, rescheduling, cancellation, and query endpoints")
+@PreAuthorize("isAuthenticated()")
 public class AppointmentController {
 
     private final AppointmentApplicationService appointmentService;

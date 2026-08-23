@@ -26,6 +26,10 @@ class PostgreSqlStartupIntegrationTest {
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.flyway.enabled", () -> "true");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("app.jwt.access-token-secret", () -> "test-access-token-secret-key-for-testing-only-32-chars");
+        registry.add("app.jwt.refresh-token-secret", () -> "test-refresh-token-secret-key-for-testing-only-32-chars");
+        registry.add("app.jwt.access-token-expiry-ms", () -> "900000");
+        registry.add("app.jwt.refresh-token-expiry-ms", () -> "604800000");
     }
 
     @Test

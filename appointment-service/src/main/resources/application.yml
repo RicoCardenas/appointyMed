@@ -52,7 +52,7 @@ management:
 
 app:
   jwt:
-    access-token-secret: ${JWT_ACCESS_SECRET:your-super-secret-access-token-key-min-32-chars-long}
+    access-token-secret: ${JWT_ACCESS_SECRET}
 
   aws:
     region: ${AWS_REGION:us-east-1}

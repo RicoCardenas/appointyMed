@@ -52,7 +52,7 @@ class RegisterUserUseCaseTest {
 
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
-        when(roleRepository.findByName(Role.PATIENT.name())).thenReturn(Optional.of(Role.PATIENT));
+        when(roleRepository.findByName(Role.CLIENT.name())).thenReturn(Optional.of(Role.CLIENT));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -67,12 +67,12 @@ class RegisterUserUseCaseTest {
         assertThat(result.getPhone().getValue()).isEqualTo(phone);
         assertThat(result.getStatus()).isEqualTo(UserStatus.ACTIVE);
         assertThat(result.isEmailVerified()).isTrue();
-        assertThat(result.getRoles()).containsExactly(Role.PATIENT);
+        assertThat(result.getRoles()).containsExactly(Role.CLIENT);
         assertThat(result.getPassword().getHashedValue()).isEqualTo("hashedPassword");
 
         verify(userRepository).existsByEmail(any(Email.class));
         verify(passwordEncoder).encode(password);
-        verify(roleRepository).findByName(Role.PATIENT.name());
+        verify(roleRepository).findByName(Role.CLIENT.name());
         verify(userRepository).save(any(User.class));
     }
 
@@ -101,7 +101,7 @@ class RegisterUserUseCaseTest {
 
         when(userRepository.existsByEmail(any(Email.class))).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
-        when(roleRepository.findByName(Role.PATIENT.name())).thenReturn(Optional.of(Role.PATIENT));
+        when(roleRepository.findByName(Role.CLIENT.name())).thenReturn(Optional.of(Role.CLIENT));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When

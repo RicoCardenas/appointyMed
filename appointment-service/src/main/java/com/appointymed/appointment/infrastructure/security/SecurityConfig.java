@@ -33,19 +33,16 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/actuator/**",
+                                "/actuator/health",
                                 "/swagger-ui/**",
                                 "/api/v1/swagger-ui.html",
                                 "/api/v1/v3/api-docs/**",
                                 "/*.html",
                                 "/static/**",
                                 "/css/**",
-                                "/js/**",
-                                "/api/v1/specialties/**",
-                                "/api/v1/doctors/**",
-                                "/api/v1/patients/**",
-                                "/api/v1/appointments/**"
+                                "/js/**"
                         ).permitAll()
+                        .requestMatchers("/actuator/**").hasAnyRole("ADMIN", "DEVELOPER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
