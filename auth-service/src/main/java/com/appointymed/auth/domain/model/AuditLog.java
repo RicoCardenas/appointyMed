@@ -1,36 +1,34 @@
 package com.appointymed.auth.domain.model;
 
-import java.time.Instant;
-import java.util.UUID;
+public final class AuditLog {
 
-public class AuditLog {
-    private final UUID id;
-    private final UUID userId;
+    private final DomainId id;
+    private final DomainId userId;
     private final String action;
     private final String entityType;
-    private final UUID entityId;
+    private final DomainId entityId;
     private final String oldValue;
     private final String newValue;
     private final String ipAddress;
-    private final Instant timestamp;
+    private final DomainInstant timestamp;
 
-    private AuditLog(Builder builder) {
-        this.id = builder.id;
-        this.userId = builder.userId;
-        this.action = builder.action;
-        this.entityType = builder.entityType;
-        this.entityId = builder.entityId;
-        this.oldValue = builder.oldValue;
-        this.newValue = builder.newValue;
-        this.ipAddress = builder.ipAddress;
-        this.timestamp = builder.timestamp;
+    private AuditLog(Builder b) {
+        id = b.id;
+        userId = b.userId;
+        action = b.action;
+        entityType = b.entityType;
+        entityId = b.entityId;
+        oldValue = b.oldValue;
+        newValue = b.newValue;
+        ipAddress = b.ipAddress;
+        timestamp = b.timestamp;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
-    public UUID getUserId() {
+    public DomainId getUserId() {
         return userId;
     }
 
@@ -42,7 +40,7 @@ public class AuditLog {
         return entityType;
     }
 
-    public UUID getEntityId() {
+    public DomainId getEntityId() {
         return entityId;
     }
 
@@ -58,7 +56,7 @@ public class AuditLog {
         return ipAddress;
     }
 
-    public Instant getTimestamp() {
+    public DomainInstant getTimestamp() {
         return timestamp;
     }
 
@@ -66,63 +64,60 @@ public class AuditLog {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id = UUID.randomUUID();
-        private UUID userId;
-        private String action;
-        private String entityType;
-        private UUID entityId;
-        private String oldValue;
-        private String newValue;
-        private String ipAddress;
-        private Instant timestamp = Instant.now();
+    public static final class Builder {
 
-        public Builder id(UUID id) {
-            this.id = id;
+        private DomainId id, userId, entityId;
+        private String action, entityType, oldValue, newValue, ipAddress;
+        private DomainInstant timestamp;
+
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder userId(UUID userId) {
-            this.userId = userId;
+        public Builder userId(DomainId v) {
+            userId = v;
             return this;
         }
 
-        public Builder action(String action) {
-            this.action = action;
+        public Builder action(String v) {
+            action = v;
             return this;
         }
 
-        public Builder entityType(String entityType) {
-            this.entityType = entityType;
+        public Builder entityType(String v) {
+            entityType = v;
             return this;
         }
 
-        public Builder entityId(UUID entityId) {
-            this.entityId = entityId;
+        public Builder entityId(DomainId v) {
+            entityId = v;
             return this;
         }
 
-        public Builder oldValue(String oldValue) {
-            this.oldValue = oldValue;
+        public Builder oldValue(String v) {
+            oldValue = v;
             return this;
         }
 
-        public Builder newValue(String newValue) {
-            this.newValue = newValue;
+        public Builder newValue(String v) {
+            newValue = v;
             return this;
         }
 
-        public Builder ipAddress(String ipAddress) {
-            this.ipAddress = ipAddress;
+        public Builder ipAddress(String v) {
+            ipAddress = v;
             return this;
         }
 
-        public Builder timestamp(Instant timestamp) {
-            this.timestamp = timestamp;
+        public Builder timestamp(DomainInstant v) {
+            timestamp = v;
             return this;
         }
 
         public AuditLog build() {
+            if (action == null || action.trim().isEmpty())
+                throw new IllegalArgumentException("Audit action is required");
             return new AuditLog(this);
         }
     }

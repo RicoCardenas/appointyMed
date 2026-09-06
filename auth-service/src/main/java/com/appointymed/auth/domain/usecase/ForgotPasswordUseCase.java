@@ -1,58 +1,50 @@
 package com.appointymed.auth.domain.usecase;
 
+import com.appointymed.auth.domain.exception.DomainException;
+import com.appointymed.auth.domain.exception.UserNotFoundException;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainInstant;
 import com.appointymed.auth.domain.model.Email;
 import com.appointymed.auth.domain.model.User;
+import com.appointymed.auth.domain.model.UserStatus;
 import com.appointymed.auth.domain.repository.UserRepository;
-import com.appointymed.auth.domain.exception.UserNotFoundException;
-import com.appointymed.auth.domain.exception.DomainException;
-import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.UUID;
-
-@Component
-public class ForgotPasswordUseCase {
+public final class ForgotPasswordUseCase {
     private final UserRepository userRepository;
     private final PasswordResetTokenProvider tokenProvider;
     private final NotificationEventPublisher notificationPublisher;
 
-    public ForgotPasswordUseCase(UserRepository userRepository,
-                                 PasswordResetTokenProvider tokenProvider,
-                                 NotificationEventPublisher notificationPublisher) {
-        this.userRepository = userRepository;
-        this.tokenProvider = tokenProvider;
-        this.notificationPublisher = notificationPublisher;
+    public ForgotPasswordUseCase(
+            UserRepository u, PasswordResetTokenProvider t, NotificationEventPublisher n) {
+        userRepository = u;
+        tokenProvider = t;
+        notificationPublisher = n;
     }
 
-    public void execute(String email) {
-        Email emailVO = Email.of(email);
-        User user = userRepository.findByEmail(emailVO)
-                .orElseThrow(() -> new UserNotFoundException(email));
-
-        if (user.getStatus() != com.appointymed.auth.domain.model.UserStatus.ACTIVE) {
+    public void execute(String value) {
+        Email email = Email.of(value);
+        User user =
+                userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException(value));
+        if (user.getStatus() != UserStatus.ACTIVE)
             throw new DomainException("User account is not active", "ACCOUNT_NOT_ACTIVE");
-        }
-
-        String resetToken = tokenProvider.generateToken();
-        Instant expiry = tokenProvider.getExpiry();
-
+        String token = tokenProvider.generateToken(user.getId());
+        DomainInstant expiry = tokenProvider.getExpiry();
         notificationPublisher.publishPasswordResetRequested(
-                user.getId(),
-                user.getEmail().getValue(),
-                user.getFullName(),
-                resetToken,
-                expiry
-        );
+                user.getId(), user.getEmail().getValue(), user.getFullName(), token, expiry);
     }
 
     public interface PasswordResetTokenProvider {
-        String generateToken();
-        Instant getExpiry();
+        String generateToken(DomainId userId);
+
+        DomainInstant getExpiry();
+
         boolean validateToken(String token);
-        UUID getUserIdFromToken(String token);
+
+        DomainId getUserIdFromToken(String token);
     }
 
     public interface NotificationEventPublisher {
-        void publishPasswordResetRequested(UUID userId, String email, String fullName, String resetToken, Instant expiry);
+        void publishPasswordResetRequested(
+                DomainId userId, String email, String fullName, String resetToken, DomainInstant expiry);
     }
 }

@@ -1,19 +1,26 @@
 package com.appointymed.appointment.domain.repository;
 
 import com.appointymed.appointment.domain.model.Doctor;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
+import com.appointymed.appointment.domain.model.DomainOptional;
 
 public interface DoctorRepository {
     Doctor save(Doctor doctor);
-    Optional<Doctor> findById(UUID id);
-    Optional<Doctor> findByUserId(UUID userId);
-    Optional<Doctor> findByMedicalLicense(String medicalLicense);
-    List<Doctor> findBySpecialtyId(UUID specialtyId);
-    List<Doctor> findAllActive();
-    List<Doctor> findAll();
-    boolean existsByMedicalLicense(String medicalLicense);
-    boolean existsByUserId(UUID userId);
+
+    DomainOptional<Doctor> findById(DomainId id);
+
+    DomainOptional<Doctor> findByUserId(DomainId id);
+
+    DomainOptional<Doctor> findByMedicalLicense(String license);
+
+    DomainList<Doctor> findBySpecialtyId(DomainId id);
+
+    DomainList<Doctor> findAllActive();
+
+    DomainList<Doctor> findAll();
+
+    boolean existsByMedicalLicense(String license);
+
+    boolean existsByUserId(DomainId id);
 }

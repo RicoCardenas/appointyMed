@@ -1,26 +1,21 @@
 package com.appointymed.auth.domain.model;
 
-import java.time.Instant;
-import java.util.UUID;
-
-public class RefreshToken {
-    private final UUID id;
+public final class RefreshToken {
+    private final DomainId id, userId;
     private final String token;
-    private final UUID userId;
-    private final Instant expiresAt;
-    private final Instant createdAt;
+    private final DomainInstant expiresAt, createdAt;
     private boolean revoked;
 
-    private RefreshToken(Builder builder) {
-        this.id = builder.id;
-        this.token = builder.token;
-        this.userId = builder.userId;
-        this.expiresAt = builder.expiresAt;
-        this.createdAt = builder.createdAt;
-        this.revoked = builder.revoked;
+    private RefreshToken(Builder b) {
+        id = b.id;
+        token = b.token;
+        userId = b.userId;
+        expiresAt = b.expiresAt;
+        createdAt = b.createdAt;
+        revoked = b.revoked;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
@@ -28,15 +23,15 @@ public class RefreshToken {
         return token;
     }
 
-    public UUID getUserId() {
+    public DomainId getUserId() {
         return userId;
     }
 
-    public Instant getExpiresAt() {
+    public DomainInstant getExpiresAt() {
         return expiresAt;
     }
 
-    public Instant getCreatedAt() {
+    public DomainInstant getCreatedAt() {
         return createdAt;
     }
 
@@ -45,60 +40,62 @@ public class RefreshToken {
     }
 
     public void revoke() {
-        this.revoked = true;
+        revoked = true;
     }
 
-    public boolean isExpired() {
-        return Instant.now().isAfter(expiresAt);
-    }
-
-    public boolean isValid() {
-        return !revoked && !isExpired();
+    public boolean isValid(DomainInstant now) {
+        return !revoked && expiresAt != null && now.isBefore(expiresAt);
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id = UUID.randomUUID();
+    public static final class Builder {
+        private DomainId id, userId;
         private String token;
-        private UUID userId;
-        private Instant expiresAt;
-        private Instant createdAt = Instant.now();
-        private boolean revoked = false;
+        private DomainInstant expiresAt, createdAt;
+        private boolean revoked;
 
-        public Builder id(UUID id) {
-            this.id = id;
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder token(String token) {
-            this.token = token;
+        public Builder token(String v) {
+            token = v;
             return this;
         }
 
-        public Builder userId(UUID userId) {
-            this.userId = userId;
+        public Builder userId(DomainId v) {
+            userId = v;
             return this;
         }
 
-        public Builder expiresAt(Instant expiresAt) {
-            this.expiresAt = expiresAt;
+        public Builder expiresAt(DomainInstant v) {
+            expiresAt = v;
             return this;
         }
 
-        public Builder createdAt(Instant createdAt) {
-            this.createdAt = createdAt;
+        public Builder createdAt(DomainInstant v) {
+            createdAt = v;
             return this;
         }
 
-        public Builder revoked(boolean revoked) {
-            this.revoked = revoked;
+        public Builder revoked(boolean v) {
+            revoked = v;
             return this;
         }
 
         public RefreshToken build() {
+            if (token == null || token.isEmpty())
+                throw new IllegalArgumentException("Refresh token is required");
+            if (userId == null) {
+                throw new IllegalArgumentException("Refresh token user is required");
+            }
+            if (expiresAt == null) {
+                throw new IllegalArgumentException("Refresh token expiry is required");
+            }
             return new RefreshToken(this);
         }
     }

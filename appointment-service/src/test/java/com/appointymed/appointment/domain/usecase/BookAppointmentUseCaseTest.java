@@ -9,148 +9,64 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookAppointmentUseCaseTest {
+    @Mock AppointmentRepository appointments;
+    @Mock DoctorRepository doctors;
+    @Mock PatientRepository patients;
+    @Mock SpecialtyRepository specialties;
+    @Mock DoctorScheduleRepository schedules;
+    @Mock AppointmentEventPublisherPort events;
 
-    @Mock
-    private AppointmentRepository appointmentRepository;
-
-    @Mock
-    private DoctorRepository doctorRepository;
-
-    @Mock
-    private PatientRepository patientRepository;
-
-    @Mock
-    private SpecialtyRepository specialtyRepository;
-
-    @Mock
-    private DoctorScheduleRepository doctorScheduleRepository;
-
-    @Mock
-    private AppointmentEventPublisherPort eventPublisher;
-
-    private BookAppointmentUseCase bookAppointmentUseCase;
-
-    private UUID doctorId;
-    private UUID patientId;
-    private UUID specialtyId;
-    private Doctor doctor;
-    private Patient patient;
-    private Specialty specialty;
-    private DoctorSchedule schedule;
+    private DomainId doctorId;
+    private DomainId patientId;
+    private DomainId specialtyId;
+    private DomainDateTime appointmentTime;
+    private BookAppointmentUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        bookAppointmentUseCase = new BookAppointmentUseCase(
-                appointmentRepository,
-                doctorRepository,
-                patientRepository,
-                specialtyRepository,
-                doctorScheduleRepository,
-                eventPublisher
-        );
+        doctorId = DomainId.of("11111111-1111-1111-1111-111111111111");
+        patientId = DomainId.of("22222222-2222-2222-2222-222222222222");
+        specialtyId = DomainId.of("33333333-3333-3333-3333-333333333333");
+        long today = System.currentTimeMillis() / 86400000L;
+        DomainDate date = DomainDate.ofEpochDay(today + 7);
+        appointmentTime = date.atTime(DomainTime.ofMinuteOfDay(9 * 60));
+        DomainClock clock = () -> DomainDateTime.ofEpochMillis(System.currentTimeMillis());
+        useCase = new BookAppointmentUseCase(appointments, doctors, patients, specialties, schedules, events, clock);
 
-        doctorId = UUID.randomUUID();
-        patientId = UUID.randomUUID();
-        specialtyId = UUID.randomUUID();
-
-        specialty = Specialty.builder()
-                .id(specialtyId)
-                .name("Cardiología")
-                .consultationDurationMinutes(30)
-                .active(true)
-                .build();
-
-        doctor = Doctor.builder()
-                .id(doctorId)
-                .userId(UUID.randomUUID())
-                .medicalLicense("LIC-12345")
-                .specialtyId(specialtyId)
-                .firstName("Ana")
-                .lastName("Martínez")
-                .email("ana@example.com")
-                .active(true)
-                .build();
-
-        patient = Patient.builder()
-                .id(patientId)
-                .documentType(DocumentType.CC)
-                .documentNumber("12345678")
-                .firstName("Carlos")
-                .lastName("López")
-                .email("carlos@example.com")
-                .phone("+573001112233")
-                .build();
-
-        // Monday schedule: 08:00 to 12:00
-        schedule = DoctorSchedule.builder()
-                .id(UUID.randomUUID())
-                .doctorId(doctorId)
-                .dayOfWeek(1) // Monday
-                .startTime(LocalTime.of(8, 0))
-                .endTime(LocalTime.of(12, 0))
-                .slotDurationMinutes(30)
-                .active(true)
-                .build();
+        Doctor doctor = Doctor.builder().id(doctorId).userId(DomainId.of("44444444-4444-4444-4444-444444444444"))
+                .specialtyId(specialtyId).medicalLicense("LIC-123").firstName("Ana").lastName("Martinez").email("ana@example.com").active(true).build();
+        Patient patient = Patient.builder().id(patientId).documentNumber("123").firstName("Carlos").lastName("Lopez").email("carlos@example.com").phone("+123").build();
+        Specialty specialty = Specialty.builder().id(specialtyId).name("Cardiology").consultationDurationMinutes(30).active(true).build();
+        DoctorSchedule schedule = DoctorSchedule.builder().doctorId(doctorId).dayOfWeek(date.getDayOfWeek()).startTime(DomainTime.ofMinuteOfDay(8 * 60)).endTime(DomainTime.ofMinuteOfDay(12 * 60)).slotDurationMinutes(30).active(true).build();
+        when(doctors.findById(doctorId)).thenReturn(DomainOptional.of(doctor));
+        when(patients.findById(patientId)).thenReturn(DomainOptional.of(patient));
+        when(specialties.findById(specialtyId)).thenReturn(DomainOptional.of(specialty));
+        when(schedules.findByDoctorIdAndDayOfWeek(doctorId, date.getDayOfWeek())).thenReturn(DomainOptional.of(schedule));
     }
 
     @Test
-    void shouldBookAppointmentSuccessfully() {
-        // Next Monday at 09:00 AM in the future
-        LocalDateTime appointmentTime = LocalDateTime.now().plusWeeks(1).with(java.time.DayOfWeek.MONDAY).withHour(9).withMinute(0).withSecond(0).withNano(0);
-
-        when(patientRepository.findById(patientId)).thenReturn(Optional.of(patient));
-        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
-        when(specialtyRepository.findById(specialtyId)).thenReturn(Optional.of(specialty));
-        when(doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctorId, 1)).thenReturn(Optional.of(schedule));
-        when(appointmentRepository.hasActiveAppointmentConflict(eq(doctorId), any(LocalDateTime.class), any(LocalDateTime.class), isNull())).thenReturn(false);
-        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        var command = new BookAppointmentUseCase.BookAppointmentCommand(
-                patientId, doctorId, specialtyId, appointmentTime, "Routine Checkup", "None"
-        );
-
-        Appointment result = bookAppointmentUseCase.execute(command);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getDoctorId()).isEqualTo(doctorId);
-        assertThat(result.getPatientId()).isEqualTo(patientId);
+    void booksAppointment() {
+        when(appointments.hasActiveAppointmentConflict(eq(doctorId), any(), any(), isNull())).thenReturn(false);
+        when(appointments.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        Appointment result = useCase.execute(new BookAppointmentUseCase.BookAppointmentCommand(patientId, doctorId, specialtyId, appointmentTime, "Routine", ""));
         assertThat(result.getStatus()).isEqualTo(AppointmentStatus.SCHEDULED);
         assertThat(result.getAppointmentDateTime()).isEqualTo(appointmentTime);
         assertThat(result.getEndDateTime()).isEqualTo(appointmentTime.plusMinutes(30));
-
-        verify(appointmentRepository).save(any(Appointment.class));
-        verify(eventPublisher).publishAppointmentBooked(any(Appointment.class), anyString(), anyString(), anyString(), anyString());
+        verify(events).publishAppointmentBooked(any(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
-    void shouldThrowConflictExceptionWhenSlotIsAlreadyBooked() {
-        LocalDateTime appointmentTime = LocalDateTime.now().plusWeeks(1).with(java.time.DayOfWeek.MONDAY).withHour(9).withMinute(0).withSecond(0).withNano(0);
-
-        when(patientRepository.findById(patientId)).thenReturn(Optional.of(patient));
-        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
-        when(specialtyRepository.findById(specialtyId)).thenReturn(Optional.of(specialty));
-        when(doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctorId, 1)).thenReturn(Optional.of(schedule));
-        when(appointmentRepository.hasActiveAppointmentConflict(eq(doctorId), any(LocalDateTime.class), any(LocalDateTime.class), isNull())).thenReturn(true);
-
-        var command = new BookAppointmentUseCase.BookAppointmentCommand(
-                patientId, doctorId, specialtyId, appointmentTime, "Routine Checkup", "None"
-        );
-
-        assertThatThrownBy(() -> bookAppointmentUseCase.execute(command))
+    void rejectsConflict() {
+        when(appointments.hasActiveAppointmentConflict(eq(doctorId), any(), any(), isNull())).thenReturn(true);
+        assertThatThrownBy(() -> useCase.execute(new BookAppointmentUseCase.BookAppointmentCommand(patientId, doctorId, specialtyId, appointmentTime, "Routine", "")))
                 .isInstanceOf(AppointmentConflictException.class);
-
-        verify(appointmentRepository, never()).save(any(Appointment.class));
+        verify(appointments, never()).save(any());
     }
 }

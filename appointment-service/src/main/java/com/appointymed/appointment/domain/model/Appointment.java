@@ -2,114 +2,107 @@ package com.appointymed.appointment.domain.model;
 
 import com.appointymed.appointment.domain.exception.InvalidAppointmentStateException;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.UUID;
-
-public class Appointment {
-    private final UUID id;
-    private final UUID doctorId;
-    private final UUID patientId;
-    private final UUID specialtyId;
-    private LocalDateTime appointmentDateTime;
-    private LocalDateTime endDateTime;
+public final class Appointment {
+    private final DomainId id, doctorId, patientId, specialtyId;
+    private DomainDateTime appointmentDateTime, endDateTime;
     private AppointmentStatus status;
     private final String reason;
-    private String cancellationReason;
-    private String notes;
-    private final Instant createdAt;
-    private Instant updatedAt;
+    private String cancellationReason, notes;
+    private final DomainInstant createdAt;
+    private DomainInstant updatedAt;
 
-    public Appointment(UUID id, UUID doctorId, UUID patientId, UUID specialtyId,
-                       LocalDateTime appointmentDateTime, LocalDateTime endDateTime,
-                       AppointmentStatus status, String reason, String cancellationReason,
-                       String notes, Instant createdAt, Instant updatedAt) {
-        if (appointmentDateTime == null || endDateTime == null) {
-            throw new IllegalArgumentException("Appointment start and end date times are required");
-        }
-        if (endDateTime.isBefore(appointmentDateTime) || endDateTime.isEqual(appointmentDateTime)) {
-            throw new IllegalArgumentException("End date time must be strictly after start date time");
-        }
-        this.id = id != null ? id : UUID.randomUUID();
+    public Appointment(
+            DomainId id,
+            DomainId doctorId,
+            DomainId patientId,
+            DomainId specialtyId,
+            DomainDateTime start,
+            DomainDateTime end,
+            AppointmentStatus status,
+            String reason,
+            String cancellationReason,
+            String notes,
+            DomainInstant createdAt,
+            DomainInstant updatedAt) {
+        if (start == null || end == null || !end.isAfter(start))
+            throw new IllegalArgumentException(
+                    "Appointment start and end date times are required and end must be after start");
+        this.id = id;
         this.doctorId = doctorId;
         this.patientId = patientId;
         this.specialtyId = specialtyId;
-        this.appointmentDateTime = appointmentDateTime;
-        this.endDateTime = endDateTime;
-        this.status = status != null ? status : AppointmentStatus.SCHEDULED;
+        appointmentDateTime = start;
+        endDateTime = end;
+        this.status = status == null ? AppointmentStatus.SCHEDULED : status;
         this.reason = reason;
         this.cancellationReason = cancellationReason;
         this.notes = notes;
-        this.createdAt = createdAt != null ? createdAt : Instant.now();
-        this.updatedAt = updatedAt != null ? updatedAt : Instant.now();
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public void cancel(String reason) {
-        if (this.status == AppointmentStatus.CANCELLED) {
+    public void cancel(String reason, DomainInstant now) {
+        if (status == AppointmentStatus.CANCELLED)
             throw new InvalidAppointmentStateException("Appointment is already cancelled");
-        }
-        if (this.status == AppointmentStatus.COMPLETED) {
+        if (status == AppointmentStatus.COMPLETED)
             throw new InvalidAppointmentStateException("Cannot cancel an already completed appointment");
-        }
-        this.status = AppointmentStatus.CANCELLED;
-        this.cancellationReason = reason != null ? reason : "Cancelled by user";
-        this.updatedAt = Instant.now();
+        status = AppointmentStatus.CANCELLED;
+        cancellationReason = reason == null || reason.trim().isEmpty() ? "Cancelled by user" : reason;
+        updatedAt = now;
     }
 
-    public void reschedule(LocalDateTime newStart, LocalDateTime newEnd) {
-        if (this.status == AppointmentStatus.CANCELLED) {
-            throw new InvalidAppointmentStateException("Cannot reschedule a cancelled appointment. Please book a new one.");
-        }
-        if (this.status == AppointmentStatus.COMPLETED) {
-            throw new InvalidAppointmentStateException("Cannot reschedule an already completed appointment");
-        }
-        if (newEnd.isBefore(newStart) || newEnd.isEqual(newStart)) {
+    public void reschedule(DomainDateTime start, DomainDateTime end, DomainInstant now) {
+        if (status == AppointmentStatus.CANCELLED)
+            throw new InvalidAppointmentStateException(
+                    "Cannot reschedule a cancelled appointment. Please book a new one.");
+        if (status == AppointmentStatus.COMPLETED)
+            throw new InvalidAppointmentStateException(
+                    "Cannot reschedule an already completed appointment");
+        if (start == null || end == null || !end.isAfter(start))
             throw new IllegalArgumentException("New end time must be after start time");
-        }
-        this.appointmentDateTime = newStart;
-        this.endDateTime = newEnd;
-        this.status = AppointmentStatus.RESCHEDULED;
-        this.updatedAt = Instant.now();
+        appointmentDateTime = start;
+        endDateTime = end;
+        status = AppointmentStatus.RESCHEDULED;
+        updatedAt = now;
     }
 
-    public void confirm() {
-        if (this.status != AppointmentStatus.SCHEDULED && this.status != AppointmentStatus.RESCHEDULED) {
-            throw new InvalidAppointmentStateException("Only scheduled or rescheduled appointments can be confirmed");
-        }
-        this.status = AppointmentStatus.CONFIRMED;
-        this.updatedAt = Instant.now();
+    public void confirm(DomainInstant now) {
+        if (status != AppointmentStatus.SCHEDULED && status != AppointmentStatus.RESCHEDULED)
+            throw new InvalidAppointmentStateException(
+                    "Only scheduled or rescheduled appointments can be confirmed");
+        status = AppointmentStatus.CONFIRMED;
+        updatedAt = now;
     }
 
-    public void complete(String doctorNotes) {
-        if (this.status == AppointmentStatus.CANCELLED) {
+    public void complete(String doctorNotes, DomainInstant now) {
+        if (status == AppointmentStatus.CANCELLED)
             throw new InvalidAppointmentStateException("Cannot complete a cancelled appointment");
-        }
-        this.status = AppointmentStatus.COMPLETED;
-        this.notes = doctorNotes;
-        this.updatedAt = Instant.now();
+        status = AppointmentStatus.COMPLETED;
+        notes = doctorNotes;
+        updatedAt = now;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
-    public UUID getDoctorId() {
+    public DomainId getDoctorId() {
         return doctorId;
     }
 
-    public UUID getPatientId() {
+    public DomainId getPatientId() {
         return patientId;
     }
 
-    public UUID getSpecialtyId() {
+    public DomainId getSpecialtyId() {
         return specialtyId;
     }
 
-    public LocalDateTime getAppointmentDateTime() {
+    public DomainDateTime getAppointmentDateTime() {
         return appointmentDateTime;
     }
 
-    public LocalDateTime getEndDateTime() {
+    public DomainDateTime getEndDateTime() {
         return endDateTime;
     }
 
@@ -129,11 +122,11 @@ public class Appointment {
         return notes;
     }
 
-    public Instant getCreatedAt() {
+    public DomainInstant getCreatedAt() {
         return createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public DomainInstant getUpdatedAt() {
         return updatedAt;
     }
 
@@ -141,82 +134,87 @@ public class Appointment {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id;
-        private UUID doctorId;
-        private UUID patientId;
-        private UUID specialtyId;
-        private LocalDateTime appointmentDateTime;
-        private LocalDateTime endDateTime;
+    public static final class Builder {
+        private DomainId id, doctorId, patientId, specialtyId;
+        private DomainDateTime start, end;
         private AppointmentStatus status = AppointmentStatus.SCHEDULED;
-        private String reason;
-        private String cancellationReason;
-        private String notes;
-        private Instant createdAt;
-        private Instant updatedAt;
+        private String reason, cancellationReason, notes;
+        private DomainInstant createdAt, updatedAt;
 
-        public Builder id(UUID id) {
-            this.id = id;
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder doctorId(UUID doctorId) {
-            this.doctorId = doctorId;
+        public Builder doctorId(DomainId v) {
+            doctorId = v;
             return this;
         }
 
-        public Builder patientId(UUID patientId) {
-            this.patientId = patientId;
+        public Builder patientId(DomainId v) {
+            patientId = v;
             return this;
         }
 
-        public Builder specialtyId(UUID specialtyId) {
-            this.specialtyId = specialtyId;
+        public Builder specialtyId(DomainId v) {
+            specialtyId = v;
             return this;
         }
 
-        public Builder appointmentDateTime(LocalDateTime appointmentDateTime) {
-            this.appointmentDateTime = appointmentDateTime;
+        public Builder appointmentDateTime(DomainDateTime v) {
+            start = v;
             return this;
         }
 
-        public Builder endDateTime(LocalDateTime endDateTime) {
-            this.endDateTime = endDateTime;
+        public Builder endDateTime(DomainDateTime v) {
+            end = v;
             return this;
         }
 
-        public Builder status(AppointmentStatus status) {
-            this.status = status;
+        public Builder status(AppointmentStatus v) {
+            status = v;
             return this;
         }
 
-        public Builder reason(String reason) {
-            this.reason = reason;
+        public Builder reason(String v) {
+            reason = v;
             return this;
         }
 
-        public Builder cancellationReason(String cancellationReason) {
-            this.cancellationReason = cancellationReason;
+        public Builder cancellationReason(String v) {
+            cancellationReason = v;
             return this;
         }
 
-        public Builder notes(String notes) {
-            this.notes = notes;
+        public Builder notes(String v) {
+            notes = v;
             return this;
         }
 
-        public Builder createdAt(Instant createdAt) {
-            this.createdAt = createdAt;
+        public Builder createdAt(DomainInstant v) {
+            createdAt = v;
             return this;
         }
 
-        public Builder updatedAt(Instant updatedAt) {
-            this.updatedAt = updatedAt;
+        public Builder updatedAt(DomainInstant v) {
+            updatedAt = v;
             return this;
         }
 
         public Appointment build() {
-            return new Appointment(id, doctorId, patientId, specialtyId, appointmentDateTime, endDateTime, status, reason, cancellationReason, notes, createdAt, updatedAt);
+            return new Appointment(
+                    id,
+                    doctorId,
+                    patientId,
+                    specialtyId,
+                    start,
+                    end,
+                    status,
+                    reason,
+                    cancellationReason,
+                    notes,
+                    createdAt,
+                    updatedAt);
         }
     }
 }

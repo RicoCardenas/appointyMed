@@ -1,43 +1,43 @@
 package com.appointymed.appointment.domain.usecase;
 
 import com.appointymed.appointment.domain.exception.ResourceNotFoundException;
+import com.appointymed.appointment.domain.model.DomainDate;
+import com.appointymed.appointment.domain.model.DomainId;
 import com.appointymed.appointment.domain.model.Patient;
 import com.appointymed.appointment.domain.repository.PatientRepository;
-import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.util.UUID;
+public final class UpdatePatientUseCase {
+    private final PatientRepository repository;
 
-@Component
-public class UpdatePatientUseCase {
-    private final PatientRepository patientRepository;
-
-    public UpdatePatientUseCase(PatientRepository patientRepository) {
-        this.patientRepository = patientRepository;
+    public UpdatePatientUseCase(PatientRepository r) {
+        repository = r;
     }
 
-    public Patient execute(UUID patientId, UpdatePatientCommand command) {
-        Patient existing = patientRepository.findById(patientId)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient", patientId));
+    public Patient execute(DomainId id, UpdatePatientCommand c) {
+        Patient p =
+                repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Patient", id));
+        return repository.save(
+                Patient.builder()
+                        .id(p.getId())
+                        .userId(p.getUserId())
+                        .documentType(p.getDocumentType())
+                        .documentNumber(p.getDocumentNumber())
+                        .firstName(value(c.firstName(), p.getFirstName()))
+                        .lastName(value(c.lastName(), p.getLastName()))
+                        .email(value(c.email(), p.getEmail()))
+                        .phone(value(c.phone(), p.getPhone()))
+                        .birthDate(c.birthDate() == null ? p.getBirthDate() : c.birthDate())
+                        .bloodType(value(c.bloodType(), p.getBloodType()))
+                        .address(value(c.address(), p.getAddress()))
+                        .emergencyContactName(value(c.emergencyContactName(), p.getEmergencyContactName()))
+                        .emergencyContactPhone(value(c.emergencyContactPhone(), p.getEmergencyContactPhone()))
+                        .createdAt(p.getCreatedAt())
+                        .updatedAt(p.getUpdatedAt())
+                        .build());
+    }
 
-        Patient updated = Patient.builder()
-                .id(existing.getId())
-                .userId(existing.getUserId())
-                .documentType(existing.getDocumentType())
-                .documentNumber(existing.getDocumentNumber())
-                .firstName(command.firstName() != null ? command.firstName() : existing.getFirstName())
-                .lastName(command.lastName() != null ? command.lastName() : existing.getLastName())
-                .email(command.email() != null ? command.email() : existing.getEmail())
-                .phone(command.phone() != null ? command.phone() : existing.getPhone())
-                .birthDate(command.birthDate() != null ? command.birthDate() : existing.getBirthDate())
-                .bloodType(command.bloodType() != null ? command.bloodType() : existing.getBloodType())
-                .address(command.address() != null ? command.address() : existing.getAddress())
-                .emergencyContactName(command.emergencyContactName() != null ? command.emergencyContactName() : existing.getEmergencyContactName())
-                .emergencyContactPhone(command.emergencyContactPhone() != null ? command.emergencyContactPhone() : existing.getEmergencyContactPhone())
-                .createdAt(existing.getCreatedAt())
-                .build();
-
-        return patientRepository.save(updated);
+    private String value(String incoming, String current) {
+        return incoming == null ? current : incoming;
     }
 
     public record UpdatePatientCommand(
@@ -45,10 +45,9 @@ public class UpdatePatientUseCase {
             String lastName,
             String email,
             String phone,
-            LocalDate birthDate,
+            DomainDate birthDate,
             String bloodType,
             String address,
             String emergencyContactName,
-            String emergencyContactPhone
-    ) {}
+            String emergencyContactPhone) {}
 }

@@ -5,6 +5,8 @@ import com.appointymed.appointment.application.dto.RegisterPatientRequest;
 import com.appointymed.appointment.application.dto.UpdatePatientRequest;
 import com.appointymed.appointment.application.mapper.PatientMapper;
 import com.appointymed.appointment.domain.model.Patient;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
 import com.appointymed.appointment.domain.usecase.GetPatientByIdUseCase;
 import com.appointymed.appointment.domain.usecase.RegisterPatientUseCase;
 import com.appointymed.appointment.domain.usecase.UpdatePatientUseCase;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import com.appointymed.appointment.application.mapper.DomainValueMapper;
 
 @Service
 @Transactional
@@ -34,14 +37,14 @@ public class PatientApplicationService {
 
     public PatientResponse registerPatient(RegisterPatientRequest request) {
         var command = new RegisterPatientUseCase.RegisterPatientCommand(
-                request.userId(),
+                DomainValueMapper.toDomainId(request.userId()),
                 request.documentType(),
                 request.documentNumber(),
                 request.firstName(),
                 request.lastName(),
                 request.email(),
                 request.phone(),
-                request.birthDate(),
+                DomainValueMapper.toDomainDate(request.birthDate()),
                 request.bloodType(),
                 request.address(),
                 request.emergencyContactName(),
@@ -57,32 +60,33 @@ public class PatientApplicationService {
                 request.lastName(),
                 request.email(),
                 request.phone(),
-                request.birthDate(),
+                DomainValueMapper.toDomainDate(request.birthDate()),
                 request.bloodType(),
                 request.address(),
                 request.emergencyContactName(),
                 request.emergencyContactPhone()
         );
-        Patient patient = updatePatientUseCase.execute(id, command);
+        Patient patient = updatePatientUseCase.execute(DomainId.of(id.toString()), command);
         return patientMapper.toResponse(patient);
     }
 
     @Transactional(readOnly = true)
     public PatientResponse getPatientById(UUID id) {
-        Patient patient = getPatientByIdUseCase.execute(id);
+        Patient patient = getPatientByIdUseCase.execute(DomainId.of(id.toString()));
         return patientMapper.toResponse(patient);
     }
 
     @Transactional(readOnly = true)
     public PatientResponse getPatientByUserId(UUID userId) {
-        Patient patient = getPatientByIdUseCase.executeByUserId(userId);
+        Patient patient = getPatientByIdUseCase.executeByUserId(DomainId.of(userId.toString()));
         return patientMapper.toResponse(patient);
     }
 
     @Transactional(readOnly = true)
     public List<PatientResponse> getAllPatients(int page, int size) {
-        return getPatientByIdUseCase.executeAll(page, size).stream()
-                .map(patientMapper::toResponse)
-                .toList();
+        DomainList<Patient> patients = getPatientByIdUseCase.executeAll(page, size);
+        List<PatientResponse> result = new java.util.ArrayList<>();
+        for (int index = 0; index < patients.size(); index++) result.add(patientMapper.toResponse(patients.get(index)));
+        return result;
     }
 }

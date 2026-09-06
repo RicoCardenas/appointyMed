@@ -1,55 +1,51 @@
 package com.appointymed.auth.domain.model;
 
-import java.util.Set;
-
 public enum Role {
-    ADMIN(Set.of(
-            Permission.MANAGE_USERS,
-            Permission.MANAGE_ROLES,
-            Permission.VIEW_AUDIT,
-            Permission.READ_PATIENT,
-            Permission.WRITE_PATIENT,
-            Permission.READ_DOCTOR,
-            Permission.WRITE_DOCTOR,
-            Permission.READ_APPOINTMENT,
-            Permission.WRITE_APPOINTMENT
-    )),
-    DEVELOPER(Set.of(
-            Permission.MANAGE_USERS,
-            Permission.VIEW_AUDIT,
-            Permission.READ_PATIENT,
-            Permission.READ_DOCTOR,
-            Permission.READ_APPOINTMENT
-    )),
-    DOCTOR(Set.of(
-            Permission.READ_PATIENT,
-            Permission.READ_DOCTOR,
-            Permission.READ_APPOINTMENT,
-            Permission.WRITE_APPOINTMENT
-    )),
-    PATIENT(Set.of(
-            Permission.READ_APPOINTMENT,
-            Permission.WRITE_APPOINTMENT
-    )),
-    CLIENT(Set.of(
-            Permission.READ_APPOINTMENT,
-            Permission.WRITE_APPOINTMENT
-    )),
-    RECEPTIONIST(Set.of(
-            Permission.READ_PATIENT,
-            Permission.WRITE_PATIENT,
-            Permission.READ_DOCTOR,
-            Permission.READ_APPOINTMENT,
-            Permission.WRITE_APPOINTMENT
-    ));
+    ADMIN(
+            DomainSet.of(
+                    Permission.MANAGE_USERS,
+                    Permission.MANAGE_ROLES,
+                    Permission.VIEW_AUDIT,
+                    Permission.READ_PATIENT,
+                    Permission.WRITE_PATIENT,
+                    Permission.READ_DOCTOR,
+                    Permission.WRITE_DOCTOR,
+                    Permission.READ_APPOINTMENT,
+                    Permission.WRITE_APPOINTMENT)),
 
-    private final Set<Permission> permissions;
+    DEVELOPER(
+            DomainSet.of(
+                    Permission.MANAGE_USERS,
+                    Permission.VIEW_AUDIT,
+                    Permission.READ_PATIENT,
+                    Permission.READ_DOCTOR,
+                    Permission.READ_APPOINTMENT)),
 
-    Role(Set<Permission> permissions) {
+    DOCTOR(
+            DomainSet.of(
+                    Permission.READ_PATIENT,
+                    Permission.READ_DOCTOR,
+                    Permission.READ_APPOINTMENT,
+                    Permission.WRITE_APPOINTMENT)),
+
+    PATIENT(DomainSet.of(Permission.READ_APPOINTMENT, Permission.WRITE_APPOINTMENT)),
+    CLIENT(DomainSet.of(Permission.READ_APPOINTMENT, Permission.WRITE_APPOINTMENT)),
+
+    RECEPTIONIST(
+            DomainSet.of(
+                    Permission.READ_PATIENT,
+                    Permission.WRITE_PATIENT,
+                    Permission.READ_DOCTOR,
+                    Permission.READ_APPOINTMENT,
+                    Permission.WRITE_APPOINTMENT));
+
+    private final DomainSet<Permission> permissions;
+
+    Role(DomainSet<Permission> permissions) {
         this.permissions = permissions;
     }
 
-    public Set<Permission> getPermissions() {
+    public DomainSet<Permission> getPermissions() {
         return permissions;
     }
 
@@ -58,11 +54,8 @@ public enum Role {
     }
 
     public static Role fromName(String name) {
-        for (Role role : values()) {
-            if (role.name().equalsIgnoreCase(name)) {
-                return role;
-            }
-        }
+        if (name != null)
+            for (Role role : values()) if (role.name().equalsIgnoreCase(name.trim())) return role;
         throw new IllegalArgumentException("Unknown role: " + name);
     }
 }

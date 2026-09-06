@@ -6,6 +6,8 @@ import com.appointymed.appointment.domain.model.Doctor;
 import com.appointymed.appointment.domain.model.DoctorSchedule;
 import com.appointymed.appointment.domain.model.Specialty;
 import com.appointymed.appointment.domain.model.TimeSlot;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
 import com.appointymed.appointment.domain.repository.DoctorRepository;
 import com.appointymed.appointment.domain.repository.DoctorScheduleRepository;
 import com.appointymed.appointment.domain.repository.SpecialtyRepository;
@@ -17,6 +19,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import com.appointymed.appointment.application.mapper.DomainValueMapper;
 
 @Service
 @Transactional
@@ -53,9 +56,9 @@ public class DoctorApplicationService {
 
     public DoctorResponse registerDoctor(RegisterDoctorRequest request) {
         var command = new RegisterDoctorUseCase.RegisterDoctorCommand(
-                request.userId(),
+                DomainId.of(request.userId().toString()),
                 request.medicalLicense(),
-                request.specialtyId(),
+                DomainId.of(request.specialtyId().toString()),
                 request.firstName(),
                 request.lastName(),
                 request.email(),
@@ -63,21 +66,20 @@ public class DoctorApplicationService {
                 request.consultationRoom()
         );
         Doctor doctor = registerDoctorUseCase.execute(command);
-        String specialtyName = specialtyRepository.findById(doctor.getSpecialtyId())
-                .map(Specialty::getName)
-                .orElse("Especialidad General");
+        var specialty = specialtyRepository.findById(doctor.getSpecialtyId());
+        String specialtyName = specialty.isPresent() ? specialty.get().getName() : "Especialidad General";
         return doctorMapper.toResponse(doctor, specialtyName);
     }
 
     @Transactional(readOnly = true)
     public List<DoctorResponse> getAllDoctors(UUID specialtyId) {
-        List<Doctor> doctors = getAllDoctorsUseCase.execute(specialtyId);
+        DomainList<Doctor> doctors = getAllDoctorsUseCase.execute(DomainValueMapper.toDomainId(specialtyId));
         List<DoctorResponse> responses = new ArrayList<>();
-        for (Doctor doc : doctors) {
-            String specialtyName = specialtyRepository.findById(doc.getSpecialtyId())
-                    .map(Specialty::getName)
-                    .orElse("N/A");
-            List<DoctorSchedule> schedules = doctorScheduleRepository.findByDoctorId(doc.getId());
+        for (int index = 0; index < doctors.size(); index++) {
+            Doctor doc = doctors.get(index);
+            var specialty = specialtyRepository.findById(doc.getSpecialtyId());
+            String specialtyName = specialty.isPresent() ? specialty.get().getName() : "N/A";
+            DomainList<DoctorSchedule> schedules = doctorScheduleRepository.findByDoctorId(doc.getId());
             Doctor docWithSchedules = Doctor.builder()
                     .id(doc.getId())
                     .userId(doc.getUserId())
@@ -99,11 +101,10 @@ public class DoctorApplicationService {
 
     @Transactional(readOnly = true)
     public DoctorResponse getDoctorById(UUID id) {
-        Doctor doc = getDoctorByIdUseCase.execute(id);
-        List<DoctorSchedule> schedules = doctorScheduleRepository.findByDoctorId(doc.getId());
-        String specialtyName = specialtyRepository.findById(doc.getSpecialtyId())
-                .map(Specialty::getName)
-                .orElse("N/A");
+        Doctor doc = getDoctorByIdUseCase.execute(DomainId.of(id.toString()));
+        DomainList<DoctorSchedule> schedules = doctorScheduleRepository.findByDoctorId(doc.getId());
+        var specialty = specialtyRepository.findById(doc.getSpecialtyId());
+        String specialtyName = specialty.isPresent() ? specialty.get().getName() : "N/A";
 
         Doctor docWithSchedules = Doctor.builder()
                 .id(doc.getId())
@@ -125,25 +126,28 @@ public class DoctorApplicationService {
 
     @Transactional(readOnly = true)
     public DoctorResponse getDoctorByUserId(UUID userId) {
-        Doctor doc = getDoctorByIdUseCase.executeByUserId(userId);
-        return getDoctorById(doc.getId());
+        Doctor doc = getDoctorByIdUseCase.executeByUserId(DomainId.of(userId.toString()));
+        return getDoctorById(UUID.fromString(doc.getId().value()));
     }
 
     public List<ScheduleResponse> updateDoctorSchedules(UUID doctorId, DoctorScheduleRequest request) {
-        List<UpdateDoctorScheduleUseCase.DayScheduleItem> items = request.schedules().stream()
-                .map(s -> new UpdateDoctorScheduleUseCase.DayScheduleItem(
-                        s.dayOfWeek(), s.startTime(), s.endTime(), s.slotDurationMinutes(), s.active()
-                )).toList();
-
-        List<DoctorSchedule> schedules = updateDoctorScheduleUseCase.execute(doctorId, items);
-        return schedules.stream().map(doctorMapper::toScheduleResponse).toList();
+        DomainList<UpdateDoctorScheduleUseCase.DayScheduleItem> items = new DomainList<>();
+        for (var schedule : request.schedules()) items.add(new UpdateDoctorScheduleUseCase.DayScheduleItem(
+                schedule.dayOfWeek(), DomainValueMapper.toDomainTime(schedule.startTime()), DomainValueMapper.toDomainTime(schedule.endTime()), schedule.slotDurationMinutes(), schedule.active()));
+        DomainList<DoctorSchedule> schedules = updateDoctorScheduleUseCase.execute(DomainId.of(doctorId.toString()), items);
+        List<ScheduleResponse> result = new ArrayList<>();
+        for (int index = 0; index < schedules.size(); index++) result.add(doctorMapper.toScheduleResponse(schedules.get(index)));
+        return result;
     }
 
     @Transactional(readOnly = true)
     public List<AvailableSlotResponse> getDoctorAvailability(UUID doctorId, LocalDate date) {
-        List<TimeSlot> slots = getDoctorAvailabilityUseCase.execute(doctorId, date);
-        return slots.stream()
-                .map(slot -> new AvailableSlotResponse(slot.startDateTime(), slot.endDateTime(), slot.available()))
-                .toList();
+        DomainList<TimeSlot> slots = getDoctorAvailabilityUseCase.execute(DomainId.of(doctorId.toString()), DomainValueMapper.toDomainDate(date));
+        List<AvailableSlotResponse> result = new ArrayList<>();
+        for (int index = 0; index < slots.size(); index++) {
+            TimeSlot slot = slots.get(index);
+            result.add(new AvailableSlotResponse(DomainValueMapper.toLocalDateTime(slot.startDateTime()), DomainValueMapper.toLocalDateTime(slot.endDateTime()), slot.available()));
+        }
+        return result;
     }
 }

@@ -1,6 +1,7 @@
 package com.appointymed.auth.infrastructure.security;
 
 import com.appointymed.auth.domain.model.User;
+import com.appointymed.auth.domain.model.DomainId;
 import com.appointymed.auth.domain.usecase.JwtTokenProvider;
 import com.appointymed.auth.infrastructure.persistence.repository.UserRepositoryImpl;
 import jakarta.servlet.FilterChain;
@@ -43,8 +44,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = authHeader.substring(7);
 
         try {
-            UUID userId = jwtTokenProvider.getUserIdFromAccessToken(token);
-            List<String> roles = jwtTokenProvider.getRolesFromAccessToken(token);
+            DomainId userId = jwtTokenProvider.getUserIdFromAccessToken(token);
+            var domainRoles = jwtTokenProvider.getRolesFromAccessToken(token);
+            List<String> roles = new java.util.ArrayList<>();
+            for (int index = 0; index < domainRoles.size(); index++) roles.add(domainRoles.get(index));
 
             User user = userRepository.findById(userId).orElse(null);
             if (user == null || user.getStatus() != com.appointymed.auth.domain.model.UserStatus.ACTIVE) {
@@ -57,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .toList();
 
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                    new UsernamePasswordAuthenticationToken(UUID.fromString(userId.value()), null, authorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);

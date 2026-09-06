@@ -1,20 +1,17 @@
 package com.appointymed.appointment.domain.usecase;
 
+import com.appointymed.appointment.domain.model.DomainList;
 import com.appointymed.appointment.domain.model.Specialty;
 import com.appointymed.appointment.domain.repository.SpecialtyRepository;
-import org.springframework.stereotype.Component;
 
-import java.util.List;
+public final class GetAllSpecialtiesUseCase {
+    private final SpecialtyRepository repository;
 
-@Component
-public class GetAllSpecialtiesUseCase {
-    private final SpecialtyRepository specialtyRepository;
-
-    public GetAllSpecialtiesUseCase(SpecialtyRepository specialtyRepository) {
-        this.specialtyRepository = specialtyRepository;
+    public GetAllSpecialtiesUseCase(SpecialtyRepository r) {
+        repository = r;
     }
 
-    public List<Specialty> execute() {
-        return specialtyRepository.findAllActive();
+    public DomainList<Specialty> execute() {
+        return repository.findAllActive();
     }
 }

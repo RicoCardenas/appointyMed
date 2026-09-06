@@ -16,15 +16,16 @@ public class DoctorMapper {
             return null;
         }
 
-        List<ScheduleResponse> scheduleResponses = domain.getSchedules() != null ?
-                domain.getSchedules().stream().map(this::toScheduleResponse).toList() :
-                Collections.emptyList();
+        List<ScheduleResponse> scheduleResponses = new java.util.ArrayList<>();
+        if (domain.getSchedules() != null) {
+            for (int index = 0; index < domain.getSchedules().size(); index++) scheduleResponses.add(toScheduleResponse(domain.getSchedules().get(index)));
+        }
 
         return new DoctorResponse(
-                domain.getId(),
-                domain.getUserId(),
+                DomainValueMapper.toUuid(domain.getId()),
+                DomainValueMapper.toUuid(domain.getUserId()),
                 domain.getMedicalLicense(),
-                domain.getSpecialtyId(),
+                DomainValueMapper.toUuid(domain.getSpecialtyId()),
                 specialtyName,
                 domain.getFirstName(),
                 domain.getLastName(),
@@ -34,7 +35,7 @@ public class DoctorMapper {
                 domain.getConsultationRoom(),
                 domain.isActive(),
                 scheduleResponses,
-                domain.getCreatedAt()
+                DomainValueMapper.toInstant(domain.getCreatedAt())
         );
     }
 
@@ -43,12 +44,12 @@ public class DoctorMapper {
             return null;
         }
         return new ScheduleResponse(
-                schedule.getId(),
-                schedule.getDoctorId(),
+                DomainValueMapper.toUuid(schedule.getId()),
+                DomainValueMapper.toUuid(schedule.getDoctorId()),
                 schedule.getDayOfWeek(),
                 ScheduleResponse.getDayNameFromInt(schedule.getDayOfWeek()),
-                schedule.getStartTime(),
-                schedule.getEndTime(),
+                DomainValueMapper.toLocalTime(schedule.getStartTime()),
+                DomainValueMapper.toLocalTime(schedule.getEndTime()),
                 schedule.getSlotDurationMinutes(),
                 schedule.isActive()
         );

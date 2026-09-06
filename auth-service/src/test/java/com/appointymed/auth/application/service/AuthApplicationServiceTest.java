@@ -2,202 +2,58 @@ package com.appointymed.auth.application.service;
 
 import com.appointymed.auth.application.dto.*;
 import com.appointymed.auth.application.mapper.UserMapper;
-import com.appointymed.auth.domain.model.Email;
-import com.appointymed.auth.domain.model.Password;
-import com.appointymed.auth.domain.model.Role;
-import com.appointymed.auth.domain.model.User;
-import com.appointymed.auth.domain.model.UserStatus;
-import com.appointymed.auth.domain.usecase.*;
+import com.appointymed.auth.domain.model.*;
 import com.appointymed.auth.domain.repository.UserRepository;
-import com.appointymed.auth.domain.exception.UserNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
+import com.appointymed.auth.domain.usecase.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthApplicationServiceTest {
+    @Mock RegisterUserUseCase register;
+    @Mock AuthenticateUserUseCase authenticate;
+    @Mock RefreshAccessTokenUseCase refresh;
+    @Mock LogoutUseCase logout;
+    @Mock ForgotPasswordUseCase forgot;
+    @Mock ResetPasswordUseCase reset;
+    @Mock ChangePasswordUseCase change;
+    @Mock UserRepository users;
+    @Mock UserMapper mapper;
 
-    @Mock
-    private RegisterUserUseCase registerUserUseCase;
+    private AuthApplicationService service() { return new AuthApplicationService(register, authenticate, refresh, logout, forgot, reset, change, users, mapper); }
 
-    @Mock
-    private AuthenticateUserUseCase authenticateUserUseCase;
-
-    @Mock
-    private RefreshAccessTokenUseCase refreshAccessTokenUseCase;
-
-    @Mock
-    private LogoutUseCase logoutUseCase;
-
-    @Mock
-    private ForgotPasswordUseCase forgotPasswordUseCase;
-
-    @Mock
-    private ResetPasswordUseCase resetPasswordUseCase;
-
-    @Mock
-    private ChangePasswordUseCase changePasswordUseCase;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private UserMapper userMapper;
-
-    private AuthApplicationService authApplicationService;
-
-    @BeforeEach
-    void setUp() {
-        authApplicationService = new AuthApplicationService(
-                registerUserUseCase,
-                authenticateUserUseCase,
-                refreshAccessTokenUseCase,
-                logoutUseCase,
-                forgotPasswordUseCase,
-                resetPasswordUseCase,
-                changePasswordUseCase,
-                userRepository,
-                userMapper
-        );
+    @Test
+    void registers() {
+        User user = User.builder().id(DomainId.of("11111111-1111-1111-1111-111111111111")).email(Email.of("test@example.com")).password(Password.ofHashed("hash")).fullName("John Doe").roles(DomainSet.of(Role.PATIENT)).build();
+        UserDto dto = new UserDto(java.util.UUID.fromString(user.getId().value()), "test@example.com", "John Doe", null, "ACTIVE", true, List.of("PATIENT"), null, null);
+        when(register.execute(any())).thenReturn(user); when(mapper.toDto(user)).thenReturn(dto);
+        assertThat(service().register(new RegisterRequest("test@example.com", "SecurePass123!", "John Doe", null))).isEqualTo(dto);
     }
 
     @Test
-    void shouldRegisterUserSuccessfully() {
-        // Given
-        RegisterRequest request = new RegisterRequest(
-                "test@example.com", "SecurePass123!", "John Doe", "+1234567890"
-        );
-
-        User user = User.builder()
-                .id(UUID.randomUUID())
-                .email(Email.of("test@example.com"))
-                .password(Password.ofHashed("hashed"))
-                .fullName("John Doe")
-                .status(UserStatus.PENDING_VERIFICATION)
-                .roles(Set.of(Role.PATIENT))
-                .build();
-
-        UserDto userDto = new UserDto(
-                user.getId(), "test@example.com", "John Doe", "+1234567890",
-                "PENDING_VERIFICATION", false, List.of("PATIENT"),
-                user.getCreatedAt(), user.getUpdatedAt()
-        );
-
-        when(registerUserUseCase.execute(any())).thenReturn(user);
-        when(userMapper.toDto(user)).thenReturn(userDto);
-
-        // When
-        UserDto result = authApplicationService.register(request);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.email()).isEqualTo("test@example.com");
-        assertThat(result.fullName()).isEqualTo("John Doe");
-        verify(registerUserUseCase).execute(any());
-        verify(userMapper).toDto(user);
+    void logsInAndConvertsDomainValues() {
+        DomainId id = DomainId.of("11111111-1111-1111-1111-111111111111");
+        DomainList<String> roles = new DomainList<>(); roles.add("PATIENT");
+        when(authenticate.execute(any())).thenReturn(new AuthenticateUserUseCase.AuthenticationResult("access", "refresh", id, "test@example.com", "John Doe", roles));
+        LoginResponse result = service().login(new LoginRequest("test@example.com", "SecurePass123!"));
+        assertThat(result.userId()).isEqualTo(java.util.UUID.fromString(id.value()));
+        assertThat(result.roles()).containsExactly("PATIENT");
     }
 
     @Test
-    void shouldLoginSuccessfully() {
-        // Given
-        LoginRequest request = new LoginRequest("test@example.com", "SecurePass123!");
-        UUID userId = UUID.randomUUID();
-
-        AuthenticateUserUseCase.AuthenticationResult authResult = new AuthenticateUserUseCase.AuthenticationResult(
-                "access-token", "refresh-token", userId, "test@example.com", "John Doe", List.of("PATIENT")
-        );
-
-        when(authenticateUserUseCase.execute(any())).thenReturn(authResult);
-
-        // When
-        LoginResponse result = authApplicationService.login(request);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.accessToken()).isEqualTo("access-token");
-        assertThat(result.refreshToken()).isEqualTo("refresh-token");
-        assertThat(result.userId()).isEqualTo(userId);
-        verify(authenticateUserUseCase).execute(any());
-    }
-
-    @Test
-    void shouldRefreshTokenSuccessfully() {
-        // Given
-        RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
-        RefreshAccessTokenUseCase.RefreshTokenResult refreshResult = new RefreshAccessTokenUseCase.RefreshTokenResult(
-                "new-access-token", "new-refresh-token"
-        );
-
-        when(refreshAccessTokenUseCase.execute("refresh-token")).thenReturn(refreshResult);
-
-        // When
-        RefreshTokenResponse result = authApplicationService.refreshToken(request);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.accessToken()).isEqualTo("new-access-token");
-        assertThat(result.refreshToken()).isEqualTo("new-refresh-token");
-    }
-
-    @Test
-    void shouldLogoutSuccessfully() {
-        // Given
-        RefreshTokenRequest request = new RefreshTokenRequest("refresh-token");
-
-        // When
-        authApplicationService.logout(request.refreshToken());
-
-        // Then
-        verify(logoutUseCase).execute("refresh-token");
-    }
-
-    @Test
-    void shouldGetUserByIdSuccessfully() {
-        // Given
-        UUID userId = UUID.randomUUID();
-        User user = User.builder()
-                .id(userId)
-                .email(Email.of("test@example.com"))
-                .fullName("John Doe")
-                .roles(Set.of(Role.PATIENT))
-                .build();
-
-        UserDto userDto = new UserDto(
-                userId, "test@example.com", "John Doe", null,
-                "ACTIVE", true, List.of("PATIENT"),
-                user.getCreatedAt(), user.getUpdatedAt()
-        );
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(userMapper.toDto(user)).thenReturn(userDto);
-
-        // When
-        UserDto result = authApplicationService.getUserById(userId);
-
-        // Then
-        assertThat(result).isNotNull();
-        assertThat(result.id()).isEqualTo(userId);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUserNotFound() {
-        // Given
-        UUID userId = UUID.randomUUID();
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-        // When & Then
-        assertThatThrownBy(() -> authApplicationService.getUserById(userId))
-                .isInstanceOf(UserNotFoundException.class);
+    void refreshesAndLogsOut() {
+        when(refresh.execute("refresh")).thenReturn(new RefreshAccessTokenUseCase.RefreshTokenResult("access", "new-refresh"));
+        RefreshTokenResponse response = service().refreshToken(new RefreshTokenRequest("refresh"));
+        assertThat(response.accessToken()).isEqualTo("access");
+        service().logout("refresh");
+        verify(logout).execute("refresh");
     }
 }

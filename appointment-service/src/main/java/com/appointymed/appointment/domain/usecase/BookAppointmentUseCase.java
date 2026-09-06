@@ -7,6 +7,9 @@ import com.appointymed.appointment.domain.model.Appointment;
 import com.appointymed.appointment.domain.model.AppointmentStatus;
 import com.appointymed.appointment.domain.model.Doctor;
 import com.appointymed.appointment.domain.model.DoctorSchedule;
+import com.appointymed.appointment.domain.model.DomainClock;
+import com.appointymed.appointment.domain.model.DomainDateTime;
+import com.appointymed.appointment.domain.model.DomainId;
 import com.appointymed.appointment.domain.model.Patient;
 import com.appointymed.appointment.domain.model.Specialty;
 import com.appointymed.appointment.domain.repository.AppointmentEventPublisherPort;
@@ -15,114 +18,98 @@ import com.appointymed.appointment.domain.repository.DoctorRepository;
 import com.appointymed.appointment.domain.repository.DoctorScheduleRepository;
 import com.appointymed.appointment.domain.repository.PatientRepository;
 import com.appointymed.appointment.domain.repository.SpecialtyRepository;
-import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.UUID;
+public final class BookAppointmentUseCase {
+    private final AppointmentRepository appointments;
+    private final DoctorRepository doctors;
+    private final PatientRepository patients;
+    private final SpecialtyRepository specialties;
+    private final DoctorScheduleRepository schedules;
+    private final AppointmentEventPublisherPort events;
+    private final DomainClock clock;
 
-@Component
-public class BookAppointmentUseCase {
-    private final AppointmentRepository appointmentRepository;
-    private final DoctorRepository doctorRepository;
-    private final PatientRepository patientRepository;
-    private final SpecialtyRepository specialtyRepository;
-    private final DoctorScheduleRepository doctorScheduleRepository;
-    private final AppointmentEventPublisherPort eventPublisher;
-
-    public BookAppointmentUseCase(AppointmentRepository appointmentRepository,
-                                  DoctorRepository doctorRepository,
-                                  PatientRepository patientRepository,
-                                  SpecialtyRepository specialtyRepository,
-                                  DoctorScheduleRepository doctorScheduleRepository,
-                                  AppointmentEventPublisherPort eventPublisher) {
-        this.appointmentRepository = appointmentRepository;
-        this.doctorRepository = doctorRepository;
-        this.patientRepository = patientRepository;
-        this.specialtyRepository = specialtyRepository;
-        this.doctorScheduleRepository = doctorScheduleRepository;
-        this.eventPublisher = eventPublisher;
+    public BookAppointmentUseCase(
+            AppointmentRepository a,
+            DoctorRepository d,
+            PatientRepository p,
+            SpecialtyRepository s,
+            DoctorScheduleRepository ds,
+            AppointmentEventPublisherPort e,
+            DomainClock c) {
+        appointments = a;
+        doctors = d;
+        patients = p;
+        specialties = s;
+        schedules = ds;
+        events = e;
+        clock = c;
     }
 
-    public Appointment execute(BookAppointmentCommand command) {
-        if (command.appointmentDateTime().isBefore(LocalDateTime.now())) {
+    public Appointment execute(BookAppointmentCommand c) {
+        if (c.appointmentDateTime() == null || c.appointmentDateTime().isBefore(clock.now()))
             throw new DomainException("Cannot book an appointment in the past", "PAST_APPOINTMENT_DATE");
-        }
-
-        Patient patient = patientRepository.findById(command.patientId())
-                .orElseThrow(() -> new ResourceNotFoundException("Patient", command.patientId()));
-
-        Doctor doctor = doctorRepository.findById(command.doctorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor", command.doctorId()));
-
-        if (!doctor.isActive()) {
+        Patient patient =
+                patients
+                        .findById(c.patientId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Patient", c.patientId()));
+        Doctor doctor =
+                doctors
+                        .findById(c.doctorId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Doctor", c.doctorId()));
+        if (!doctor.isActive())
             throw new DomainException("Doctor is currently inactive", "DOCTOR_INACTIVE");
-        }
-
-        Specialty specialty = specialtyRepository.findById(command.specialtyId() != null ? command.specialtyId() : doctor.getSpecialtyId())
-                .orElseThrow(() -> new ResourceNotFoundException("Specialty", doctor.getSpecialtyId()));
-
-        // Calculate end time
-        int durationMinutes = specialty.getConsultationDurationMinutes();
-        LocalDateTime endDateTime = command.appointmentDateTime().plusMinutes(durationMinutes);
-
-        // Validate doctor working schedule
-        int dayOfWeek = command.appointmentDateTime().getDayOfWeek().getValue();
-        DoctorSchedule schedule = doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctor.getId(), dayOfWeek)
-                .orElseThrow(() -> new AppointmentConflictException("Doctor has no active working schedule configured for this day of the week"));
-
-        LocalTime appointmentStartTime = command.appointmentDateTime().toLocalTime();
-        LocalTime appointmentEndTime = endDateTime.toLocalTime();
-
-        if (appointmentStartTime.isBefore(schedule.getStartTime()) || appointmentEndTime.isAfter(schedule.getEndTime())) {
-            throw new AppointmentConflictException("Appointment time is outside doctor's configured working hours (" + schedule.getStartTime() + " - " + schedule.getEndTime() + ")");
-        }
-
-        // Check for conflicting appointments
-        boolean conflictExists = appointmentRepository.hasActiveAppointmentConflict(
-                doctor.getId(), command.appointmentDateTime(), endDateTime, null
-        );
-
-        if (conflictExists) {
-            throw new AppointmentConflictException(command.appointmentDateTime());
-        }
-
-        Appointment appointment = Appointment.builder()
-                .id(UUID.randomUUID())
-                .doctorId(doctor.getId())
-                .patientId(patient.getId())
-                .specialtyId(specialty.getId())
-                .appointmentDateTime(command.appointmentDateTime())
-                .endDateTime(endDateTime)
-                .status(AppointmentStatus.SCHEDULED)
-                .reason(command.reason())
-                .notes(command.notes())
-                .build();
-
-        Appointment savedAppointment = appointmentRepository.save(appointment);
-
-        // Publish event for notification microservice via SQS
-        try {
-            eventPublisher.publishAppointmentBooked(
-                    savedAppointment,
-                    patient.getEmail(),
-                    patient.getFullName(),
-                    doctor.getFullName(),
-                    specialty.getName()
-            );
-        } catch (Exception e) {
-            // Log but don't break the transaction
-        }
-
-        return savedAppointment;
+        DomainId specialtyId = c.specialtyId() == null ? doctor.getSpecialtyId() : c.specialtyId();
+        if (!specialtyId.equals(doctor.getSpecialtyId()))
+            throw new DomainException("Specialty does not belong to doctor", "DOCTOR_SPECIALTY_MISMATCH");
+        Specialty specialty =
+                specialties
+                        .findById(specialtyId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Specialty", specialtyId));
+        DomainDateTime end =
+                c.appointmentDateTime().plusMinutes(specialty.getConsultationDurationMinutes());
+        DoctorSchedule schedule =
+                schedules
+                        .findByDoctorIdAndDayOfWeek(doctor.getId(), c.appointmentDateTime().getDayOfWeek())
+                        .orElseThrow(
+                                () ->
+                                        new AppointmentConflictException(
+                                                "Doctor has no active working schedule configured for this day of the"
+                                                        + " week"));
+        if (c.appointmentDateTime().toLocalTime().isBefore(schedule.getStartTime())
+                || end.toLocalTime().isAfter(schedule.getEndTime()))
+            throw new AppointmentConflictException(
+                    "Appointment time is outside doctor's configured working hours");
+        if (appointments.hasActiveAppointmentConflict(
+                doctor.getId(), c.appointmentDateTime(), end, null))
+            throw new AppointmentConflictException(c.appointmentDateTime());
+        Appointment saved =
+                appointments.save(
+                        Appointment.builder()
+                                .doctorId(doctor.getId())
+                                .patientId(patient.getId())
+                                .specialtyId(specialty.getId())
+                                .appointmentDateTime(c.appointmentDateTime())
+                                .endDateTime(end)
+                                .status(AppointmentStatus.SCHEDULED)
+                                .reason(c.reason())
+                                .notes(c.notes())
+                                .createdAt(clock.asInstant())
+                                .updatedAt(clock.asInstant())
+                                .build());
+        events.publishAppointmentBooked(
+                saved,
+                patient.getEmail(),
+                patient.getFullName(),
+                doctor.getFullName(),
+                specialty.getName());
+        return saved;
     }
 
     public record BookAppointmentCommand(
-            UUID patientId,
-            UUID doctorId,
-            UUID specialtyId,
-            LocalDateTime appointmentDateTime,
+            DomainId patientId,
+            DomainId doctorId,
+            DomainId specialtyId,
+            DomainDateTime appointmentDateTime,
             String reason,
-            String notes
-    ) {}
+            String notes) {}
 }

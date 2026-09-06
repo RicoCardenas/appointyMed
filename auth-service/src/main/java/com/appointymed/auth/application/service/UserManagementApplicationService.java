@@ -6,6 +6,9 @@ import com.appointymed.auth.application.dto.UserDto;
 import com.appointymed.auth.application.dto.UpdateRolesRequest;
 import com.appointymed.auth.application.mapper.UserMapper;
 import com.appointymed.auth.domain.model.Role;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainInstant;
+import com.appointymed.auth.domain.model.DomainSet;
 import com.appointymed.auth.domain.model.User;
 import com.appointymed.auth.domain.usecase.AssignRoleUseCase;
 import com.appointymed.auth.domain.usecase.GetUserPermissionsUseCase;
@@ -49,12 +52,12 @@ public class UserManagementApplicationService {
     }
 
     public UserDto assignRole(UUID userId, AssignRoleRequest request) {
-        User user = assignRoleUseCase.execute(userId, request.roleName());
+        User user = assignRoleUseCase.execute(DomainId.of(userId.toString()), request.roleName());
         return userMapper.toDto(user);
     }
 
     public UserDto revokeRole(UUID userId, String roleName) {
-        User user = revokeRoleUseCase.execute(userId, roleName);
+        User user = revokeRoleUseCase.execute(DomainId.of(userId.toString()), roleName);
         return userMapper.toDto(user);
     }
 
@@ -64,15 +67,14 @@ public class UserManagementApplicationService {
                     "A developer cannot modify their own roles", "SELF_ROLE_CHANGE_FORBIDDEN");
         }
 
-        User actor = userRepository.findById(actorId)
-                .orElseThrow(() -> new UserNotFoundException(actorId));
-        User target = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new UserNotFoundException(targetUserId));
+        User actor = userRepository.findById(DomainId.of(actorId.toString()))
+                .orElseThrow(() -> new UserNotFoundException(DomainId.of(actorId.toString())));
+        User target = userRepository.findById(DomainId.of(targetUserId.toString()))
+                .orElseThrow(() -> new UserNotFoundException(DomainId.of(targetUserId.toString())));
 
-        Set<Role> requestedRoles = request.roleNames().stream()
-                .map(Role::fromName)
-                .collect(Collectors.toSet());
-        if (requestedRoles.isEmpty()) {
+        DomainSet<Role> requestedRoles = DomainSet.empty();
+        for (String roleName : request.roleNames()) requestedRoles = requestedRoles.add(Role.fromName(roleName));
+        if (requestedRoles.size() == 0) {
             throw new com.appointymed.auth.domain.exception.DomainException(
                     "At least one role is required", "ROLE_REQUIRED");
         }
@@ -93,17 +95,17 @@ public class UserManagementApplicationService {
                 .phone(target.getPhone())
                 .status(target.getStatus())
                 .emailVerified(target.isEmailVerified())
-                .roles(Set.copyOf(requestedRoles))
+                .roles(requestedRoles)
                 .createdAt(target.getCreatedAt())
-                .updatedAt(java.time.Instant.now())
+                .updatedAt(DomainInstant.ofEpochMillis(System.currentTimeMillis()))
                 .build();
         User saved = userRepository.save(updated);
 
         auditOperationUseCase.execute(new com.appointymed.auth.domain.usecase.AuditOperationUseCase.AuditCommand(
-                actorId,
+                DomainId.of(actorId.toString()),
                 "USER_ROLES_UPDATED",
                 "USER",
-                targetUserId,
+                DomainId.of(targetUserId.toString()),
                 rolesAsJson(target.getRoles()),
                 rolesAsJson(requestedRoles),
                 ipAddress
@@ -111,43 +113,50 @@ public class UserManagementApplicationService {
         return userMapper.toDto(saved);
     }
 
-    private static String rolesAsJson(Set<Role> roles) {
-        return roles.stream()
-                .map(Enum::name)
-                .sorted()
-                .map(role -> "\"" + role + "\"")
-                .collect(Collectors.joining(",", "[", "]"));
+    private static String rolesAsJson(DomainSet<Role> roles) {
+        StringBuilder result = new StringBuilder("[");
+        for (int index = 0; index < roles.size(); index++) {
+            if (index > 0) result.append(',');
+            result.append('"').append(roles.get(index).name()).append('"');
+        }
+        return result.append(']').toString();
     }
 
     @Transactional(readOnly = true)
     public List<RoleDto> getAllRoles() {
-        return roleRepository.findAll().stream()
-                .map(role -> new RoleDto(
-                        role.name(),
-                        role.name() + " role",
-                        role.getPermissions().stream().map(Enum::name).toList()
-                ))
-                .toList();
+        List<RoleDto> result = new java.util.ArrayList<>();
+        var roles = roleRepository.findAll();
+        for (int index = 0; index < roles.size(); index++) {
+            Role role = roles.get(index);
+            List<String> permissions = new java.util.ArrayList<>();
+            for (int permissionIndex = 0; permissionIndex < role.getPermissions().size(); permissionIndex++) {
+                permissions.add(role.getPermissions().get(permissionIndex).name());
+            }
+            result.add(new RoleDto(role.name(), role.name() + " role", permissions));
+        }
+        return result;
     }
 
     @Transactional(readOnly = true)
     public Set<String> getUserPermissions(UUID userId) {
-        return getUserPermissionsUseCase.execute(userId).stream()
-                .map(Enum::name)
-                .collect(Collectors.toSet());
+        Set<String> result = new java.util.HashSet<>();
+        var permissions = getUserPermissionsUseCase.execute(DomainId.of(userId.toString()));
+        for (int index = 0; index < permissions.size(); index++) result.add(permissions.get(index).name());
+        return result;
     }
 
     @Transactional(readOnly = true)
     public UserDto getUserById(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+        User user = userRepository.findById(DomainId.of(userId.toString()))
+                .orElseThrow(() -> new UserNotFoundException(DomainId.of(userId.toString())));
         return userMapper.toDto(user);
     }
 
     @Transactional(readOnly = true)
     public List<UserDto> getAllUsers(int page, int size) {
-        return userRepository.findAll(page, size).stream()
-                .map(userMapper::toDto)
-                .toList();
+        List<UserDto> result = new java.util.ArrayList<>();
+        var users = userRepository.findAll(page, size);
+        for (int index = 0; index < users.size(); index++) result.add(userMapper.toDto(users.get(index)));
+        return result;
     }
 }

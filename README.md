@@ -11,6 +11,7 @@ appointyMed/
 ├── auth-service/           # Authentication & Authorization microservice (Port: 8081) [✓ Implemented]
 ├── appointment-service/    # Core appointment, doctor, patient & schedule service (Port: 8082) [✓ Implemented]
 │   └── src/main/resources/static/index.html # Interactive Visual Web Testing Dashboard
+├── notification-service/   # SQS notification consumer (Port: 8083) [✓ MVP]
 ├── docker-compose.yml      # Multi-database PostgreSQL + LocalStack AWS SQS + pgAdmin
 └── pom.xml                 # Maven Multi-Module Root POM
 ```
@@ -48,6 +49,7 @@ src/main/java/com/appointymed/{service}/
 - **Recuperación de Acceso:** Solicitud de reset de contraseña y publicación de eventos en AWS SQS.
 - **Control de Acceso (RBAC):** Roles preconfigurados (`ADMIN`, `DOCTOR`, `PATIENT`, `RECEPTIONIST`) y permisos granulares.
 - **Auditoría:** Registro de trazas y acciones críticas en PostgreSQL.
+- **Eventos:** Publicación con envelope común v1 hacia `notification-service`.
 
 ### 2. `appointment-service` (Port 8082)
 - **Especialidades Médicas:** Creación y catálogo de especialidades con duración configurable.
@@ -60,6 +62,13 @@ src/main/java/com/appointymed/{service}/
 - **Historial y Próximas Citas:** Filtros por paciente y médico.
 - **Notificaciones Asíncronas:** Publicación de eventos `APPOINTMENT_BOOKED`, `APPOINTMENT_CANCELLED`, `APPOINTMENT_RESCHEDULED` en SQS.
 - **Dashboard Visual:** Interfaz web interactiva en `http://localhost:8082/index.html`.
+
+### 3. `notification-service` (Port 8083)
+- **Consumo de eventos:** Lee envelope v1 desde SQS `notification-queue`.
+- **Eventos soportados:** Recuperación de contraseña, registro de usuario y cambios de citas.
+- **Idempotencia:** Evita reprocesar eventos durante la ejecución del servicio.
+- **Entrega MVP:** Simula envío mediante logs; proveedor real queda pendiente.
+- **Errores:** Reintentos SQS y DLQ después de tres intentos.
 
 ---
 
@@ -105,6 +114,9 @@ src/main/java/com/appointymed/{service}/
 
 ## 🛠️ Cómo Ejecutar y Probar el Proyecto
 
+Responsabilidades y límites por microservicio: [`docs/architecture/services.md`](docs/architecture/services.md).
+Contrato de eventos y política de pagos: [`docs/architecture/event-contracts.md`](docs/architecture/event-contracts.md).
+
 ### 1. Iniciar Infraestructura Docker (PostgreSQL & LocalStack AWS SQS)
 ```bash
 docker-compose up -d
@@ -129,6 +141,12 @@ mvn spring-boot:run
 En terminal 2:
 ```bash
 cd appointment-service
+mvn spring-boot:run
+```
+
+En terminal 3:
+```bash
+cd notification-service
 mvn spring-boot:run
 ```
 

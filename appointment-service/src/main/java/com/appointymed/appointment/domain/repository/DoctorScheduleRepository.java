@@ -1,15 +1,18 @@
 package com.appointymed.appointment.domain.repository;
 
 import com.appointymed.appointment.domain.model.DoctorSchedule;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
+import com.appointymed.appointment.domain.model.DomainOptional;
 
 public interface DoctorScheduleRepository {
     DoctorSchedule save(DoctorSchedule schedule);
-    List<DoctorSchedule> saveAll(List<DoctorSchedule> schedules);
-    List<DoctorSchedule> findByDoctorId(UUID doctorId);
-    Optional<DoctorSchedule> findByDoctorIdAndDayOfWeek(UUID doctorId, int dayOfWeek);
-    void deleteByDoctorId(UUID doctorId);
+
+    DomainList<DoctorSchedule> saveAll(DomainList<DoctorSchedule> schedules);
+
+    DomainList<DoctorSchedule> findByDoctorId(DomainId id);
+
+    DomainOptional<DoctorSchedule> findByDoctorIdAndDayOfWeek(DomainId id, int dayOfWeek);
+
+    void deleteByDoctorId(DomainId id);
 }

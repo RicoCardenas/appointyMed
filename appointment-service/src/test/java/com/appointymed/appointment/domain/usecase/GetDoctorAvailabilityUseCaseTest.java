@@ -1,99 +1,39 @@
 package com.appointymed.appointment.domain.usecase;
 
 import com.appointymed.appointment.domain.model.*;
-import com.appointymed.appointment.domain.repository.AppointmentRepository;
-import com.appointymed.appointment.domain.repository.DoctorRepository;
-import com.appointymed.appointment.domain.repository.DoctorScheduleRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.appointymed.appointment.domain.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GetDoctorAvailabilityUseCaseTest {
-
-    @Mock
-    private DoctorRepository doctorRepository;
-
-    @Mock
-    private DoctorScheduleRepository doctorScheduleRepository;
-
-    @Mock
-    private AppointmentRepository appointmentRepository;
-
-    private GetDoctorAvailabilityUseCase getDoctorAvailabilityUseCase;
-
-    private UUID doctorId;
-    private Doctor doctor;
-
-    @BeforeEach
-    void setUp() {
-        getDoctorAvailabilityUseCase = new GetDoctorAvailabilityUseCase(
-                doctorRepository, doctorScheduleRepository, appointmentRepository
-        );
-        doctorId = UUID.randomUUID();
-        doctor = Doctor.builder()
-                .id(doctorId)
-                .userId(UUID.randomUUID())
-                .medicalLicense("LIC-999")
-                .firstName("Laura")
-                .lastName("Gómez")
-                .active(true)
-                .build();
-    }
+    @Mock DoctorRepository doctors;
+    @Mock DoctorScheduleRepository schedules;
+    @Mock AppointmentRepository appointments;
 
     @Test
-    void shouldGenerateSlotsAndMarkOccupiedOnes() {
-        // Monday date
-        LocalDate nextMonday = LocalDate.now().plusWeeks(1).with(java.time.DayOfWeek.MONDAY);
+    void generatesSlotsAndMarksOccupiedOne() {
+        DomainId doctorId = DomainId.of("11111111-1111-1111-1111-111111111111");
+        long today = System.currentTimeMillis() / 86400000L;
+        DomainDate date = DomainDate.ofEpochDay(today + 7);
+        Doctor doctor = Doctor.builder().id(doctorId).userId(DomainId.of("22222222-2222-2222-2222-222222222222")).medicalLicense("LIC").firstName("Laura").lastName("Gomez").active(true).build();
+        DoctorSchedule schedule = DoctorSchedule.builder().doctorId(doctorId).dayOfWeek(date.getDayOfWeek()).startTime(DomainTime.ofMinuteOfDay(8 * 60)).endTime(DomainTime.ofMinuteOfDay(10 * 60)).slotDurationMinutes(30).active(true).build();
+        Appointment booked = Appointment.builder().id(DomainId.of("33333333-3333-3333-3333-333333333333")).doctorId(doctorId).patientId(DomainId.of("44444444-4444-4444-4444-444444444444")).specialtyId(DomainId.of("55555555-5555-5555-5555-555555555555")).appointmentDateTime(date.atTime(DomainTime.ofMinuteOfDay(8 * 60 + 30))).endDateTime(date.atTime(DomainTime.ofMinuteOfDay(9 * 60))).reason("Consultation").build();
+        when(doctors.findById(doctorId)).thenReturn(DomainOptional.of(doctor));
+        when(schedules.findByDoctorIdAndDayOfWeek(doctorId, date.getDayOfWeek())).thenReturn(DomainOptional.of(schedule));
+        DomainList<Appointment> existing = new DomainList<>(); existing.add(booked);
+        when(appointments.findActiveAppointmentsByDoctorAndDate(eq(doctorId), any(), any())).thenReturn(existing);
 
-        // Schedule: 08:00 to 10:00 (4 slots of 30 min: 08:00, 08:30, 09:00, 09:30)
-        DoctorSchedule schedule = DoctorSchedule.builder()
-                .id(UUID.randomUUID())
-                .doctorId(doctorId)
-                .dayOfWeek(1)
-                .startTime(LocalTime.of(8, 0))
-                .endTime(LocalTime.of(10, 0))
-                .slotDurationMinutes(30)
-                .active(true)
-                .build();
-
-        // 1 existing appointment at 08:30
-        Appointment bookedAppointment = Appointment.builder()
-                .id(UUID.randomUUID())
-                .doctorId(doctorId)
-                .patientId(UUID.randomUUID())
-                .specialtyId(UUID.randomUUID())
-                .appointmentDateTime(nextMonday.atTime(8, 30))
-                .endDateTime(nextMonday.atTime(9, 0))
-                .status(AppointmentStatus.SCHEDULED)
-                .reason("Consultation")
-                .build();
-
-        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
-        when(doctorScheduleRepository.findByDoctorIdAndDayOfWeek(doctorId, 1)).thenReturn(Optional.of(schedule));
-        when(appointmentRepository.findActiveAppointmentsByDoctorAndDate(eq(doctorId), any(LocalDateTime.class), any(LocalDateTime.class)))
-                .thenReturn(List.of(bookedAppointment));
-
-        List<TimeSlot> slots = getDoctorAvailabilityUseCase.execute(doctorId, nextMonday);
-
-        assertThat(slots).hasSize(4);
-        assertThat(slots.get(0).available()).isTrue(); // 08:00
-        assertThat(slots.get(1).available()).isFalse(); // 08:30 occupied!
-        assertThat(slots.get(2).available()).isTrue(); // 09:00
-        assertThat(slots.get(3).available()).isTrue(); // 09:30
+        DomainList<TimeSlot> slots = new GetDoctorAvailabilityUseCase(doctors, schedules, appointments).execute(doctorId, date);
+        assertThat(slots.size()).isEqualTo(4);
+        assertThat(slots.get(0).available()).isTrue();
+        assertThat(slots.get(1).available()).isFalse();
+        assertThat(slots.get(2).available()).isTrue();
     }
 }

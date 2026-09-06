@@ -1,29 +1,25 @@
 package com.appointymed.appointment.domain.usecase;
 
 import com.appointymed.appointment.domain.model.Appointment;
+import com.appointymed.appointment.domain.model.DomainDate;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
 import com.appointymed.appointment.domain.repository.AppointmentRepository;
-import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
+public final class GetDoctorAppointmentsUseCase {
+    private final AppointmentRepository repository;
 
-@Component
-public class GetDoctorAppointmentsUseCase {
-    private final AppointmentRepository appointmentRepository;
-
-    public GetDoctorAppointmentsUseCase(AppointmentRepository appointmentRepository) {
-        this.appointmentRepository = appointmentRepository;
+    public GetDoctorAppointmentsUseCase(AppointmentRepository r) {
+        repository = r;
     }
 
-    public List<Appointment> execute(UUID doctorId, LocalDate date) {
-        if (date != null) {
-            LocalDateTime start = date.atStartOfDay();
-            LocalDateTime end = date.atTime(LocalTime.MAX);
-            return appointmentRepository.findByDoctorIdAndDateRange(doctorId, start, end);
+    public DomainList<Appointment> execute(DomainId id, DomainDate date) {
+        if (date == null) {
+            return repository.findByDoctorId(id);
         }
-        return appointmentRepository.findByDoctorId(doctorId);
+        return repository.findByDoctorIdAndDateRange(
+                id,
+                date.atStartOfDay(),
+                date.atTime(com.appointymed.appointment.domain.model.DomainTime.MAX));
     }
 }

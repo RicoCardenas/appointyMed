@@ -2,19 +2,28 @@ package com.appointymed.appointment.domain.repository;
 
 import com.appointymed.appointment.domain.model.Appointment;
 import com.appointymed.appointment.domain.model.AppointmentStatus;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.appointymed.appointment.domain.model.DomainDateTime;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
+import com.appointymed.appointment.domain.model.DomainOptional;
 
 public interface AppointmentRepository {
     Appointment save(Appointment appointment);
-    Optional<Appointment> findById(UUID id);
-    List<Appointment> findByPatientId(UUID patientId);
-    List<Appointment> findByPatientIdAndStatus(UUID patientId, AppointmentStatus status);
-    List<Appointment> findByDoctorId(UUID doctorId);
-    List<Appointment> findByDoctorIdAndDateRange(UUID doctorId, LocalDateTime start, LocalDateTime end);
-    List<Appointment> findActiveAppointmentsByDoctorAndDate(UUID doctorId, LocalDateTime startOfDay, LocalDateTime endOfDay);
-    boolean hasActiveAppointmentConflict(UUID doctorId, LocalDateTime startDateTime, LocalDateTime endDateTime, UUID excludeAppointmentId);
+
+    DomainOptional<Appointment> findById(DomainId id);
+
+    DomainList<Appointment> findByPatientId(DomainId id);
+
+    DomainList<Appointment> findByPatientIdAndStatus(DomainId id, AppointmentStatus status);
+
+    DomainList<Appointment> findByDoctorId(DomainId id);
+
+    DomainList<Appointment> findByDoctorIdAndDateRange(
+            DomainId id, DomainDateTime start, DomainDateTime end);
+
+    DomainList<Appointment> findActiveAppointmentsByDoctorAndDate(
+            DomainId id, DomainDateTime start, DomainDateTime end);
+
+    boolean hasActiveAppointmentConflict(
+            DomainId doctorId, DomainDateTime start, DomainDateTime end, DomainId excludeId);
 }

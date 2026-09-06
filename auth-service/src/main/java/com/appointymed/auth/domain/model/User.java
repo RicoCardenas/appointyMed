@@ -1,35 +1,30 @@
 package com.appointymed.auth.domain.model;
 
-import java.time.Instant;
-import java.util.Set;
-import java.util.UUID;
-
-public class User {
-    private final UUID id;
+public final class User {
+    private final DomainId id;
     private final Email email;
     private final Password password;
     private final String fullName;
     private final PhoneNumber phone;
     private final UserStatus status;
     private final boolean emailVerified;
-    private final Set<Role> roles;
-    private final Instant createdAt;
-    private final Instant updatedAt;
+    private final DomainSet<Role> roles;
+    private final DomainInstant createdAt, updatedAt;
 
-    private User(Builder builder) {
-        this.id = builder.id;
-        this.email = builder.email;
-        this.password = builder.password;
-        this.fullName = builder.fullName;
-        this.phone = builder.phone;
-        this.status = builder.status;
-        this.emailVerified = builder.emailVerified;
-        this.roles = builder.roles;
-        this.createdAt = builder.createdAt;
-        this.updatedAt = builder.updatedAt;
+    private User(Builder b) {
+        id = b.id;
+        email = b.email;
+        password = b.password;
+        fullName = b.fullName;
+        phone = b.phone;
+        status = b.status;
+        emailVerified = b.emailVerified;
+        roles = b.roles;
+        createdAt = b.createdAt;
+        updatedAt = b.updatedAt;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
@@ -57,15 +52,15 @@ public class User {
         return emailVerified;
     }
 
-    public Set<Role> getRoles() {
+    public DomainSet<Role> getRoles() {
         return roles;
     }
 
-    public Instant getCreatedAt() {
+    public DomainInstant getCreatedAt() {
         return createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public DomainInstant getUpdatedAt() {
         return updatedAt;
     }
 
@@ -74,76 +69,85 @@ public class User {
     }
 
     public boolean hasPermission(Permission permission) {
-        return roles.stream().anyMatch(role -> role.hasPermission(permission));
+        return roles.any(
+                new DomainSet.DomainPredicate<Role>() {
+                    public boolean test(Role role) {
+                        return role.hasPermission(permission);
+                    }
+                });
     }
 
     public static Builder builder() {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id;
+    public static final class Builder {
+        private DomainId id;
         private Email email;
         private Password password;
         private String fullName;
         private PhoneNumber phone;
         private UserStatus status = UserStatus.ACTIVE;
-        private boolean emailVerified = false;
-        private Set<Role> roles = Set.of();
-        private Instant createdAt = Instant.now();
-        private Instant updatedAt = Instant.now();
+        private boolean emailVerified;
+        private DomainSet<Role> roles = DomainSet.empty();
+        private DomainInstant createdAt, updatedAt;
 
-        public Builder id(UUID id) {
-            this.id = id;
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder email(Email email) {
-            this.email = email;
+        public Builder email(Email v) {
+            email = v;
             return this;
         }
 
-        public Builder password(Password password) {
-            this.password = password;
+        public Builder password(Password v) {
+            password = v;
             return this;
         }
 
-        public Builder fullName(String fullName) {
-            this.fullName = fullName;
+        public Builder fullName(String v) {
+            fullName = v;
             return this;
         }
 
-        public Builder phone(PhoneNumber phone) {
-            this.phone = phone;
+        public Builder phone(PhoneNumber v) {
+            phone = v;
             return this;
         }
 
-        public Builder status(UserStatus status) {
-            this.status = status;
+        public Builder status(UserStatus v) {
+            status = v;
             return this;
         }
 
-        public Builder emailVerified(boolean emailVerified) {
-            this.emailVerified = emailVerified;
+        public Builder emailVerified(boolean v) {
+            emailVerified = v;
             return this;
         }
 
-        public Builder roles(Set<Role> roles) {
-            this.roles = roles;
+        public Builder roles(DomainSet<Role> v) {
+            roles = v == null ? DomainSet.empty() : v;
             return this;
         }
 
-        public Builder createdAt(Instant createdAt) {
-            this.createdAt = createdAt;
+        public Builder createdAt(DomainInstant v) {
+            createdAt = v;
             return this;
         }
 
-        public Builder updatedAt(Instant updatedAt) {
-            this.updatedAt = updatedAt;
+        public Builder updatedAt(DomainInstant v) {
+            updatedAt = v;
             return this;
         }
 
         public User build() {
+            if (email == null || password == null || fullName == null || fullName.trim().isEmpty())
+                throw new IllegalArgumentException("User identity and credentials are required");
+            if (roles.size() == 0) {
+                throw new IllegalArgumentException("User must have at least one role");
+            }
             return new User(this);
         }
     }

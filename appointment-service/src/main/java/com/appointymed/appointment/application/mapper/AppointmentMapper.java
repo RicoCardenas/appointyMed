@@ -11,21 +11,21 @@ public class AppointmentMapper {
             return null;
         }
         return new AppointmentResponse(
-                domain.getId(),
-                domain.getDoctorId(),
+                DomainValueMapper.toUuid(domain.getId()),
+                DomainValueMapper.toUuid(domain.getDoctorId()),
                 doctorName,
-                domain.getPatientId(),
+                DomainValueMapper.toUuid(domain.getPatientId()),
                 patientName,
                 patientPhone,
-                domain.getSpecialtyId(),
+                DomainValueMapper.toUuid(domain.getSpecialtyId()),
                 specialtyName,
-                domain.getAppointmentDateTime(),
-                domain.getEndDateTime(),
+                DomainValueMapper.toLocalDateTime(domain.getAppointmentDateTime()),
+                DomainValueMapper.toLocalDateTime(domain.getEndDateTime()),
                 domain.getStatus(),
                 domain.getReason(),
                 domain.getCancellationReason(),
                 domain.getNotes(),
-                domain.getCreatedAt()
+                DomainValueMapper.toInstant(domain.getCreatedAt())
         );
     }
 }

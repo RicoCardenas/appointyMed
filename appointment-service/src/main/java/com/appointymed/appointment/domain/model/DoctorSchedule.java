@@ -1,38 +1,41 @@
 package com.appointymed.appointment.domain.model;
 
-import java.time.LocalTime;
-import java.util.UUID;
-
-public class DoctorSchedule {
-    private final UUID id;
-    private final UUID doctorId;
-    private final int dayOfWeek; // 1: Monday, 7: Sunday
-    private final LocalTime startTime;
-    private final LocalTime endTime;
+public final class DoctorSchedule {
+    private final DomainId id, doctorId;
+    private final int dayOfWeek;
+    private final DomainTime startTime, endTime;
     private final int slotDurationMinutes;
     private final boolean active;
 
-    public DoctorSchedule(UUID id, UUID doctorId, int dayOfWeek, LocalTime startTime, LocalTime endTime, int slotDurationMinutes, boolean active) {
-        if (dayOfWeek < 1 || dayOfWeek > 7) {
+    public DoctorSchedule(
+            DomainId id,
+            DomainId doctorId,
+            int dayOfWeek,
+            DomainTime startTime,
+            DomainTime endTime,
+            int duration,
+            boolean active) {
+        if (dayOfWeek < 1 || dayOfWeek > 7)
             throw new IllegalArgumentException("Day of week must be between 1 (Monday) and 7 (Sunday)");
-        }
-        if (endTime.isBefore(startTime) || endTime.equals(startTime)) {
+        if (startTime == null || endTime == null || !endTime.isAfter(startTime))
             throw new IllegalArgumentException("End time must be strictly after start time");
+        if (duration <= 0) {
+            throw new IllegalArgumentException("Slot duration must be positive");
         }
-        this.id = id != null ? id : UUID.randomUUID();
+        this.id = id;
         this.doctorId = doctorId;
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.slotDurationMinutes = slotDurationMinutes > 0 ? slotDurationMinutes : 30;
+        slotDurationMinutes = duration;
         this.active = active;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
-    public UUID getDoctorId() {
+    public DomainId getDoctorId() {
         return doctorId;
     }
 
@@ -40,11 +43,11 @@ public class DoctorSchedule {
         return dayOfWeek;
     }
 
-    public LocalTime getStartTime() {
+    public DomainTime getStartTime() {
         return startTime;
     }
 
-    public LocalTime getEndTime() {
+    public DomainTime getEndTime() {
         return endTime;
     }
 
@@ -60,52 +63,50 @@ public class DoctorSchedule {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id;
-        private UUID doctorId;
-        private int dayOfWeek;
-        private LocalTime startTime;
-        private LocalTime endTime;
-        private int slotDurationMinutes = 30;
+    public static final class Builder {
+        private DomainId id, doctorId;
+        private int day;
+        private DomainTime start, end;
+        private int duration = 30;
         private boolean active = true;
 
-        public Builder id(UUID id) {
-            this.id = id;
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder doctorId(UUID doctorId) {
-            this.doctorId = doctorId;
+        public Builder doctorId(DomainId v) {
+            doctorId = v;
             return this;
         }
 
-        public Builder dayOfWeek(int dayOfWeek) {
-            this.dayOfWeek = dayOfWeek;
+        public Builder dayOfWeek(int v) {
+            day = v;
             return this;
         }
 
-        public Builder startTime(LocalTime startTime) {
-            this.startTime = startTime;
+        public Builder startTime(DomainTime v) {
+            start = v;
             return this;
         }
 
-        public Builder endTime(LocalTime endTime) {
-            this.endTime = endTime;
+        public Builder endTime(DomainTime v) {
+            end = v;
             return this;
         }
 
-        public Builder slotDurationMinutes(int slotDurationMinutes) {
-            this.slotDurationMinutes = slotDurationMinutes;
+        public Builder slotDurationMinutes(int v) {
+            duration = v;
             return this;
         }
 
-        public Builder active(boolean active) {
-            this.active = active;
+        public Builder active(boolean v) {
+            active = v;
             return this;
         }
 
         public DoctorSchedule build() {
-            return new DoctorSchedule(id, doctorId, dayOfWeek, startTime, endTime, slotDurationMinutes, active);
+            return new DoctorSchedule(id, doctorId, day, start, end, duration, active);
         }
     }
 }
