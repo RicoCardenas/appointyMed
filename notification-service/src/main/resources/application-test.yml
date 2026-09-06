@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: notification-service-test
+
+app:
+  aws:
+    sqs:
+      notification-queue-url:
+
+server:
+  port: 0

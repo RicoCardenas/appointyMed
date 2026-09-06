@@ -6,22 +6,25 @@ import com.appointymed.auth.domain.model.PhoneNumber;
 import com.appointymed.auth.domain.model.Role;
 import com.appointymed.auth.domain.model.User;
 import com.appointymed.auth.domain.model.UserStatus;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainInstant;
 import com.appointymed.auth.infrastructure.persistence.entity.RoleJpaEntity;
 import com.appointymed.auth.infrastructure.persistence.entity.UserJpaEntity;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.UUID;
+import java.time.Instant;
 
 public class UserPersistenceMapper {
     public static User toDomain(UserJpaEntity entity) {
         if (entity == null) return null;
 
-        Set<Role> roles = entity.getRoles().stream()
-                .map(roleEntity -> Role.fromName(roleEntity.getName()))
-                .collect(Collectors.toSet());
+        com.appointymed.auth.domain.model.DomainSet<Role> roles = com.appointymed.auth.domain.model.DomainSet.empty();
+        for (RoleJpaEntity roleEntity : entity.getRoles()) roles = roles.add(Role.fromName(roleEntity.getName()));
 
         return User.builder()
-                .id(entity.getId())
+                .id(toDomainId(entity.getId()))
                 .email(Email.of(entity.getEmail()))
                 .password(Password.ofHashed(entity.getPasswordHash()))
                 .fullName(entity.getFullName())
@@ -29,8 +32,8 @@ public class UserPersistenceMapper {
                 .status(mapStatus(entity.getStatus()))
                 .emailVerified(entity.isEmailVerified())
                 .roles(roles)
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
+                .createdAt(toDomainInstant(entity.getCreatedAt()))
+                .updatedAt(toDomainInstant(entity.getUpdatedAt()))
                 .build();
     }
 
@@ -38,15 +41,15 @@ public class UserPersistenceMapper {
         if (domain == null) return null;
 
         UserJpaEntity entity = new UserJpaEntity();
-        entity.setId(domain.getId());
+        entity.setId(toUuid(domain.getId()));
         entity.setEmail(domain.getEmail().getValue());
         entity.setPasswordHash(domain.getPassword().getHashedValue());
         entity.setFullName(domain.getFullName());
         entity.setPhone(domain.getPhone() != null ? domain.getPhone().getValue() : null);
         entity.setStatus(mapStatus(domain.getStatus()));
         entity.setEmailVerified(domain.isEmailVerified());
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
+        entity.setCreatedAt(toInstant(domain.getCreatedAt()));
+        entity.setUpdatedAt(toInstant(domain.getUpdatedAt()));
         return entity;
     }
 
@@ -57,7 +60,7 @@ public class UserPersistenceMapper {
         entity.setPhone(domain.getPhone() != null ? domain.getPhone().getValue() : null);
         entity.setStatus(mapStatus(domain.getStatus()));
         entity.setEmailVerified(domain.isEmailVerified());
-        entity.setUpdatedAt(domain.getUpdatedAt());
+        entity.setUpdatedAt(toInstant(domain.getUpdatedAt()));
     }
 
     private static UserJpaEntity.UserStatus mapStatus(UserStatus status) {
@@ -67,4 +70,9 @@ public class UserPersistenceMapper {
     private static UserStatus mapStatus(UserJpaEntity.UserStatus status) {
         return UserStatus.valueOf(status.name());
     }
+
+    private static DomainId toDomainId(UUID value) { return value == null ? null : DomainId.of(value.toString()); }
+    private static UUID toUuid(DomainId value) { return value == null ? null : UUID.fromString(value.value()); }
+    private static DomainInstant toDomainInstant(Instant value) { return value == null ? null : DomainInstant.ofEpochMillis(value.toEpochMilli()); }
+    private static Instant toInstant(DomainInstant value) { return value == null ? null : Instant.ofEpochMilli(value.toEpochMillis()); }
 }

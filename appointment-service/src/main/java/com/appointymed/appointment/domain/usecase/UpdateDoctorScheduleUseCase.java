@@ -3,53 +3,44 @@ package com.appointymed.appointment.domain.usecase;
 import com.appointymed.appointment.domain.exception.ResourceNotFoundException;
 import com.appointymed.appointment.domain.model.Doctor;
 import com.appointymed.appointment.domain.model.DoctorSchedule;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
 import com.appointymed.appointment.domain.repository.DoctorRepository;
 import com.appointymed.appointment.domain.repository.DoctorScheduleRepository;
-import org.springframework.stereotype.Component;
 
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+public final class UpdateDoctorScheduleUseCase {
+    private final DoctorRepository doctors;
+    private final DoctorScheduleRepository schedules;
 
-@Component
-public class UpdateDoctorScheduleUseCase {
-    private final DoctorRepository doctorRepository;
-    private final DoctorScheduleRepository doctorScheduleRepository;
-
-    public UpdateDoctorScheduleUseCase(DoctorRepository doctorRepository, DoctorScheduleRepository doctorScheduleRepository) {
-        this.doctorRepository = doctorRepository;
-        this.doctorScheduleRepository = doctorScheduleRepository;
+    public UpdateDoctorScheduleUseCase(DoctorRepository d, DoctorScheduleRepository s) {
+        doctors = d;
+        schedules = s;
     }
 
-    public List<DoctorSchedule> execute(UUID doctorId, List<DayScheduleItem> scheduleItems) {
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new ResourceNotFoundException("Doctor", doctorId));
-
-        doctorScheduleRepository.deleteByDoctorId(doctor.getId());
-
-        List<DoctorSchedule> schedules = new ArrayList<>();
-        for (DayScheduleItem item : scheduleItems) {
-            DoctorSchedule schedule = DoctorSchedule.builder()
-                    .id(UUID.randomUUID())
-                    .doctorId(doctor.getId())
-                    .dayOfWeek(item.dayOfWeek())
-                    .startTime(item.startTime())
-                    .endTime(item.endTime())
-                    .slotDurationMinutes(item.slotDurationMinutes() > 0 ? item.slotDurationMinutes() : 30)
-                    .active(item.active())
-                    .build();
-            schedules.add(schedule);
+    public DomainList<DoctorSchedule> execute(DomainId id, DomainList<DayScheduleItem> items) {
+        Doctor doctor =
+                doctors.findById(id).orElseThrow(() -> new ResourceNotFoundException("Doctor", id));
+        schedules.deleteByDoctorId(doctor.getId());
+        DomainList<DoctorSchedule> result = new DomainList<>();
+        for (int i = 0; i < items.size(); i++) {
+            DayScheduleItem item = items.get(i);
+            result.add(
+                    DoctorSchedule.builder()
+                            .doctorId(doctor.getId())
+                            .dayOfWeek(item.dayOfWeek())
+                            .startTime(item.startTime())
+                            .endTime(item.endTime())
+                            .slotDurationMinutes(item.slotDurationMinutes())
+                            .active(item.active())
+                            .build());
         }
-
-        return doctorScheduleRepository.saveAll(schedules);
+        return schedules.saveAll(result);
     }
 
     public record DayScheduleItem(
             int dayOfWeek,
-            LocalTime startTime,
-            LocalTime endTime,
+            com.appointymed.appointment.domain.model.DomainTime startTime,
+            com.appointymed.appointment.domain.model.DomainTime endTime,
             int slotDurationMinutes,
-            boolean active
-    ) {}
+            boolean active) {}
 }

@@ -1,34 +1,39 @@
 package com.appointymed.appointment.domain.model;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.util.UUID;
-
-public class Patient {
-    private final UUID id;
-    private final UUID userId;
+public final class Patient {
+    private final DomainId id, userId;
     private final DocumentType documentType;
-    private final String documentNumber;
-    private final String firstName;
-    private final String lastName;
-    private final String email;
-    private final String phone;
-    private final LocalDate birthDate;
-    private final String bloodType;
-    private final String address;
-    private final String emergencyContactName;
-    private final String emergencyContactPhone;
-    private final Instant createdAt;
-    private final Instant updatedAt;
+    private final String documentNumber,
+            firstName,
+            lastName,
+            email,
+            phone,
+            bloodType,
+            address,
+            emergencyContactName,
+            emergencyContactPhone;
+    private final DomainDate birthDate;
+    private final DomainInstant createdAt, updatedAt;
 
-    public Patient(UUID id, UUID userId, DocumentType documentType, String documentNumber,
-                   String firstName, String lastName, String email, String phone,
-                   LocalDate birthDate, String bloodType, String address,
-                   String emergencyContactName, String emergencyContactPhone,
-                   Instant createdAt, Instant updatedAt) {
-        this.id = id != null ? id : UUID.randomUUID();
+    public Patient(
+            DomainId id,
+            DomainId userId,
+            DocumentType type,
+            String documentNumber,
+            String firstName,
+            String lastName,
+            String email,
+            String phone,
+            DomainDate birthDate,
+            String bloodType,
+            String address,
+            String emergencyName,
+            String emergencyPhone,
+            DomainInstant createdAt,
+            DomainInstant updatedAt) {
+        this.id = id;
         this.userId = userId;
-        this.documentType = documentType != null ? documentType : DocumentType.CC;
+        documentType = type == null ? DocumentType.CC : type;
         this.documentNumber = documentNumber;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -37,17 +42,17 @@ public class Patient {
         this.birthDate = birthDate;
         this.bloodType = bloodType;
         this.address = address;
-        this.emergencyContactName = emergencyContactName;
-        this.emergencyContactPhone = emergencyContactPhone;
-        this.createdAt = createdAt != null ? createdAt : Instant.now();
-        this.updatedAt = updatedAt != null ? updatedAt : Instant.now();
+        emergencyContactName = emergencyName;
+        emergencyContactPhone = emergencyPhone;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
-    public UUID getUserId() {
+    public DomainId getUserId() {
         return userId;
     }
 
@@ -79,7 +84,7 @@ public class Patient {
         return phone;
     }
 
-    public LocalDate getBirthDate() {
+    public DomainDate getBirthDate() {
         return birthDate;
     }
 
@@ -99,11 +104,11 @@ public class Patient {
         return emergencyContactPhone;
     }
 
-    public Instant getCreatedAt() {
+    public DomainInstant getCreatedAt() {
         return createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public DomainInstant getUpdatedAt() {
         return updatedAt;
     }
 
@@ -111,100 +116,113 @@ public class Patient {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id;
-        private UUID userId;
-        private DocumentType documentType = DocumentType.CC;
-        private String documentNumber;
-        private String firstName;
-        private String lastName;
-        private String email;
-        private String phone;
-        private LocalDate birthDate;
-        private String bloodType;
-        private String address;
-        private String emergencyContactName;
-        private String emergencyContactPhone;
-        private Instant createdAt;
-        private Instant updatedAt;
+    public static final class Builder {
+        private DomainId id, userId;
+        private DocumentType type = DocumentType.CC;
+        private String documentNumber,
+                first,
+                last,
+                email,
+                phone,
+                blood,
+                address,
+                emergencyName,
+                emergencyPhone;
+        private DomainDate birth;
+        private DomainInstant createdAt, updatedAt;
 
-        public Builder id(UUID id) {
-            this.id = id;
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder userId(UUID userId) {
-            this.userId = userId;
+        public Builder userId(DomainId v) {
+            userId = v;
             return this;
         }
 
-        public Builder documentType(DocumentType documentType) {
-            this.documentType = documentType;
+        public Builder documentType(DocumentType v) {
+            type = v;
             return this;
         }
 
-        public Builder documentNumber(String documentNumber) {
-            this.documentNumber = documentNumber;
+        public Builder documentNumber(String v) {
+            documentNumber = v;
             return this;
         }
 
-        public Builder firstName(String firstName) {
-            this.firstName = firstName;
+        public Builder firstName(String v) {
+            first = v;
             return this;
         }
 
-        public Builder lastName(String lastName) {
-            this.lastName = lastName;
+        public Builder lastName(String v) {
+            last = v;
             return this;
         }
 
-        public Builder email(String email) {
-            this.email = email;
+        public Builder email(String v) {
+            email = v;
             return this;
         }
 
-        public Builder phone(String phone) {
-            this.phone = phone;
+        public Builder phone(String v) {
+            phone = v;
             return this;
         }
 
-        public Builder birthDate(LocalDate birthDate) {
-            this.birthDate = birthDate;
+        public Builder birthDate(DomainDate v) {
+            birth = v;
             return this;
         }
 
-        public Builder bloodType(String bloodType) {
-            this.bloodType = bloodType;
+        public Builder bloodType(String v) {
+            blood = v;
             return this;
         }
 
-        public Builder address(String address) {
-            this.address = address;
+        public Builder address(String v) {
+            address = v;
             return this;
         }
 
-        public Builder emergencyContactName(String emergencyContactName) {
-            this.emergencyContactName = emergencyContactName;
+        public Builder emergencyContactName(String v) {
+            emergencyName = v;
             return this;
         }
 
-        public Builder emergencyContactPhone(String emergencyContactPhone) {
-            this.emergencyContactPhone = emergencyContactPhone;
+        public Builder emergencyContactPhone(String v) {
+            emergencyPhone = v;
             return this;
         }
 
-        public Builder createdAt(Instant createdAt) {
-            this.createdAt = createdAt;
+        public Builder createdAt(DomainInstant v) {
+            createdAt = v;
             return this;
         }
 
-        public Builder updatedAt(Instant updatedAt) {
-            this.updatedAt = updatedAt;
+        public Builder updatedAt(DomainInstant v) {
+            updatedAt = v;
             return this;
         }
 
         public Patient build() {
-            return new Patient(id, userId, documentType, documentNumber, firstName, lastName, email, phone, birthDate, bloodType, address, emergencyContactName, emergencyContactPhone, createdAt, updatedAt);
+            return new Patient(
+                    id,
+                    userId,
+                    type,
+                    documentNumber,
+                    first,
+                    last,
+                    email,
+                    phone,
+                    birth,
+                    blood,
+                    address,
+                    emergencyName,
+                    emergencyPhone,
+                    createdAt,
+                    updatedAt);
         }
     }
 }

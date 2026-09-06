@@ -276,6 +276,7 @@
     <modules>
         <module>auth-service</module>
         <module>appointment-service</module>
+        <module>notification-service</module>
     </modules>
 
     <profiles>

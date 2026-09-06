@@ -1,29 +1,28 @@
 package com.appointymed.auth.domain.repository;
 
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainList;
+import com.appointymed.auth.domain.model.DomainOptional;
 import com.appointymed.auth.domain.model.Email;
 import com.appointymed.auth.domain.model.User;
 import com.appointymed.auth.domain.model.UserStatus;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 public interface UserRepository {
-    Optional<User> findById(UUID id);
+    DomainOptional<User> findById(DomainId id);
 
-    Optional<User> findByEmail(Email email);
+    DomainOptional<User> findByEmail(Email email);
 
     boolean existsByEmail(Email email);
 
     User save(User user);
 
-    List<User> findAll(int page, int size);
+    DomainList<User> findAll(int page, int size);
 
-    List<User> findByStatus(UserStatus status, int page, int size);
+    DomainList<User> findByStatus(UserStatus status, int page, int size);
 
     long count();
 
     long countByStatus(UserStatus status);
 
-    void deleteById(UUID id);
+    void deleteById(DomainId id);
 }

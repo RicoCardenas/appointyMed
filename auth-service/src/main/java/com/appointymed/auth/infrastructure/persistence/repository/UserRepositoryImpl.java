@@ -1,6 +1,9 @@
 package com.appointymed.auth.infrastructure.persistence.repository;
 
 import com.appointymed.auth.domain.model.Email;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainList;
+import com.appointymed.auth.domain.model.DomainOptional;
 import com.appointymed.auth.domain.model.Role;
 import com.appointymed.auth.domain.model.User;
 import com.appointymed.auth.domain.model.UserStatus;
@@ -29,15 +32,15 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(UUID id) {
-        return springDataUserRepository.findById(id)
-                .map(UserPersistenceMapper::toDomain);
+    public DomainOptional<User> findById(DomainId id) {
+        Optional<UserJpaEntity> entity = springDataUserRepository.findById(UUID.fromString(id.value()));
+        return entity.isPresent() ? DomainOptional.of(UserPersistenceMapper.toDomain(entity.get())) : DomainOptional.empty();
     }
 
     @Override
-    public Optional<User> findByEmail(Email email) {
-        return springDataUserRepository.findByEmail(email.getValue())
-                .map(UserPersistenceMapper::toDomain);
+    public DomainOptional<User> findByEmail(Email email) {
+        Optional<UserJpaEntity> entity = springDataUserRepository.findByEmail(email.getValue());
+        return entity.isPresent() ? DomainOptional.of(UserPersistenceMapper.toDomain(entity.get())) : DomainOptional.empty();
     }
 
     @Override
@@ -53,8 +56,9 @@ public class UserRepositoryImpl implements UserRepository {
         return UserPersistenceMapper.toDomain(saved);
     }
 
-    private Set<RoleJpaEntity> resolveRoles(Set<Role> roles) {
-        Set<String> roleNames = roles.stream().map(Enum::name).collect(Collectors.toSet());
+    private Set<RoleJpaEntity> resolveRoles(com.appointymed.auth.domain.model.DomainSet<Role> roles) {
+        Set<String> roleNames = new java.util.HashSet<>();
+        for (int index = 0; index < roles.size(); index++) roleNames.add(roles.get(index).name());
         Set<RoleJpaEntity> entities = springDataRoleRepository.findByNameIn(roleNames.stream().toList()).stream().collect(Collectors.toSet());
         if (entities.size() != roleNames.size()) {
             throw new IllegalStateException("One or more requested roles do not exist in the database");
@@ -63,21 +67,17 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public List<User> findAll(int page, int size) {
-        return springDataUserRepository.findAll(PageRequest.of(page, size))
-                .stream()
-                .map(UserPersistenceMapper::toDomain)
-                .toList();
+    public DomainList<User> findAll(int page, int size) {
+        DomainList<User> result = new DomainList<>();
+        for (UserJpaEntity entity : springDataUserRepository.findAll(PageRequest.of(page, size))) result.add(UserPersistenceMapper.toDomain(entity));
+        return result;
     }
 
     @Override
-    public List<User> findByStatus(UserStatus status, int page, int size) {
-        return springDataUserRepository.findByStatus(
-                        UserJpaEntity.UserStatus.valueOf(status.name()),
-                        PageRequest.of(page, size))
-                .stream()
-                .map(UserPersistenceMapper::toDomain)
-                .toList();
+    public DomainList<User> findByStatus(UserStatus status, int page, int size) {
+        DomainList<User> result = new DomainList<>();
+        for (UserJpaEntity entity : springDataUserRepository.findByStatus(UserJpaEntity.UserStatus.valueOf(status.name()), PageRequest.of(page, size))) result.add(UserPersistenceMapper.toDomain(entity));
+        return result;
     }
 
     @Override
@@ -92,7 +92,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public void deleteById(UUID id) {
-        springDataUserRepository.deleteById(id);
+    public void deleteById(DomainId id) {
+        springDataUserRepository.deleteById(UUID.fromString(id.value()));
     }
 }

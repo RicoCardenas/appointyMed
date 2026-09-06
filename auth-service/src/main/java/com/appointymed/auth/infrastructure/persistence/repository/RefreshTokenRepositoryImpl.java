@@ -1,6 +1,10 @@
 package com.appointymed.auth.infrastructure.persistence.repository;
 
 import com.appointymed.auth.domain.model.RefreshToken;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainInstant;
+import com.appointymed.auth.domain.model.DomainList;
+import com.appointymed.auth.domain.model.DomainOptional;
 import com.appointymed.auth.domain.repository.RefreshTokenRepository;
 import com.appointymed.auth.infrastructure.persistence.entity.RefreshTokenJpaEntity;
 import com.appointymed.auth.infrastructure.persistence.mapper.RefreshTokenPersistenceMapper;
@@ -20,16 +24,16 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
     }
 
     @Override
-    public Optional<RefreshToken> findByToken(String token) {
-        return springDataRefreshTokenRepository.findByToken(token)
-                .map(RefreshTokenPersistenceMapper::toDomain);
+    public DomainOptional<RefreshToken> findByToken(String token) {
+        Optional<RefreshTokenJpaEntity> entity = springDataRefreshTokenRepository.findByToken(token);
+        return entity.isPresent() ? DomainOptional.of(RefreshTokenPersistenceMapper.toDomain(entity.get())) : DomainOptional.empty();
     }
 
     @Override
-    public List<RefreshToken> findByUserId(UUID userId) {
-        return springDataRefreshTokenRepository.findByUserId(userId).stream()
-                .map(RefreshTokenPersistenceMapper::toDomain)
-                .toList();
+    public DomainList<RefreshToken> findByUserId(DomainId userId) {
+        DomainList<RefreshToken> result = new DomainList<>();
+        for (RefreshTokenJpaEntity entity : springDataRefreshTokenRepository.findByUserId(UUID.fromString(userId.value()))) result.add(RefreshTokenPersistenceMapper.toDomain(entity));
+        return result;
     }
 
     @Override
@@ -40,22 +44,22 @@ public class RefreshTokenRepositoryImpl implements RefreshTokenRepository {
     }
 
     @Override
-    public void deleteById(UUID id) {
-        springDataRefreshTokenRepository.deleteById(id);
+    public void deleteById(DomainId id) {
+        springDataRefreshTokenRepository.deleteById(UUID.fromString(id.value()));
     }
 
     @Override
-    public void deleteByUserId(UUID userId) {
-        springDataRefreshTokenRepository.deleteByUserId(userId);
+    public void deleteByUserId(DomainId userId) {
+        springDataRefreshTokenRepository.deleteByUserId(UUID.fromString(userId.value()));
     }
 
     @Override
-    public void deleteExpiredTokens() {
-        springDataRefreshTokenRepository.deleteExpiredTokens(Instant.now());
+    public void deleteExpiredTokens(DomainInstant now) {
+        springDataRefreshTokenRepository.deleteExpiredTokens(Instant.ofEpochMilli(now.toEpochMillis()));
     }
 
     @Override
-    public long countByUserId(UUID userId) {
-        return springDataRefreshTokenRepository.countByUserId(userId);
+    public long countByUserId(DomainId userId) {
+        return springDataRefreshTokenRepository.countByUserId(UUID.fromString(userId.value()));
     }
 }

@@ -1,6 +1,8 @@
 package com.appointymed.auth.infrastructure.persistence.repository;
 
 import com.appointymed.auth.domain.model.Role;
+import com.appointymed.auth.domain.model.DomainList;
+import com.appointymed.auth.domain.model.DomainOptional;
 import com.appointymed.auth.domain.repository.RoleRepository;
 import com.appointymed.auth.infrastructure.persistence.entity.RoleJpaEntity;
 import org.springframework.stereotype.Repository;
@@ -17,22 +19,24 @@ public class RoleRepositoryImpl implements RoleRepository {
     }
 
     @Override
-    public Optional<Role> findByName(String name) {
-        return springDataRoleRepository.findByName(name)
-                .map(roleEntity -> Role.fromName(roleEntity.getName()));
+    public DomainOptional<Role> findByName(String name) {
+        Optional<RoleJpaEntity> entity = springDataRoleRepository.findByName(name);
+        return entity.isPresent() ? DomainOptional.of(Role.fromName(entity.get().getName())) : DomainOptional.empty();
     }
 
     @Override
-    public List<Role> findAll() {
-        return springDataRoleRepository.findAll().stream()
-                .map(roleEntity -> Role.fromName(roleEntity.getName()))
-                .toList();
+    public DomainList<Role> findAll() {
+        DomainList<Role> result = new DomainList<>();
+        for (RoleJpaEntity entity : springDataRoleRepository.findAll()) result.add(Role.fromName(entity.getName()));
+        return result;
     }
 
     @Override
-    public List<Role> findByNames(List<String> names) {
-        return springDataRoleRepository.findByNameIn(names).stream()
-                .map(roleEntity -> Role.fromName(roleEntity.getName()))
-                .toList();
+    public DomainList<Role> findByNames(DomainList<String> names) {
+        List<String> values = new java.util.ArrayList<>();
+        for (int index = 0; index < names.size(); index++) values.add(names.get(index));
+        DomainList<Role> result = new DomainList<>();
+        for (RoleJpaEntity entity : springDataRoleRepository.findByNameIn(values)) result.add(Role.fromName(entity.getName()));
+        return result;
     }
 }

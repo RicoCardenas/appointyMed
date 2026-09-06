@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: notification-service
+
+server:
+  port: ${PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  health:
+    probes:
+      enabled: true
+
+app:
+  aws:
+    region: ${AWS_REGION:us-east-1}
+    endpoint-url: ${AWS_ENDPOINT_URL:http://localhost:4566}
+    sqs:
+      notification-queue-url: ${SQS_NOTIFICATION_QUEUE_URL:http://localhost:4566/000000000000/notification-queue}
+      poll-delay-ms: ${SQS_POLL_DELAY_MS:1000}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID:test}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:test}
+
+logging:
+  level:
+    com.appointymed.notification: INFO

@@ -1,10 +1,6 @@
 package com.appointymed.auth.domain.model;
 
-import java.util.Objects;
-import java.util.regex.Pattern;
-
 public final class PhoneNumber {
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^\\+?[1-9]\\d{1,14}$");
     private final String value;
 
     private PhoneNumber(String value) {
@@ -12,15 +8,15 @@ public final class PhoneNumber {
     }
 
     public static PhoneNumber of(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
-        String cleaned = value.replaceAll("[\\s\\-()]", "").trim();
-        if (!PHONE_PATTERN.matcher(cleaned).matches()) {
+        if (value == null || value.trim().isEmpty()) return null;
+        String cleaned =
+                value.trim().replace(" ", "").replace("-", "").replace("(", "").replace(")", "");
+        int start = cleaned.charAt(0) == '+' ? 1 : 0;
+        if (start == cleaned.length() || cleaned.length() > 20)
             throw new IllegalArgumentException("Invalid phone number format: " + value);
-        }
-        if (cleaned.length() > 20) {
-            throw new IllegalArgumentException("Phone number cannot exceed 20 characters");
+        for (int index = start; index < cleaned.length(); index++) {
+            if (cleaned.charAt(index) < '0' || cleaned.charAt(index) > '9')
+                throw new IllegalArgumentException("Invalid phone number format: " + value);
         }
         return new PhoneNumber(cleaned);
     }
@@ -30,16 +26,13 @@ public final class PhoneNumber {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PhoneNumber that = (PhoneNumber) o;
-        return Objects.equals(value, that.value);
+    public boolean equals(Object other) {
+        return other instanceof PhoneNumber && value.equals(((PhoneNumber) other).value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return value.hashCode();
     }
 
     @Override

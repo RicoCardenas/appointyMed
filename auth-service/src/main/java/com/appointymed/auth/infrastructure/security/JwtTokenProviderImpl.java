@@ -1,6 +1,9 @@
 package com.appointymed.auth.infrastructure.security;
 
 import com.appointymed.auth.domain.model.User;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainInstant;
+import com.appointymed.auth.domain.model.DomainList;
 import com.appointymed.auth.domain.usecase.ForgotPasswordUseCase;
 import com.appointymed.auth.domain.usecase.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
@@ -40,10 +43,11 @@ public class JwtTokenProviderImpl implements JwtTokenProvider, ForgotPasswordUse
         Instant now = Instant.now();
         Instant expiry = now.plusMillis(accessTokenExpiryMs);
 
-        List<String> roles = user.getRoles().stream().map(Enum::name).collect(Collectors.toList());
+        List<String> roles = new java.util.ArrayList<>();
+        for (int index = 0; index < user.getRoles().size(); index++) roles.add(user.getRoles().get(index).name());
 
         return Jwts.builder()
-                .subject(user.getId().toString())
+                .subject(user.getId().value())
                 .claim("email", user.getEmail().getValue())
                 .claim("fullName", user.getFullName())
                 .claim("roles", roles)
@@ -64,8 +68,8 @@ public class JwtTokenProviderImpl implements JwtTokenProvider, ForgotPasswordUse
     }
 
     @Override
-    public Instant getRefreshTokenExpiry() {
-        return Instant.now().plusMillis(refreshTokenExpiryMs);
+    public DomainInstant getRefreshTokenExpiry() {
+        return DomainInstant.ofEpochMillis(Instant.now().plusMillis(refreshTokenExpiryMs).toEpochMilli());
     }
 
     public Jws<Claims> validateAccessToken(String token) {
@@ -82,23 +86,26 @@ public class JwtTokenProviderImpl implements JwtTokenProvider, ForgotPasswordUse
                 .parseSignedClaims(token);
     }
 
-    public UUID getUserIdFromAccessToken(String token) {
-        return UUID.fromString(validateAccessToken(token).getPayload().getSubject());
+    public DomainId getUserIdFromAccessToken(String token) {
+        return DomainId.of(validateAccessToken(token).getPayload().getSubject());
     }
 
-    public UUID getUserIdFromRefreshToken(String token) {
-        return UUID.fromString(validateRefreshToken(token).getPayload().getSubject());
+    public DomainId getUserIdFromRefreshToken(String token) {
+        return DomainId.of(validateRefreshToken(token).getPayload().getSubject());
     }
 
-    public List<String> getRolesFromAccessToken(String token) {
+    public DomainList<String> getRolesFromAccessToken(String token) {
         Claims claims = validateAccessToken(token).getPayload();
-        return claims.get("roles", List.class);
+        DomainList<String> result = new DomainList<>();
+        List<?> roles = claims.get("roles", List.class);
+        for (Object role : roles) result.add(String.valueOf(role));
+        return result;
     }
 
     @Override
-    public String generateToken() {
+    public String generateToken(DomainId userId) {
         return Jwts.builder()
-                .subject(UUID.randomUUID().toString())
+                .subject(userId.value())
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plusMillis(3600000))) // 1 hour expiry for password reset
                 .signWith(accessTokenKey)
@@ -106,8 +113,8 @@ public class JwtTokenProviderImpl implements JwtTokenProvider, ForgotPasswordUse
     }
 
     @Override
-    public Instant getExpiry() {
-        return Instant.now().plusMillis(3600000); // 1 hour
+    public DomainInstant getExpiry() {
+        return DomainInstant.ofEpochMillis(Instant.now().plusMillis(3600000).toEpochMilli()); // 1 hour
     }
 
     @Override
@@ -124,12 +131,12 @@ public class JwtTokenProviderImpl implements JwtTokenProvider, ForgotPasswordUse
     }
 
     @Override
-    public UUID getUserIdFromToken(String token) {
+    public DomainId getUserIdFromToken(String token) {
         Claims claims = Jwts.parser()
                 .verifyWith(accessTokenKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-        return UUID.fromString(claims.getSubject());
+        return DomainId.of(claims.getSubject());
     }
 }

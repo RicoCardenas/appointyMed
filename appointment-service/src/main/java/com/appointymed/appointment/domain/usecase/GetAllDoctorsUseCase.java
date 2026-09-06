@@ -1,25 +1,20 @@
 package com.appointymed.appointment.domain.usecase;
 
-import com.appointymed.appointment.domain.exception.ResourceNotFoundException;
 import com.appointymed.appointment.domain.model.Doctor;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
 import com.appointymed.appointment.domain.repository.DoctorRepository;
-import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.UUID;
+public final class GetAllDoctorsUseCase {
+    private final DoctorRepository repository;
 
-@Component
-public class GetAllDoctorsUseCase {
-    private final DoctorRepository doctorRepository;
-
-    public GetAllDoctorsUseCase(DoctorRepository doctorRepository) {
-        this.doctorRepository = doctorRepository;
+    public GetAllDoctorsUseCase(DoctorRepository r) {
+        repository = r;
     }
 
-    public List<Doctor> execute(UUID specialtyId) {
-        if (specialtyId != null) {
-            return doctorRepository.findBySpecialtyId(specialtyId);
-        }
-        return doctorRepository.findAllActive();
+    public DomainList<Doctor> execute(DomainId specialtyId) {
+        return specialtyId == null
+                ? repository.findAllActive()
+                : repository.findBySpecialtyId(specialtyId);
     }
 }

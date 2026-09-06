@@ -3,6 +3,7 @@ package com.appointymed.auth.application.service;
 import com.appointymed.auth.application.dto.*;
 import com.appointymed.auth.application.mapper.UserMapper;
 import com.appointymed.auth.domain.model.Email;
+import com.appointymed.auth.domain.model.DomainId;
 import com.appointymed.auth.domain.model.Password;
 import com.appointymed.auth.domain.model.User;
 import com.appointymed.auth.domain.usecase.*;
@@ -58,9 +59,11 @@ public class AuthApplicationService {
     public LoginResponse login(LoginRequest request) {
         var command = new AuthenticateUserUseCase.AuthenticateUserCommand(request.email(), request.password());
         var result = authenticateUserUseCase.execute(command);
+        List<String> roles = new java.util.ArrayList<>();
+        for (int index = 0; index < result.roles().size(); index++) roles.add(result.roles().get(index));
         return new LoginResponse(
-                result.accessToken(), result.refreshToken(), result.userId(),
-                result.email(), result.fullName(), result.roles()
+                result.accessToken(), result.refreshToken(), java.util.UUID.fromString(result.userId().value()),
+                result.email(), result.fullName(), roles
         );
     }
 
@@ -83,14 +86,14 @@ public class AuthApplicationService {
     }
 
     public void changePassword(UUID userId, ChangePasswordRequest request) {
-        var command = new ChangePasswordUseCase.ChangePasswordCommand(userId, request.currentPassword(), request.newPassword());
+        var command = new ChangePasswordUseCase.ChangePasswordCommand(DomainId.of(userId.toString()), request.currentPassword(), request.newPassword());
         changePasswordUseCase.execute(command);
     }
 
     @Transactional(readOnly = true)
     public UserDto getUserById(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+        User user = userRepository.findById(DomainId.of(userId.toString()))
+                .orElseThrow(() -> new UserNotFoundException(DomainId.of(userId.toString())));
         return userMapper.toDto(user);
     }
 
@@ -103,8 +106,9 @@ public class AuthApplicationService {
 
     @Transactional(readOnly = true)
     public List<UserDto> getAllUsers(int page, int size) {
-        return userRepository.findAll(page, size).stream()
-                .map(userMapper::toDto)
-                .toList();
+        List<UserDto> result = new java.util.ArrayList<>();
+        var users = userRepository.findAll(page, size);
+        for (int index = 0; index < users.size(); index++) result.add(userMapper.toDto(users.get(index)));
+        return result;
     }
 }

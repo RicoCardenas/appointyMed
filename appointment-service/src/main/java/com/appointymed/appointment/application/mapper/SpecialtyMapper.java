@@ -11,12 +11,12 @@ public class SpecialtyMapper {
             return null;
         }
         return new SpecialtyResponse(
-                domain.getId(),
+                DomainValueMapper.toUuid(domain.getId()),
                 domain.getName(),
                 domain.getDescription(),
                 domain.getConsultationDurationMinutes(),
                 domain.isActive(),
-                domain.getCreatedAt()
+                DomainValueMapper.toInstant(domain.getCreatedAt())
         );
     }
 }

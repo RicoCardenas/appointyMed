@@ -1,48 +1,46 @@
 package com.appointymed.appointment.domain.model;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-public class Doctor {
-    private final UUID id;
-    private final UUID userId;
-    private final String medicalLicense;
-    private final UUID specialtyId;
-    private final String firstName;
-    private final String lastName;
-    private final String email;
-    private final String phone;
-    private final String consultationRoom;
+public final class Doctor {
+    private final DomainId id, userId, specialtyId;
+    private final String medicalLicense, firstName, lastName, email, phone, consultationRoom;
     private final boolean active;
-    private final List<DoctorSchedule> schedules;
-    private final Instant createdAt;
-    private final Instant updatedAt;
+    private final DomainList<DoctorSchedule> schedules;
+    private final DomainInstant createdAt, updatedAt;
 
-    public Doctor(UUID id, UUID userId, String medicalLicense, UUID specialtyId, String firstName, String lastName,
-                  String email, String phone, String consultationRoom, boolean active,
-                  List<DoctorSchedule> schedules, Instant createdAt, Instant updatedAt) {
-        this.id = id != null ? id : UUID.randomUUID();
+    public Doctor(
+            DomainId id,
+            DomainId userId,
+            String license,
+            DomainId specialtyId,
+            String firstName,
+            String lastName,
+            String email,
+            String phone,
+            String room,
+            boolean active,
+            DomainList<DoctorSchedule> schedules,
+            DomainInstant createdAt,
+            DomainInstant updatedAt) {
+        this.id = id;
         this.userId = userId;
-        this.medicalLicense = medicalLicense;
+        medicalLicense = license;
         this.specialtyId = specialtyId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
-        this.consultationRoom = consultationRoom;
+        consultationRoom = room;
         this.active = active;
-        this.schedules = schedules != null ? schedules : new ArrayList<>();
-        this.createdAt = createdAt != null ? createdAt : Instant.now();
-        this.updatedAt = updatedAt != null ? updatedAt : Instant.now();
+        this.schedules = schedules == null ? new DomainList<>() : schedules;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
-    public UUID getUserId() {
+    public DomainId getUserId() {
         return userId;
     }
 
@@ -50,7 +48,7 @@ public class Doctor {
         return medicalLicense;
     }
 
-    public UUID getSpecialtyId() {
+    public DomainId getSpecialtyId() {
         return specialtyId;
     }
 
@@ -82,15 +80,15 @@ public class Doctor {
         return active;
     }
 
-    public List<DoctorSchedule> getSchedules() {
+    public DomainList<DoctorSchedule> getSchedules() {
         return schedules;
     }
 
-    public Instant getCreatedAt() {
+    public DomainInstant getCreatedAt() {
         return createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public DomainInstant getUpdatedAt() {
         return updatedAt;
     }
 
@@ -98,88 +96,93 @@ public class Doctor {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id;
-        private UUID userId;
-        private String medicalLicense;
-        private UUID specialtyId;
-        private String firstName;
-        private String lastName;
-        private String email;
-        private String phone;
-        private String consultationRoom;
+    public static final class Builder {
+        private DomainId id, userId, specialtyId;
+        private String license, first, last, email, phone, room;
         private boolean active = true;
-        private List<DoctorSchedule> schedules = new ArrayList<>();
-        private Instant createdAt;
-        private Instant updatedAt;
+        private DomainList<DoctorSchedule> schedules = new DomainList<>();
+        private DomainInstant createdAt, updatedAt;
 
-        public Builder id(UUID id) {
-            this.id = id;
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder userId(UUID userId) {
-            this.userId = userId;
+        public Builder userId(DomainId v) {
+            userId = v;
             return this;
         }
 
-        public Builder medicalLicense(String medicalLicense) {
-            this.medicalLicense = medicalLicense;
+        public Builder medicalLicense(String v) {
+            license = v;
             return this;
         }
 
-        public Builder specialtyId(UUID specialtyId) {
-            this.specialtyId = specialtyId;
+        public Builder specialtyId(DomainId v) {
+            specialtyId = v;
             return this;
         }
 
-        public Builder firstName(String firstName) {
-            this.firstName = firstName;
+        public Builder firstName(String v) {
+            first = v;
             return this;
         }
 
-        public Builder lastName(String lastName) {
-            this.lastName = lastName;
+        public Builder lastName(String v) {
+            last = v;
             return this;
         }
 
-        public Builder email(String email) {
-            this.email = email;
+        public Builder email(String v) {
+            email = v;
             return this;
         }
 
-        public Builder phone(String phone) {
-            this.phone = phone;
+        public Builder phone(String v) {
+            phone = v;
             return this;
         }
 
-        public Builder consultationRoom(String consultationRoom) {
-            this.consultationRoom = consultationRoom;
+        public Builder consultationRoom(String v) {
+            room = v;
             return this;
         }
 
-        public Builder active(boolean active) {
-            this.active = active;
+        public Builder active(boolean v) {
+            active = v;
             return this;
         }
 
-        public Builder schedules(List<DoctorSchedule> schedules) {
-            this.schedules = schedules;
+        public Builder schedules(DomainList<DoctorSchedule> v) {
+            schedules = v;
             return this;
         }
 
-        public Builder createdAt(Instant createdAt) {
-            this.createdAt = createdAt;
+        public Builder createdAt(DomainInstant v) {
+            createdAt = v;
             return this;
         }
 
-        public Builder updatedAt(Instant updatedAt) {
-            this.updatedAt = updatedAt;
+        public Builder updatedAt(DomainInstant v) {
+            updatedAt = v;
             return this;
         }
 
         public Doctor build() {
-            return new Doctor(id, userId, medicalLicense, specialtyId, firstName, lastName, email, phone, consultationRoom, active, schedules, createdAt, updatedAt);
+            return new Doctor(
+                    id,
+                    userId,
+                    license,
+                    specialtyId,
+                    first,
+                    last,
+                    email,
+                    phone,
+                    room,
+                    active,
+                    schedules,
+                    createdAt,
+                    updatedAt);
         }
     }
 }

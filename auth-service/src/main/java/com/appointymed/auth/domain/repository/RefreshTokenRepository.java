@@ -1,23 +1,23 @@
 package com.appointymed.auth.domain.repository;
 
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainInstant;
+import com.appointymed.auth.domain.model.DomainList;
+import com.appointymed.auth.domain.model.DomainOptional;
 import com.appointymed.auth.domain.model.RefreshToken;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 public interface RefreshTokenRepository {
-    Optional<RefreshToken> findByToken(String token);
+    DomainOptional<RefreshToken> findByToken(String token);
 
-    List<RefreshToken> findByUserId(UUID userId);
+    DomainList<RefreshToken> findByUserId(DomainId userId);
 
     RefreshToken save(RefreshToken refreshToken);
 
-    void deleteById(UUID id);
+    void deleteById(DomainId id);
 
-    void deleteByUserId(UUID userId);
+    void deleteByUserId(DomainId userId);
 
-    void deleteExpiredTokens();
+    void deleteExpiredTokens(DomainInstant now);
 
-    long countByUserId(UUID userId);
+    long countByUserId(DomainId userId);
 }

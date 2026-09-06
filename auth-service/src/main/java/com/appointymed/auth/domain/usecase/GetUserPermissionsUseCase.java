@@ -1,30 +1,26 @@
 package com.appointymed.auth.domain.usecase;
-import org.springframework.stereotype.Component;
 
+import com.appointymed.auth.domain.exception.UserNotFoundException;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainSet;
 import com.appointymed.auth.domain.model.Permission;
-import com.appointymed.auth.domain.model.Role;
 import com.appointymed.auth.domain.model.User;
 import com.appointymed.auth.domain.repository.UserRepository;
-import com.appointymed.auth.domain.exception.UserNotFoundException;
 
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Component
-public class GetUserPermissionsUseCase {
+public final class GetUserPermissionsUseCase {
     private final UserRepository userRepository;
 
-    public GetUserPermissionsUseCase(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public GetUserPermissionsUseCase(UserRepository u) {
+        userRepository = u;
     }
 
-    public Set<Permission> execute(UUID userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
-
-        return user.getRoles().stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .collect(Collectors.toSet());
+    public DomainSet<Permission> execute(DomainId id) {
+        User u = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        DomainSet<Permission> result = DomainSet.empty();
+        for (int i = 0; i < u.getRoles().size(); i++) {
+            var permissions = u.getRoles().get(i).getPermissions();
+            for (int j = 0; j < permissions.size(); j++) result = result.add(permissions.get(j));
+        }
+        return result;
     }
 }

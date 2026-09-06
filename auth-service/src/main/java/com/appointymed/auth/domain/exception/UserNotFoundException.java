@@ -1,10 +1,10 @@
 package com.appointymed.auth.domain.exception;
 
-import java.util.UUID;
+import com.appointymed.auth.domain.model.DomainId;
 
 public class UserNotFoundException extends DomainException {
-    public UserNotFoundException(UUID userId) {
-        super("User not found with id: " + userId, "USER_NOT_FOUND");
+    public UserNotFoundException(DomainId userId) {
+        super("User not found with id: " + userId.value(), "USER_NOT_FOUND");
     }
 
     public UserNotFoundException(String email) {

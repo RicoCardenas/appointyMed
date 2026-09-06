@@ -1,30 +1,27 @@
 package com.appointymed.auth.domain.model;
 
-import java.util.Objects;
-import java.util.regex.Pattern;
-
 public final class Email {
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
-    );
     private final String value;
 
     private Email(String value) {
-        this.value = value.toLowerCase().trim();
+        this.value = value;
     }
 
     public static Email of(String value) {
-        if (value == null || value.trim().isEmpty()) {
+        if (value == null || value.trim().isEmpty())
             throw new IllegalArgumentException("Email cannot be null or empty");
-        }
-        String trimmed = value.trim().toLowerCase();
-        if (!EMAIL_PATTERN.matcher(trimmed).matches()) {
+        String normalized = value.trim().toLowerCase();
+        int at = normalized.indexOf('@');
+        if (at <= 0
+                || at != normalized.lastIndexOf('@')
+                || at == normalized.length() - 1
+                || normalized.indexOf('.', at + 1) < 0
+                || normalized.indexOf(' ') >= 0) {
             throw new IllegalArgumentException("Invalid email format: " + value);
         }
-        if (trimmed.length() > 255) {
+        if (normalized.length() > 255)
             throw new IllegalArgumentException("Email cannot exceed 255 characters");
-        }
-        return new Email(trimmed);
+        return new Email(normalized);
     }
 
     public String getValue() {
@@ -32,16 +29,13 @@ public final class Email {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Email email = (Email) o;
-        return Objects.equals(value, email.value);
+    public boolean equals(Object other) {
+        return other instanceof Email && value.equals(((Email) other).value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(value);
+        return value.hashCode();
     }
 
     @Override

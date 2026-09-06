@@ -1,28 +1,30 @@
 package com.appointymed.appointment.domain.model;
 
-import java.time.Instant;
-import java.util.UUID;
-
-public class Specialty {
-    private final UUID id;
-    private final String name;
-    private final String description;
+public final class Specialty {
+    private final DomainId id;
+    private final String name, description;
     private final int consultationDurationMinutes;
     private final boolean active;
-    private final Instant createdAt;
-    private final Instant updatedAt;
+    private final DomainInstant createdAt, updatedAt;
 
-    public Specialty(UUID id, String name, String description, int consultationDurationMinutes, boolean active, Instant createdAt, Instant updatedAt) {
-        this.id = id != null ? id : UUID.randomUUID();
+    public Specialty(
+            DomainId id,
+            String name,
+            String description,
+            int duration,
+            boolean active,
+            DomainInstant createdAt,
+            DomainInstant updatedAt) {
+        this.id = id;
         this.name = name;
         this.description = description;
-        this.consultationDurationMinutes = consultationDurationMinutes > 0 ? consultationDurationMinutes : 30;
+        consultationDurationMinutes = duration > 0 ? duration : 30;
         this.active = active;
-        this.createdAt = createdAt != null ? createdAt : Instant.now();
-        this.updatedAt = updatedAt != null ? updatedAt : Instant.now();
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
-    public UUID getId() {
+    public DomainId getId() {
         return id;
     }
 
@@ -42,11 +44,11 @@ public class Specialty {
         return active;
     }
 
-    public Instant getCreatedAt() {
+    public DomainInstant getCreatedAt() {
         return createdAt;
     }
 
-    public Instant getUpdatedAt() {
+    public DomainInstant getUpdatedAt() {
         return updatedAt;
     }
 
@@ -54,52 +56,50 @@ public class Specialty {
         return new Builder();
     }
 
-    public static class Builder {
-        private UUID id;
-        private String name;
-        private String description;
-        private int consultationDurationMinutes = 30;
+    public static final class Builder {
+        private DomainId id;
+        private String name, description;
+        private int duration = 30;
         private boolean active = true;
-        private Instant createdAt;
-        private Instant updatedAt;
+        private DomainInstant createdAt, updatedAt;
 
-        public Builder id(UUID id) {
-            this.id = id;
+        public Builder id(DomainId v) {
+            id = v;
             return this;
         }
 
-        public Builder name(String name) {
-            this.name = name;
+        public Builder name(String v) {
+            name = v;
             return this;
         }
 
-        public Builder description(String description) {
-            this.description = description;
+        public Builder description(String v) {
+            description = v;
             return this;
         }
 
-        public Builder consultationDurationMinutes(int consultationDurationMinutes) {
-            this.consultationDurationMinutes = consultationDurationMinutes;
+        public Builder consultationDurationMinutes(int v) {
+            duration = v;
             return this;
         }
 
-        public Builder active(boolean active) {
-            this.active = active;
+        public Builder active(boolean v) {
+            active = v;
             return this;
         }
 
-        public Builder createdAt(Instant createdAt) {
-            this.createdAt = createdAt;
+        public Builder createdAt(DomainInstant v) {
+            createdAt = v;
             return this;
         }
 
-        public Builder updatedAt(Instant updatedAt) {
-            this.updatedAt = updatedAt;
+        public Builder updatedAt(DomainInstant v) {
+            updatedAt = v;
             return this;
         }
 
         public Specialty build() {
-            return new Specialty(id, name, description, consultationDurationMinutes, active, createdAt, updatedAt);
+            return new Specialty(id, name, description, duration, active, createdAt, updatedAt);
         }
     }
 }

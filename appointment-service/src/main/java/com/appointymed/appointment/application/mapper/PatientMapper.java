@@ -11,8 +11,8 @@ public class PatientMapper {
             return null;
         }
         return new PatientResponse(
-                domain.getId(),
-                domain.getUserId(),
+                DomainValueMapper.toUuid(domain.getId()),
+                DomainValueMapper.toUuid(domain.getUserId()),
                 domain.getDocumentType(),
                 domain.getDocumentNumber(),
                 domain.getFirstName(),
@@ -20,12 +20,12 @@ public class PatientMapper {
                 domain.getFullName(),
                 domain.getEmail(),
                 domain.getPhone(),
-                domain.getBirthDate(),
+                DomainValueMapper.toLocalDate(domain.getBirthDate()),
                 domain.getBloodType(),
                 domain.getAddress(),
                 domain.getEmergencyContactName(),
                 domain.getEmergencyContactPhone(),
-                domain.getCreatedAt()
+                DomainValueMapper.toInstant(domain.getCreatedAt())
         );
     }
 }

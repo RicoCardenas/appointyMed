@@ -1,51 +1,38 @@
 package com.appointymed.auth.domain.usecase;
-import org.springframework.stereotype.Component;
 
+import com.appointymed.auth.domain.exception.UserNotFoundException;
+import com.appointymed.auth.domain.model.DomainClock;
+import com.appointymed.auth.domain.model.DomainId;
 import com.appointymed.auth.domain.model.Role;
 import com.appointymed.auth.domain.model.User;
-import com.appointymed.auth.domain.repository.RoleRepository;
 import com.appointymed.auth.domain.repository.UserRepository;
-import com.appointymed.auth.domain.exception.UserNotFoundException;
-import com.appointymed.auth.domain.exception.DomainException;
 
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@Component
-public class AssignRoleUseCase {
+public final class AssignRoleUseCase {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
+    private final DomainClock clock;
 
-    public AssignRoleUseCase(UserRepository userRepository, RoleRepository roleRepository) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
+    public AssignRoleUseCase(UserRepository u, DomainClock c) {
+        userRepository = u;
+        clock = c;
     }
 
-    public User execute(UUID userId, String roleName) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(userId));
+    public User execute(DomainId id, String name) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        return userRepository.save(copy(user, user.getRoles().add(Role.fromName(name))));
+    }
 
-        Role role = Role.fromName(roleName);
-
-        Set<Role> updatedRoles = Set.copyOf(
-                java.util.stream.Stream.concat(user.getRoles().stream(), java.util.stream.Stream.of(role))
-                        .collect(Collectors.toSet())
-        );
-
-        User updatedUser = User.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .fullName(user.getFullName())
-                .phone(user.getPhone())
-                .status(user.getStatus())
-                .emailVerified(user.isEmailVerified())
-                .roles(updatedRoles)
-                .createdAt(user.getCreatedAt())
-                .updatedAt(java.time.Instant.now())
+    private User copy(User u, com.appointymed.auth.domain.model.DomainSet<Role> roles) {
+        return User.builder()
+                .id(u.getId())
+                .email(u.getEmail())
+                .password(u.getPassword())
+                .fullName(u.getFullName())
+                .phone(u.getPhone())
+                .status(u.getStatus())
+                .emailVerified(u.isEmailVerified())
+                .roles(roles)
+                .createdAt(u.getCreatedAt())
+                .updatedAt(clock.now())
                 .build();
-
-        return userRepository.save(updatedUser);
     }
 }

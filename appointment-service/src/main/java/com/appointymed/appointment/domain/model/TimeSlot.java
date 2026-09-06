@@ -1,17 +1,32 @@
 package com.appointymed.appointment.domain.model;
 
-import java.time.LocalDateTime;
+public final class TimeSlot {
+    private final DomainDateTime startDateTime, endDateTime;
+    private final boolean available;
 
-public record TimeSlot(
-        LocalDateTime startDateTime,
-        LocalDateTime endDateTime,
-        boolean available
-) {
-    public static TimeSlot available(LocalDateTime start, LocalDateTime end) {
+    public TimeSlot(DomainDateTime start, DomainDateTime end, boolean available) {
+        startDateTime = start;
+        endDateTime = end;
+        this.available = available;
+    }
+
+    public DomainDateTime startDateTime() {
+        return startDateTime;
+    }
+
+    public DomainDateTime endDateTime() {
+        return endDateTime;
+    }
+
+    public boolean available() {
+        return available;
+    }
+
+    public static TimeSlot available(DomainDateTime start, DomainDateTime end) {
         return new TimeSlot(start, end, true);
     }
 
-    public static TimeSlot occupied(LocalDateTime start, LocalDateTime end) {
+    public static TimeSlot occupied(DomainDateTime start, DomainDateTime end) {
         return new TimeSlot(start, end, false);
     }
 }

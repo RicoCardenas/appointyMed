@@ -2,39 +2,49 @@ package com.appointymed.appointment.domain.usecase;
 
 import com.appointymed.appointment.domain.model.Appointment;
 import com.appointymed.appointment.domain.model.AppointmentStatus;
+import com.appointymed.appointment.domain.model.DomainClock;
+import com.appointymed.appointment.domain.model.DomainDateTime;
+import com.appointymed.appointment.domain.model.DomainId;
+import com.appointymed.appointment.domain.model.DomainList;
 import com.appointymed.appointment.domain.repository.AppointmentRepository;
-import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+public final class GetPatientAppointmentsUseCase {
+    private final AppointmentRepository repository;
+    private final DomainClock clock;
 
-@Component
-public class GetPatientAppointmentsUseCase {
-    private final AppointmentRepository appointmentRepository;
-
-    public GetPatientAppointmentsUseCase(AppointmentRepository appointmentRepository) {
-        this.appointmentRepository = appointmentRepository;
+    public GetPatientAppointmentsUseCase(AppointmentRepository r, DomainClock c) {
+        repository = r;
+        clock = c;
     }
 
-    public List<Appointment> executeAll(UUID patientId) {
-        return appointmentRepository.findByPatientId(patientId);
+    public DomainList<Appointment> executeAll(DomainId id) {
+        return repository.findByPatientId(id);
     }
 
-    public List<Appointment> executeUpcoming(UUID patientId) {
-        return appointmentRepository.findByPatientId(patientId).stream()
-                .filter(a -> a.getAppointmentDateTime().isAfter(LocalDateTime.now()) 
-                        && a.getStatus() != AppointmentStatus.CANCELLED)
-                .sorted((a1, a2) -> a1.getAppointmentDateTime().compareTo(a2.getAppointmentDateTime()))
-                .toList();
+    public DomainList<Appointment> executeUpcoming(DomainId id) {
+        return filter(id, true);
     }
 
-    public List<Appointment> executeHistory(UUID patientId) {
-        return appointmentRepository.findByPatientId(patientId).stream()
-                .filter(a -> a.getAppointmentDateTime().isBefore(LocalDateTime.now()) 
-                        || a.getStatus() == AppointmentStatus.COMPLETED 
-                        || a.getStatus() == AppointmentStatus.CANCELLED)
-                .sorted((a1, a2) -> a2.getAppointmentDateTime().compareTo(a1.getAppointmentDateTime()))
-                .toList();
+    public DomainList<Appointment> executeHistory(DomainId id) {
+        return filter(id, false);
+    }
+
+    private DomainList<Appointment> filter(DomainId id, boolean upcoming) {
+        DomainList<Appointment> source = repository.findByPatientId(id), result = new DomainList<>();
+        DomainDateTime now = clock.now();
+        for (int i = 0; i < source.size(); i++) {
+            Appointment a = source.get(i);
+            boolean include =
+                    upcoming
+                            ? a.getAppointmentDateTime().isAfter(now)
+                                    && a.getStatus() != AppointmentStatus.CANCELLED
+                            : a.getAppointmentDateTime().isBefore(now)
+                                    || a.getStatus() == AppointmentStatus.COMPLETED
+                                    || a.getStatus() == AppointmentStatus.CANCELLED;
+            if (include) {
+                result.add(a);
+            }
+        }
+        return result;
     }
 }

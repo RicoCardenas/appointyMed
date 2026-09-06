@@ -4,6 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.appointymed.auth.domain.model.AuditLog;
+import com.appointymed.auth.domain.model.DomainId;
+import com.appointymed.auth.domain.model.DomainInstant;
+import com.appointymed.auth.domain.model.DomainList;
+import com.appointymed.auth.domain.model.DomainOptional;
 import com.appointymed.auth.domain.repository.AuditLogRepository;
 import com.appointymed.auth.infrastructure.persistence.entity.AuditLogJpaEntity;
 import org.springframework.data.domain.PageRequest;
@@ -32,73 +36,61 @@ public class AuditLogRepositoryImpl implements AuditLogRepository {
     }
 
     @Override
-    public Optional<AuditLog> findById(UUID id) {
-        return springDataAuditLogRepository.findById(id)
-                .map(this::toDomain);
+    public DomainOptional<AuditLog> findById(DomainId id) {
+        Optional<AuditLogJpaEntity> entity = springDataAuditLogRepository.findById(UUID.fromString(id.value()));
+        return entity.isPresent() ? DomainOptional.of(toDomain(entity.get())) : DomainOptional.empty();
     }
 
     @Override
-    public List<AuditLog> findByUserId(UUID userId, int page, int size) {
-        return springDataAuditLogRepository.findByUserId(userId, PageRequest.of(page, size))
-                .stream()
-                .map(this::toDomain)
-                .toList();
+    public DomainList<AuditLog> findByUserId(DomainId userId, int page, int size) {
+        return toDomainList(springDataAuditLogRepository.findByUserId(UUID.fromString(userId.value()), PageRequest.of(page, size)).getContent());
     }
 
     @Override
-    public List<AuditLog> findByEntityTypeAndEntityId(String entityType, UUID entityId, int page, int size) {
-        return springDataAuditLogRepository.findByEntityTypeAndEntityId(entityType, entityId, PageRequest.of(page, size))
-                .stream()
-                .map(this::toDomain)
-                .toList();
+    public DomainList<AuditLog> findByEntityTypeAndEntityId(String entityType, DomainId entityId, int page, int size) {
+        return toDomainList(springDataAuditLogRepository.findByEntityTypeAndEntityId(entityType, UUID.fromString(entityId.value()), PageRequest.of(page, size)).getContent());
     }
 
     @Override
-    public List<AuditLog> findByAction(String action, int page, int size) {
-        return springDataAuditLogRepository.findByAction(action, PageRequest.of(page, size))
-                .stream()
-                .map(this::toDomain)
-                .toList();
+    public DomainList<AuditLog> findByAction(String action, int page, int size) {
+        return toDomainList(springDataAuditLogRepository.findByAction(action, PageRequest.of(page, size)).getContent());
     }
 
     @Override
-    public List<AuditLog> findByDateRange(Instant start, Instant end, int page, int size) {
-        return springDataAuditLogRepository.findByTimestampBetween(start, end, PageRequest.of(page, size))
-                .stream()
-                .map(this::toDomain)
-                .toList();
+    public DomainList<AuditLog> findByDateRange(DomainInstant start, DomainInstant end, int page, int size) {
+        return toDomainList(springDataAuditLogRepository.findByTimestampBetween(Instant.ofEpochMilli(start.toEpochMillis()), Instant.ofEpochMilli(end.toEpochMillis()), PageRequest.of(page, size)).getContent());
     }
 
     @Override
-    public long countByUserId(UUID userId) {
-        return springDataAuditLogRepository.countByUserId(userId);
+    public long countByUserId(DomainId userId) {
+        return springDataAuditLogRepository.countByUserId(UUID.fromString(userId.value()));
     }
 
     private AuditLog toDomain(AuditLogJpaEntity entity) {
         return AuditLog.builder()
-                .id(entity.getId())
-                .userId(entity.getUserId())
+                .id(toDomainId(entity.getId()))
+                .userId(toDomainId(entity.getUserId()))
                 .action(entity.getAction())
                 .entityType(entity.getEntityType())
-                .entityId(entity.getEntityId())
+                .entityId(toDomainId(entity.getEntityId()))
                 .oldValue(jsonToString(entity.getOldValue()))
                 .newValue(jsonToString(entity.getNewValue()))
                 .ipAddress(entity.getIpAddress())
-                .timestamp(entity.getTimestamp())
+                .timestamp(toDomainInstant(entity.getTimestamp()))
                 .build();
     }
 
     private AuditLogJpaEntity toEntity(AuditLog domain) {
         AuditLogJpaEntity entity = new AuditLogJpaEntity();
-        entity.setId(domain.getId());
-        entity.setUserId(domain.getUserId());
+        entity.setId(toUuid(domain.getId()));
+        entity.setUserId(toUuid(domain.getUserId()));
         entity.setAction(domain.getAction());
         entity.setEntityType(domain.getEntityType());
-        entity.setEntityId(domain.getEntityId());
+        entity.setEntityId(toUuid(domain.getEntityId()));
         entity.setOldValue(jsonToNode(domain.getOldValue()));
         entity.setNewValue(jsonToNode(domain.getNewValue()));
         entity.setIpAddress(domain.getIpAddress());
-        entity.setTimestamp(domain.getTimestamp());
+        entity.setTimestamp(domain.getTimestamp() == null ? null : Instant.ofEpochMilli(domain.getTimestamp().toEpochMillis()));
         return entity;
     }
     private String jsonToString(JsonNode value) {
@@ -115,5 +107,14 @@ public class AuditLogRepositoryImpl implements AuditLogRepository {
             throw new IllegalArgumentException("Audit value must be valid JSON", ex);
         }
     }
+
+    private DomainList<AuditLog> toDomainList(List<AuditLogJpaEntity> entities) {
+        DomainList<AuditLog> result = new DomainList<>();
+        for (AuditLogJpaEntity entity : entities) result.add(toDomain(entity));
+        return result;
+    }
+    private static DomainId toDomainId(UUID value) { return value == null ? null : DomainId.of(value.toString()); }
+    private static UUID toUuid(DomainId value) { return value == null ? null : UUID.fromString(value.value()); }
+    private static DomainInstant toDomainInstant(Instant value) { return value == null ? null : DomainInstant.ofEpochMillis(value.toEpochMilli()); }
 
 }
