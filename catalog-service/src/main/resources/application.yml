@@ -1,0 +1,26 @@
+server:
+  port: ${PORT:8082}
+
+spring:
+  application:
+    name: catalog-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/appointy}
+    username: ${CATALOG_DB_USER:catalog_svc}
+    password: ${CATALOG_DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: catalog
+  flyway:
+    schemas: catalog
+    default-schema: catalog
+    create-schemas: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -1,110 +1,26 @@
+server:
+  port: ${PORT:8081}
+
 spring:
   application:
     name: auth-service
-
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/auth_db}
-    username: ${DATABASE_USER:postgres}
-    password: ${DATABASE_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 20
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/appointy}
+    username: ${AUTH_DB_USER:auth_svc}
+    password: ${AUTH_DB_PASSWORD}
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
-    show-sql: false
     properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-        jdbc:
-          lob:
-            non_contextual_creation: true
-
+      hibernate.default_schema: auth
   flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    validate-on-migrate: true
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${JWT_ISSUER_URI:}
-
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    deserialization:
-      fail-on-unknown-properties: false
-
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
-
-server:
-  port: ${PORT:8081}
-  error:
-    include-message: always
-    include-binding-errors: always
+    schemas: auth
+    default-schema: auth
+    create-schemas: false
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
-    health:
-      probes:
-        enabled: true
-  endpoint:
-    health:
-      show-details: when-authorized
-  metrics:
-    tags:
-      application: ${spring.application.name}
-
-app:
-  jwt:
-    access-token-secret: ${JWT_ACCESS_SECRET}
-    refresh-token-secret: ${JWT_REFRESH_SECRET}
-    access-token-expiry-ms: ${JWT_ACCESS_EXPIRY:900000} # 15 minutes
-    refresh-token-expiry-ms: ${JWT_REFRESH_EXPIRY:604800000} # 7 days
-
-  aws:
-    region: ${AWS_REGION:us-east-1}
-    endpoint-url: ${AWS_ENDPOINT_URL:http://localhost:4566}
-    sqs:
-      notification-queue-url: ${SQS_NOTIFICATION_QUEUE_URL:http://localhost:4566/000000000000/notification-queue}
-    credentials:
-      access-key: ${AWS_ACCESS_KEY_ID:}
-      secret-key: ${AWS_SECRET_ACCESS_KEY:}
-
-  cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
-    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-    allowed-headers: "*"
-    exposed-headers: Authorization
-    max-age: 3600
-
-springdoc:
-  api-docs:
-    path: /api/v1/v3/api-docs
-  swagger-ui:
-    path: /api/v1/swagger-ui.html
-
-logging:
-  level:
-    com.appointymed.auth: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+        include: health,info

@@ -6,13 +6,11 @@
 .idea/
 .vscode/
 *.iml
-.claude/
+.claude/settings.local.json
 .agents/
 .codex/
 .graph/
-
-# Local instructions
-AGENTS.md
+.aws/
 
 # Local environment and secrets
 .env

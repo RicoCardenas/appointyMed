@@ -1,0 +1,26 @@
+server:
+  port: ${PORT:8084}
+
+spring:
+  application:
+    name: clinical-history-service
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/appointy}
+    username: ${CLINICAL_DB_USER:clinical_svc}
+    password: ${CLINICAL_DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: clinical
+  flyway:
+    schemas: clinical
+    default-schema: clinical
+    create-schemas: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
