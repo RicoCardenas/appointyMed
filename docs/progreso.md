@@ -2,6 +2,15 @@
 
 Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-05.
 
+## Siguiente paso: Fase 3, appointment-service (CU-17 a CU-27)
+
+Leer solo lo necesario, con `rg` o lecturas por secciones: de `docs/especificacion.md`, los CU-17 a CU-27 y los detalles de CU-18, CU-19 y CU-20 (sección 9), "Concurrencia" (sección 6) y las tablas franja, cita e historial_cita (sección 10). De este archivo, el contrato de appointment en "Fase 2" y las decisiones 5, 6, 7, 8 y 20. Skills: `reserva-concurrente`, `flyway-schemas`, `spring-data-jpa`, `spring-boot-event-driven-patterns` y `spring-boot-test-patterns`.
+
+- Copiar el estilo de auth y catalog (dominio sin imports, un caso de uso por clase, DTOs con `HH:mm` y texto ISO, errores con `RespuestaError`, `UTC` en la JVM, cadena de seguridad doble `/api` y `/internal`).
+- notification-service llega en la Fase 5: en la Fase 3 el puerto y el cliente REST hacia notification se escriben igual que catalog hizo con appointment (llave de servicio, timeouts, fallo que no revierte la cita) y se prueban contra un simulado. Appointment también necesita un cliente hacia catalog (`/internal/profesionales/{id}/asociacion` y `/internal/parametros`, ya existentes).
+- Pruebas reales en `scripts/e2e/` (`auth.sh`, `catalog.sh`; ver "Comandos" en `CLAUDE.md`). `catalog.sh` usa `fake-appointment.py`: al existir el appointment real, esa prueba debe pasar a usarlo y apoyarse en una nueva `appointment.sh`. La prueba de concurrencia de la reserva va contra PostgreSQL real, no H2.
+- Pendiente del equipo: `JWT_SECRET` e `INTERNAL_API_KEY` en `.env` (valores al azar, p. ej. `openssl rand -hex 32`; el mismo en todos los servicios).
+
 ## Fases
 
 | Fase | Contenido | Estado |

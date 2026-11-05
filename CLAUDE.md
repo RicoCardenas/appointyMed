@@ -4,7 +4,7 @@ Español, profesional y conciso. Sin emojis ni relleno. Responde primero; no rep
 
 ## Fuente de verdad
 - `docs/especificacion.md`: requisitos, casos de uso, datos y reglas del docente. Prevalece sobre cualquier otro texto. Léela por secciones con `rg`, no completa.
-- `docs/progreso.md`: fases y decisiones pendientes. Léelo al empezar y actualízalo solo al cerrar una fase.
+- `docs/progreso.md`: al empezar lee solo "Siguiente paso" y la tabla de Fases (las primeras ~25 líneas); las secciones por fase y las decisiones solo si la tarea las toca. Actualízalo al cerrar una fase.
 - Si la especificación no cubre algo o se contradice, pregunta; no inventes reglas de negocio.
 - El código anterior sigue en el historial de Git, hasta el commit `efb6897` (`git show efb6897:<ruta>`). Reutiliza piezas sueltas (JWT, filtro, manejador de errores), no su arquitectura.
 
@@ -54,4 +54,5 @@ Un caso de uso por clase, puertos pequeños, reglas de negocio componibles. Domi
 ```bash
 mvn -q -DskipTests compile                 # compilar los 5 módulos (JDK 21)
 mvn -pl auth-service spring-boot:run       # arrancar un servicio (variables de .env exportadas)
+mvn -q -DskipTests package && bash scripts/e2e/catalog.sh   # prueba real contra PostgreSQL (genera sus propias claves; borra lo que crea)
 ```
