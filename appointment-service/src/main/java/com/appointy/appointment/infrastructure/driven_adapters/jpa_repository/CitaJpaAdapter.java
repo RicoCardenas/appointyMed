@@ -2,7 +2,7 @@ package com.appointy.appointment.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.appointment.domain.model.Cita;
 import com.appointy.appointment.domain.model.EstadoCita;
-import com.appointy.appointment.domain.port.out.CitaRepositoryPort;
+import com.appointy.appointment.domain.gateway.CitaRepositoryGateway;
 import com.appointy.appointment.infrastructure.driven_adapters.jpa_repository.repository.SpringDataCitaRepository;
 import com.appointy.appointment.infrastructure.mapper.CitaEntityMapper;
 import java.time.LocalDate;
@@ -11,7 +11,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CitaJpaAdapter implements CitaRepositoryPort {
+public class CitaJpaAdapter implements CitaRepositoryGateway {
 
     private final SpringDataCitaRepository repositorio;
     private final CitaEntityMapper mapper;

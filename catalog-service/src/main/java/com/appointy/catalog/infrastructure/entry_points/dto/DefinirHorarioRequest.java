@@ -1,6 +1,6 @@
 package com.appointy.catalog.infrastructure.entry_points.dto;
 
-import com.appointy.catalog.domain.port.in.DefinirHorarioPort;
+import com.appointy.catalog.domain.usecase.DefinirHorarioUseCase;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -14,8 +14,8 @@ public record DefinirHorarioRequest(
         @NotNull @Pattern(regexp = Horas.PATRON, message = "usa el formato HH:mm") String horaFin,
         @Min(5) @Max(240) Integer duracionFranjaMin) {
 
-    public DefinirHorarioPort.Comando aComando(String profesionalId) {
-        return new DefinirHorarioPort.Comando(
+    public DefinirHorarioUseCase.Comando aComando(String profesionalId) {
+        return new DefinirHorarioUseCase.Comando(
                 profesionalId, centroId.toString(), diaSemana, Horas.aMinutos(horaInicio), Horas.aMinutos(horaFin), duracionFranjaMin);
     }
 }

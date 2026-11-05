@@ -4,7 +4,7 @@ import com.appointy.appointment.domain.exception.ServicioNoDisponibleException;
 import com.appointy.appointment.domain.model.AsociacionProfesional;
 import com.appointy.appointment.domain.model.ParametrosCita;
 import com.appointy.appointment.domain.model.ProfesionalDeUsuario;
-import com.appointy.appointment.domain.port.out.CatalogClientPort;
+import com.appointy.appointment.domain.gateway.CatalogClientGateway;
 import com.appointy.appointment.infrastructure.config.CatalogProperties;
 import com.appointy.appointment.infrastructure.config.CorrelationIdFilter;
 import com.appointy.appointment.infrastructure.config.InternalProperties;
@@ -24,7 +24,7 @@ import org.springframework.web.client.RestClientResponseException;
  * se informa como {@link ServicioNoDisponibleException} (503): nunca se deja pasar un cuelgue.
  */
 @Component
-public class CatalogRestClientAdapter implements CatalogClientPort {
+public class CatalogRestClientAdapter implements CatalogClientGateway {
 
     private static final Logger LOG = LoggerFactory.getLogger(CatalogRestClientAdapter.class);
     private static final String CODIGO = "CATALOG_NO_DISPONIBLE";

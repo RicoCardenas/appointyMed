@@ -1,6 +1,6 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
-import com.appointy.catalog.domain.port.in.BloquearFranjasPort;
+import com.appointy.catalog.domain.usecase.BloquearFranjasUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.BloqueoRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.BloqueoResponse;
 import com.appointy.catalog.infrastructure.security.UsuarioAutenticado;
@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class BloqueoController {
 
-    private final BloquearFranjasPort bloquear;
+    private final BloquearFranjasUseCase bloquear;
 
-    public BloqueoController(BloquearFranjasPort bloquear) {
+    public BloqueoController(BloquearFranjasUseCase bloquear) {
         this.bloquear = bloquear;
     }
 

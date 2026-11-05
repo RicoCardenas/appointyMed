@@ -4,7 +4,7 @@ import com.appointy.auth.domain.model.ClaimsToken;
 import com.appointy.auth.domain.model.Rol;
 import com.appointy.auth.domain.model.TokenEmitido;
 import com.appointy.auth.domain.model.Usuario;
-import com.appointy.auth.domain.port.out.EmisorTokenPort;
+import com.appointy.auth.domain.gateway.EmisorTokenGateway;
 import com.appointy.auth.infrastructure.config.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 
 /** JWT firmado con HMAC; los demas servicios lo validan localmente con el mismo secreto (RNF-03). */
 @Component
-public class JwtEmisorTokenAdapter implements EmisorTokenPort {
+public class JwtEmisorTokenAdapter implements EmisorTokenGateway {
 
     private static final int MINIMO_BYTES_SECRETO = 32;
     private static final String CLAIM_ROL = "rol";

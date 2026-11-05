@@ -3,7 +3,7 @@ package com.appointy.appointment.infrastructure.driven_adapters.jpa_repository;
 import com.appointy.appointment.domain.model.EstadoCita;
 import com.appointy.appointment.domain.model.EstadoFranja;
 import com.appointy.appointment.domain.model.Franja;
-import com.appointy.appointment.domain.port.out.FranjaRepositoryPort;
+import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
 import com.appointy.appointment.infrastructure.driven_adapters.jpa_repository.repository.SpringDataFranjaRepository;
 import com.appointy.appointment.infrastructure.mapper.Conversiones;
 import com.appointy.appointment.infrastructure.mapper.FranjaEntityMapper;
@@ -14,7 +14,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FranjaJpaAdapter implements FranjaRepositoryPort {
+public class FranjaJpaAdapter implements FranjaRepositoryGateway {
 
     private final SpringDataFranjaRepository repositorio;
     private final FranjaEntityMapper mapper;

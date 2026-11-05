@@ -1,6 +1,6 @@
 package com.appointy.auth.infrastructure.config;
 
-import com.appointy.auth.domain.port.in.SembrarAdministradorPort;
+import com.appointy.auth.domain.usecase.SembrarAdministradorUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -14,9 +14,9 @@ public class AdminSeedRunner implements ApplicationRunner {
     private static final Logger LOG = LoggerFactory.getLogger(AdminSeedRunner.class);
 
     private final AdminProperties propiedades;
-    private final SembrarAdministradorPort sembrar;
+    private final SembrarAdministradorUseCase sembrar;
 
-    public AdminSeedRunner(AdminProperties propiedades, SembrarAdministradorPort sembrar) {
+    public AdminSeedRunner(AdminProperties propiedades, SembrarAdministradorUseCase sembrar) {
         this.propiedades = propiedades;
         this.sembrar = sembrar;
     }
@@ -26,7 +26,7 @@ public class AdminSeedRunner implements ApplicationRunner {
         if (esVacio(propiedades.email()) || esVacio(propiedades.password())) {
             return;
         }
-        if (sembrar.ejecutar(new SembrarAdministradorPort.Comando(propiedades.email(), propiedades.password()))) {
+        if (sembrar.ejecutar(new SembrarAdministradorUseCase.Comando(propiedades.email(), propiedades.password()))) {
             LOG.info("Administrador inicial creado");
         }
     }

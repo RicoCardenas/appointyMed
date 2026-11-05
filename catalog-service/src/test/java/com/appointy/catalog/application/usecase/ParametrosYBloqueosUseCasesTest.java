@@ -18,14 +18,14 @@ import com.appointy.catalog.domain.model.Bloqueo;
 import com.appointy.catalog.domain.model.Centro;
 import com.appointy.catalog.domain.model.ParametroServicio;
 import com.appointy.catalog.domain.model.Profesional;
-import com.appointy.catalog.domain.port.in.BloquearFranjasPort;
-import com.appointy.catalog.domain.port.in.ConfigurarParametrosPort;
-import com.appointy.catalog.domain.port.in.ValidarAsociacionPort;
-import com.appointy.catalog.domain.port.out.AppointmentClientPort;
-import com.appointy.catalog.domain.port.out.BloqueoRepositoryPort;
-import com.appointy.catalog.domain.port.out.CentroRepositoryPort;
-import com.appointy.catalog.domain.port.out.ParametroRepositoryPort;
-import com.appointy.catalog.domain.port.out.ProfesionalRepositoryPort;
+import com.appointy.catalog.domain.usecase.BloquearFranjasUseCase;
+import com.appointy.catalog.domain.usecase.ConfigurarParametrosUseCase;
+import com.appointy.catalog.domain.usecase.ValidarAsociacionUseCase;
+import com.appointy.catalog.domain.gateway.AppointmentClientGateway;
+import com.appointy.catalog.domain.gateway.BloqueoRepositoryGateway;
+import com.appointy.catalog.domain.gateway.CentroRepositoryGateway;
+import com.appointy.catalog.domain.gateway.ParametroRepositoryGateway;
+import com.appointy.catalog.domain.gateway.ProfesionalRepositoryGateway;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -38,11 +38,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ParametrosYBloqueosUseCasesTest {
 
-    @Mock ParametroRepositoryPort parametros;
-    @Mock ProfesionalRepositoryPort profesionales;
-    @Mock CentroRepositoryPort centros;
-    @Mock BloqueoRepositoryPort bloqueos;
-    @Mock AppointmentClientPort appointment;
+    @Mock ParametroRepositoryGateway parametros;
+    @Mock ProfesionalRepositoryGateway profesionales;
+    @Mock CentroRepositoryGateway centros;
+    @Mock BloqueoRepositoryGateway bloqueos;
+    @Mock AppointmentClientGateway appointment;
 
     final Clock reloj = Clock.fixed(Instant.parse("2026-06-01T10:00:00Z"), ZoneOffset.UTC);
     final Profesional ana = new Profesional("p1", "u1", "Ana", "Perez", "RM-1", true);
@@ -58,28 +58,28 @@ class ParametrosYBloqueosUseCasesTest {
         when(parametros.buscarPorClave("horizonte_max_dias")).thenReturn(new ParametroServicio("horizonte_max_dias", "60", "Dias"));
         when(parametros.listar()).thenReturn(new ParametroServicio[] {p("horizonte_max_dias", "45")});
 
-        new ConfigurarParametrosUseCase(parametros).ejecutar(new ConfigurarParametrosPort.Comando(new ParametroServicio[] {p("horizonte_max_dias", " 45 ")}));
+        new ConfigurarParametrosUseCaseImpl(parametros).ejecutar(new ConfigurarParametrosUseCase.Comando(new ParametroServicio[] {p("horizonte_max_dias", " 45 ")}));
 
         verify(parametros).guardar(new ParametroServicio("horizonte_max_dias", "45", "Dias"));
     }
 
     @Test
     void configurarEsTodoONadaSiUnValorEsInvalidoNoSeGuardaNinguno() {
-        ConfigurarParametrosUseCase useCase = new ConfigurarParametrosUseCase(parametros);
+        ConfigurarParametrosUseCaseImpl useCase = new ConfigurarParametrosUseCaseImpl(parametros);
 
-        assertThrows(ValidacionException.class, () -> useCase.ejecutar(new ConfigurarParametrosPort.Comando(
+        assertThrows(ValidacionException.class, () -> useCase.ejecutar(new ConfigurarParametrosUseCase.Comando(
                 new ParametroServicio[] {p("horizonte_max_dias", "45"), p("duracion_franja_min", "1")})));
-        assertThrows(ValidacionException.class, () -> useCase.ejecutar(new ConfigurarParametrosPort.Comando(new ParametroServicio[0])));
+        assertThrows(ValidacionException.class, () -> useCase.ejecutar(new ConfigurarParametrosUseCase.Comando(new ParametroServicio[0])));
         verify(parametros, never()).guardar(any());
     }
 
     // ---- CU-16 ----
-    private BloquearFranjasUseCase bloquear() {
-        return new BloquearFranjasUseCase(profesionales, centros, bloqueos, appointment, reloj);
+    private BloquearFranjasUseCaseImpl bloquear() {
+        return new BloquearFranjasUseCaseImpl(profesionales, centros, bloqueos, appointment, reloj);
     }
 
-    private BloquearFranjasPort.Comando comando() {
-        return new BloquearFranjasPort.Comando("admin-1", "p1", "c1", "2026-07-01", "2026-07-15", " Vacaciones ");
+    private BloquearFranjasUseCase.Comando comando() {
+        return new BloquearFranjasUseCase.Comando("admin-1", "p1", "c1", "2026-07-01", "2026-07-15", " Vacaciones ");
     }
 
     private void profesionalYCentro() {
@@ -126,7 +126,7 @@ class ParametrosYBloqueosUseCasesTest {
 
     @Test
     void bloquearValidaElRangoElProfesionalYElCentroAntesDeTocarNada() {
-        assertThrows(ValidacionException.class, () -> bloquear().ejecutar(new BloquearFranjasPort.Comando("a", "p1", "c1", "2026-07-15", "2026-07-01", "x")));
+        assertThrows(ValidacionException.class, () -> bloquear().ejecutar(new BloquearFranjasUseCase.Comando("a", "p1", "c1", "2026-07-15", "2026-07-01", "x")));
         verifyNoInteractions(profesionales, bloqueos, appointment);
 
         when(profesionales.buscarPorId("p1")).thenReturn(null);
@@ -148,10 +148,10 @@ class ParametrosYBloqueosUseCasesTest {
         when(profesionales.atiendeEnCentro("p1", "c1")).thenReturn(true);
         when(profesionales.tieneEspecialidad("p1", "e2")).thenReturn(false);
         when(profesionales.buscarPorId("nada")).thenReturn(null);
-        ValidarAsociacionUseCase useCase = new ValidarAsociacionUseCase(profesionales);
+        ValidarAsociacionUseCaseImpl useCase = new ValidarAsociacionUseCaseImpl(profesionales);
 
-        assertEquals(new ValidarAsociacionPort.Resultado(true, true), useCase.ejecutar("p1", "e1", "c1"));
-        assertEquals(new ValidarAsociacionPort.Resultado(true, false), useCase.ejecutar("p1", "e2", "c1"));
-        assertEquals(new ValidarAsociacionPort.Resultado(false, false), useCase.ejecutar("nada", "e1", "c1"));
+        assertEquals(new ValidarAsociacionUseCase.Resultado(true, true), useCase.ejecutar("p1", "e1", "c1"));
+        assertEquals(new ValidarAsociacionUseCase.Resultado(true, false), useCase.ejecutar("p1", "e2", "c1"));
+        assertEquals(new ValidarAsociacionUseCase.Resultado(false, false), useCase.ejecutar("nada", "e1", "c1"));
     }
 }

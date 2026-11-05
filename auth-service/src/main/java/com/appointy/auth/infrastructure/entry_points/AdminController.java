@@ -1,7 +1,7 @@
 package com.appointy.auth.infrastructure.entry_points;
 
-import com.appointy.auth.domain.port.in.CorregirDatosInmutablesPort;
-import com.appointy.auth.domain.port.in.CrearCuentaStaffPort;
+import com.appointy.auth.domain.usecase.CorregirDatosInmutablesUseCase;
+import com.appointy.auth.domain.usecase.CrearCuentaStaffUseCase;
 import com.appointy.auth.infrastructure.entry_points.dto.CorregirIdentidadRequest;
 import com.appointy.auth.infrastructure.entry_points.dto.CrearCuentaRequest;
 import com.appointy.auth.infrastructure.entry_points.dto.CuentaResponse;
@@ -25,10 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class AdminController {
 
-    private final CrearCuentaStaffPort crearCuenta;
-    private final CorregirDatosInmutablesPort corregirDatos;
+    private final CrearCuentaStaffUseCase crearCuenta;
+    private final CorregirDatosInmutablesUseCase corregirDatos;
 
-    public AdminController(CrearCuentaStaffPort crearCuenta, CorregirDatosInmutablesPort corregirDatos) {
+    public AdminController(CrearCuentaStaffUseCase crearCuenta, CorregirDatosInmutablesUseCase corregirDatos) {
         this.crearCuenta = crearCuenta;
         this.corregirDatos = corregirDatos;
     }

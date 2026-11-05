@@ -15,9 +15,9 @@ import com.appointy.auth.domain.model.PacienteConCuenta;
 import com.appointy.auth.domain.model.PacientePerfil;
 import com.appointy.auth.domain.model.Rol;
 import com.appointy.auth.domain.model.Usuario;
-import com.appointy.auth.domain.port.in.ActualizarDatosEditablesPort.Comando;
-import com.appointy.auth.domain.port.out.PacientePerfilRepositoryPort;
-import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
+import com.appointy.auth.domain.usecase.ActualizarDatosEditablesUseCase.Comando;
+import com.appointy.auth.domain.gateway.PacientePerfilRepositoryGateway;
+import com.appointy.auth.domain.gateway.UsuarioRepositoryGateway;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -30,18 +30,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ActualizarDatosEditablesUseCaseTest {
 
-    @Mock UsuarioRepositoryPort usuarios;
-    @Mock PacientePerfilRepositoryPort perfiles;
+    @Mock UsuarioRepositoryGateway usuarios;
+    @Mock PacientePerfilRepositoryGateway perfiles;
 
     final Clock reloj = Clock.fixed(Instant.parse("2026-06-01T10:00:00Z"), ZoneOffset.UTC);
     final String id = "id-1";
     final Usuario usuario = new Usuario(id, "ana@correo.com", "hash", Rol.PACIENTE, true, reloj.millis(), reloj.millis(), 0L);
     final PacientePerfil perfil = new PacientePerfil(id, "123456", "Ana", "Perez", "1990-05-01", "3000000000", "Calle 1", "Cali");
-    ActualizarDatosEditablesUseCase useCase;
+    ActualizarDatosEditablesUseCaseImpl useCase;
 
     @BeforeEach
     void iniciar() {
-        useCase = new ActualizarDatosEditablesUseCase(usuarios, perfiles, reloj);
+        useCase = new ActualizarDatosEditablesUseCaseImpl(usuarios, perfiles, reloj);
     }
 
     private void existeElPaciente() {

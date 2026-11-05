@@ -1,7 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
-import com.appointy.catalog.domain.port.in.GenerarFranjasPort;
-import com.appointy.catalog.domain.port.in.ModificarHorarioPort;
+import com.appointy.catalog.domain.usecase.GenerarFranjasUseCase;
+import com.appointy.catalog.domain.usecase.ModificarHorarioUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.ModificarHorarioRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.ResultadoHorarioResponse;
 import jakarta.validation.Valid;
@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class HorarioController {
 
-    private final ModificarHorarioPort modificar;
-    private final GenerarFranjasPort generarFranjas;
+    private final ModificarHorarioUseCase modificar;
+    private final GenerarFranjasUseCase generarFranjas;
 
-    public HorarioController(ModificarHorarioPort modificar, GenerarFranjasPort generarFranjas) {
+    public HorarioController(ModificarHorarioUseCase modificar, GenerarFranjasUseCase generarFranjas) {
         this.modificar = modificar;
         this.generarFranjas = generarFranjas;
     }

@@ -1,14 +1,14 @@
 package com.appointy.auth.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.auth.domain.model.TokenRevocado;
-import com.appointy.auth.domain.port.out.TokenRevocadoRepositoryPort;
+import com.appointy.auth.domain.gateway.TokenRevocadoRepositoryGateway;
 import com.appointy.auth.infrastructure.driven_adapters.jpa_repository.entity.TokenRevocadoEntity;
 import com.appointy.auth.infrastructure.driven_adapters.jpa_repository.repository.SpringDataTokenRevocadoRepository;
 import java.time.Instant;
 import org.springframework.stereotype.Component;
 
 @Component
-public class TokenRevocadoJpaAdapter implements TokenRevocadoRepositoryPort {
+public class TokenRevocadoJpaAdapter implements TokenRevocadoRepositoryGateway {
 
     private final SpringDataTokenRevocadoRepository repositorio;
 

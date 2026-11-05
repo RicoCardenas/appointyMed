@@ -1,6 +1,6 @@
 package com.appointy.auth.infrastructure.entry_points.dto;
 
-import com.appointy.auth.domain.port.in.RegistrarPacientePort;
+import com.appointy.auth.domain.usecase.RegistrarPacienteUseCase;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,8 +20,8 @@ public record RegistroPacienteRequest(
         @Size(max = 200) String direccion,
         @Size(max = 100) String ciudad) {
 
-    public RegistrarPacientePort.Comando aComando() {
-        return new RegistrarPacientePort.Comando(
+    public RegistrarPacienteUseCase.Comando aComando() {
+        return new RegistrarPacienteUseCase.Comando(
                 correo, clave, cedula, nombres, apellidos, fechaNacimiento.toString(), telefono, direccion, ciudad);
     }
 }

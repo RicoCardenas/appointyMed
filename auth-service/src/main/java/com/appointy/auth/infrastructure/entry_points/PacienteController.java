@@ -1,7 +1,7 @@
 package com.appointy.auth.infrastructure.entry_points;
 
-import com.appointy.auth.domain.port.in.ActualizarDatosEditablesPort;
-import com.appointy.auth.domain.port.in.ConsultarPerfilPort;
+import com.appointy.auth.domain.usecase.ActualizarDatosEditablesUseCase;
+import com.appointy.auth.domain.usecase.ConsultarPerfilUseCase;
 import com.appointy.auth.infrastructure.entry_points.dto.ActualizarContactoRequest;
 import com.appointy.auth.infrastructure.entry_points.dto.PacienteResponse;
 import com.appointy.auth.infrastructure.security.UsuarioAutenticado;
@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('PACIENTE')")
 public class PacienteController {
 
-    private final ConsultarPerfilPort consultarPerfil;
-    private final ActualizarDatosEditablesPort actualizarDatos;
+    private final ConsultarPerfilUseCase consultarPerfil;
+    private final ActualizarDatosEditablesUseCase actualizarDatos;
 
-    public PacienteController(ConsultarPerfilPort consultarPerfil, ActualizarDatosEditablesPort actualizarDatos) {
+    public PacienteController(ConsultarPerfilUseCase consultarPerfil, ActualizarDatosEditablesUseCase actualizarDatos) {
         this.consultarPerfil = consultarPerfil;
         this.actualizarDatos = actualizarDatos;
     }

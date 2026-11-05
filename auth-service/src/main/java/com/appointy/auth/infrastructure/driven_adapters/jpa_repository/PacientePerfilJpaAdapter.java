@@ -1,14 +1,14 @@
 package com.appointy.auth.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.auth.domain.model.PacientePerfil;
-import com.appointy.auth.domain.port.out.PacientePerfilRepositoryPort;
+import com.appointy.auth.domain.gateway.PacientePerfilRepositoryGateway;
 import com.appointy.auth.infrastructure.driven_adapters.jpa_repository.repository.SpringDataPacientePerfilRepository;
 import com.appointy.auth.infrastructure.mapper.PacientePerfilEntityMapper;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PacientePerfilJpaAdapter implements PacientePerfilRepositoryPort {
+public class PacientePerfilJpaAdapter implements PacientePerfilRepositoryGateway {
 
     private final SpringDataPacientePerfilRepository repositorio;
     private final PacientePerfilEntityMapper mapper;

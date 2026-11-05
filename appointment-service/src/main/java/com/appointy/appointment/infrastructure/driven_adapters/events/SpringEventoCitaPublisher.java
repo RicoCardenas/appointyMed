@@ -1,12 +1,12 @@
 package com.appointy.appointment.infrastructure.driven_adapters.events;
 
 import com.appointy.appointment.domain.model.EventoCita;
-import com.appointy.appointment.domain.port.out.PublicadorEventosPort;
+import com.appointy.appointment.domain.gateway.PublicadorEventosGateway;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SpringEventoCitaPublisher implements PublicadorEventosPort {
+public class SpringEventoCitaPublisher implements PublicadorEventosGateway {
 
     private final ApplicationEventPublisher publicador;
 

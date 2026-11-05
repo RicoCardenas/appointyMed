@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 
 import com.appointy.appointment.domain.exception.ServicioNoDisponibleException;
 import com.appointy.appointment.domain.model.EventoCita;
-import com.appointy.appointment.domain.port.out.NotificacionClientPort;
+import com.appointy.appointment.domain.gateway.NotificacionClientGateway;
 import com.appointy.appointment.infrastructure.driven_adapters.events.NotificacionEventListener;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class NotificacionEventListenerTest {
 
     @Test
     void siNotificationFallaElErrorNoSePropaga() {
-        NotificacionClientPort cliente = mock(NotificacionClientPort.class);
+        NotificacionClientGateway cliente = mock(NotificacionClientGateway.class);
         doThrow(new ServicioNoDisponibleException("NOTIFICATION_NO_DISPONIBLE", "caido")).when(cliente).notificar(any());
 
         assertDoesNotThrow(() -> new NotificacionEventListener(cliente).alConfirmar(EVENTO));

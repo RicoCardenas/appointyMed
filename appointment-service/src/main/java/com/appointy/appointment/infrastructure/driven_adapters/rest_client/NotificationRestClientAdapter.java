@@ -2,7 +2,7 @@ package com.appointy.appointment.infrastructure.driven_adapters.rest_client;
 
 import com.appointy.appointment.domain.exception.ServicioNoDisponibleException;
 import com.appointy.appointment.domain.model.EventoCita;
-import com.appointy.appointment.domain.port.out.NotificacionClientPort;
+import com.appointy.appointment.domain.gateway.NotificacionClientGateway;
 import com.appointy.appointment.infrastructure.config.CorrelationIdFilter;
 import com.appointy.appointment.infrastructure.config.InternalProperties;
 import com.appointy.appointment.infrastructure.config.NotificationProperties;
@@ -13,7 +13,7 @@ import org.springframework.web.client.RestClientException;
 
 /** POST /internal/notificaciones en notification-service (Fase 5). El oyente posterior al commit atrapa cualquier fallo. */
 @Component
-public class NotificationRestClientAdapter implements NotificacionClientPort {
+public class NotificationRestClientAdapter implements NotificacionClientGateway {
 
     private final RestClient cliente;
     private final String llave;

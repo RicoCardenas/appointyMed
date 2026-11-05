@@ -1,8 +1,8 @@
 package com.appointy.auth.infrastructure.entry_points;
 
-import com.appointy.auth.domain.port.in.CerrarSesionPort;
-import com.appointy.auth.domain.port.in.IniciarSesionPort;
-import com.appointy.auth.domain.port.in.RegistrarPacientePort;
+import com.appointy.auth.domain.usecase.CerrarSesionUseCase;
+import com.appointy.auth.domain.usecase.IniciarSesionUseCase;
+import com.appointy.auth.domain.usecase.RegistrarPacienteUseCase;
 import com.appointy.auth.infrastructure.entry_points.dto.LoginRequest;
 import com.appointy.auth.infrastructure.entry_points.dto.LoginResponse;
 import com.appointy.auth.infrastructure.entry_points.dto.PacienteResponse;
@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    private final RegistrarPacientePort registrarPaciente;
-    private final IniciarSesionPort iniciarSesion;
-    private final CerrarSesionPort cerrarSesion;
+    private final RegistrarPacienteUseCase registrarPaciente;
+    private final IniciarSesionUseCase iniciarSesion;
+    private final CerrarSesionUseCase cerrarSesion;
 
-    public AuthController(RegistrarPacientePort registrarPaciente, IniciarSesionPort iniciarSesion, CerrarSesionPort cerrarSesion) {
+    public AuthController(RegistrarPacienteUseCase registrarPaciente, IniciarSesionUseCase iniciarSesion, CerrarSesionUseCase cerrarSesion) {
         this.registrarPaciente = registrarPaciente;
         this.iniciarSesion = iniciarSesion;
         this.cerrarSesion = cerrarSesion;
@@ -45,6 +45,6 @@ public class AuthController {
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cerrarSesion(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        cerrarSesion.ejecutar(new CerrarSesionPort.Comando(usuario.jti(), usuario.expiraEn()));
+        cerrarSesion.ejecutar(new CerrarSesionUseCase.Comando(usuario.jti(), usuario.expiraEn()));
     }
 }

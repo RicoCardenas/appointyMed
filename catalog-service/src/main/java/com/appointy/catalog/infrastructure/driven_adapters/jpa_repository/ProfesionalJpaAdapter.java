@@ -1,7 +1,7 @@
 package com.appointy.catalog.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.catalog.domain.model.Profesional;
-import com.appointy.catalog.domain.port.out.ProfesionalRepositoryPort;
+import com.appointy.catalog.domain.gateway.ProfesionalRepositoryGateway;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.entity.ProfesionalEntity;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.repository.SpringDataProfesionalRepository;
 import com.appointy.catalog.infrastructure.mapper.ProfesionalEntityMapper;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-public class ProfesionalJpaAdapter implements ProfesionalRepositoryPort {
+public class ProfesionalJpaAdapter implements ProfesionalRepositoryGateway {
 
     private final SpringDataProfesionalRepository repositorio;
     private final ProfesionalEntityMapper mapper;

@@ -8,9 +8,9 @@ import com.appointy.appointment.domain.model.Cita;
 import com.appointy.appointment.domain.model.CitaConFranja;
 import com.appointy.appointment.domain.model.Franja;
 import com.appointy.appointment.domain.model.ProfesionalDeUsuario;
-import com.appointy.appointment.domain.port.out.CatalogClientPort;
-import com.appointy.appointment.domain.port.out.CitaRepositoryPort;
-import com.appointy.appointment.domain.port.out.FranjaRepositoryPort;
+import com.appointy.appointment.domain.gateway.CatalogClientGateway;
+import com.appointy.appointment.domain.gateway.CitaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -24,7 +24,7 @@ final class AyudaCitas {
         return UUID.randomUUID().toString();
     }
 
-    static Cita buscarCita(CitaRepositoryPort citas, String citaId) {
+    static Cita buscarCita(CitaRepositoryGateway citas, String citaId) {
         Cita cita = citas.buscarPorId(citaId);
         if (cita == null) {
             throw new NoEncontradoException("CITA_NO_ENCONTRADA", "La cita no existe");
@@ -32,7 +32,7 @@ final class AyudaCitas {
         return cita;
     }
 
-    static Franja buscarFranja(FranjaRepositoryPort franjas, String franjaId) {
+    static Franja buscarFranja(FranjaRepositoryGateway franjas, String franjaId) {
         Franja franja = franjas.buscarPorId(franjaId);
         if (franja == null) {
             throw new NoEncontradoException("FRANJA_NO_ENCONTRADA", "La franja no existe");
@@ -40,7 +40,7 @@ final class AyudaCitas {
         return franja;
     }
 
-    static Franja buscarFranjaParaActualizar(FranjaRepositoryPort franjas, String franjaId) {
+    static Franja buscarFranjaParaActualizar(FranjaRepositoryGateway franjas, String franjaId) {
         Franja franja = franjas.buscarParaActualizar(franjaId);
         if (franja == null) {
             throw new NoEncontradoException("FRANJA_NO_ENCONTRADA", "La franja no existe");
@@ -52,7 +52,7 @@ final class AyudaCitas {
      * Se llama con la franja de la cita ya bloqueada. Quien cambia una cita bloquea antes su franja, asi que si la cita se
      * movio o cambio de estado entre la lectura previa y el bloqueo, aqui se nota y se rechaza como conflicto.
      */
-    static Cita cargarCitaBajoBloqueo(CitaRepositoryPort citas, String citaId, String franjaEsperadaId) {
+    static Cita cargarCitaBajoBloqueo(CitaRepositoryGateway citas, String citaId, String franjaEsperadaId) {
         Cita cita = buscarCita(citas, citaId);
         if (!cita.franjaId().equals(franjaEsperadaId)) {
             throw new ConflictoException("CITA_CAMBIO", "La cita cambio mientras se procesaba la solicitud; intenta de nuevo");
@@ -60,7 +60,7 @@ final class AyudaCitas {
         return cita;
     }
 
-    static CitaConFranja[] conFranjas(FranjaRepositoryPort franjas, Cita[] citas) {
+    static CitaConFranja[] conFranjas(FranjaRepositoryGateway franjas, Cita[] citas) {
         String[] ids = new String[citas.length];
         for (int i = 0; i < citas.length; i++) {
             ids[i] = citas[i].franjaId();
@@ -77,7 +77,7 @@ final class AyudaCitas {
     }
 
     /** El profesional de catalog que corresponde a la cuenta; 403 si la cuenta no tiene perfil o esta inactiva. */
-    static String profesionalDe(CatalogClientPort catalog, Actor actor) {
+    static String profesionalDe(CatalogClientGateway catalog, Actor actor) {
         ProfesionalDeUsuario p = catalog.buscarProfesionalDeUsuario(actor.usuarioId());
         if (p == null || !p.activo()) {
             throw new AccesoProhibidoException("SIN_PERFIL_PROFESIONAL", "Tu cuenta no tiene un perfil de profesional activo");
@@ -86,7 +86,7 @@ final class AyudaCitas {
     }
 
     /** Lectura de una cita: su paciente, su profesional o personal administrativo (RNF-05). */
-    static void exigirLectura(CatalogClientPort catalog, Actor actor, Cita cita) {
+    static void exigirLectura(CatalogClientGateway catalog, Actor actor, Cita cita) {
         if (actor.esAdministrativo()) {
             return;
         }

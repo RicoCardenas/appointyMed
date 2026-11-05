@@ -1,7 +1,7 @@
 package com.appointy.appointment.infrastructure.driven_adapters.events;
 
 import com.appointy.appointment.domain.model.EventoCita;
-import com.appointy.appointment.domain.port.out.NotificacionClientPort;
+import com.appointy.appointment.domain.gateway.NotificacionClientGateway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -18,9 +18,9 @@ public class NotificacionEventListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificacionEventListener.class);
 
-    private final NotificacionClientPort cliente;
+    private final NotificacionClientGateway cliente;
 
-    public NotificacionEventListener(NotificacionClientPort cliente) {
+    public NotificacionEventListener(NotificacionClientGateway cliente) {
         this.cliente = cliente;
     }
 

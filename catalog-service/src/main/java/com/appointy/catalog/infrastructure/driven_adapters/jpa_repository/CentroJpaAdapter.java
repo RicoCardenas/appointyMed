@@ -1,14 +1,14 @@
 package com.appointy.catalog.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.catalog.domain.model.Centro;
-import com.appointy.catalog.domain.port.out.CentroRepositoryPort;
+import com.appointy.catalog.domain.gateway.CentroRepositoryGateway;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.repository.SpringDataCentroRepository;
 import com.appointy.catalog.infrastructure.mapper.CentroEntityMapper;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CentroJpaAdapter implements CentroRepositoryPort {
+public class CentroJpaAdapter implements CentroRepositoryGateway {
 
     private final SpringDataCentroRepository repositorio;
     private final CentroEntityMapper mapper;

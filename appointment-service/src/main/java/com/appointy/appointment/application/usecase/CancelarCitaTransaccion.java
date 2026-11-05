@@ -7,24 +7,24 @@ import com.appointy.appointment.domain.model.EventoCita;
 import com.appointy.appointment.domain.model.Franja;
 import com.appointy.appointment.domain.model.HistorialCita;
 import com.appointy.appointment.domain.model.ParametrosCita;
-import com.appointy.appointment.domain.port.in.CancelarCitaPort.Comando;
-import com.appointy.appointment.domain.port.out.CitaRepositoryPort;
-import com.appointy.appointment.domain.port.out.FranjaRepositoryPort;
-import com.appointy.appointment.domain.port.out.HistorialCitaRepositoryPort;
-import com.appointy.appointment.domain.port.out.PublicadorEventosPort;
+import com.appointy.appointment.domain.usecase.CancelarCitaUseCase.Comando;
+import com.appointy.appointment.domain.gateway.CitaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.HistorialCitaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.PublicadorEventosGateway;
 import com.appointy.appointment.domain.rule.ReglasCita;
 import org.springframework.transaction.annotation.Transactional;
 
 public class CancelarCitaTransaccion {
 
-    private final FranjaRepositoryPort franjas;
-    private final CitaRepositoryPort citas;
-    private final HistorialCitaRepositoryPort historial;
-    private final PublicadorEventosPort eventos;
+    private final FranjaRepositoryGateway franjas;
+    private final CitaRepositoryGateway citas;
+    private final HistorialCitaRepositoryGateway historial;
+    private final PublicadorEventosGateway eventos;
     private final RelojClinica reloj;
 
-    public CancelarCitaTransaccion(FranjaRepositoryPort franjas, CitaRepositoryPort citas, HistorialCitaRepositoryPort historial,
-            PublicadorEventosPort eventos, RelojClinica reloj) {
+    public CancelarCitaTransaccion(FranjaRepositoryGateway franjas, CitaRepositoryGateway citas, HistorialCitaRepositoryGateway historial,
+            PublicadorEventosGateway eventos, RelojClinica reloj) {
         this.franjas = franjas;
         this.citas = citas;
         this.historial = historial;

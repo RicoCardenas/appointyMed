@@ -6,21 +6,21 @@ import com.appointy.appointment.domain.model.CitaConFranja;
 import com.appointy.appointment.domain.model.EstadoCita;
 import com.appointy.appointment.domain.model.Franja;
 import com.appointy.appointment.domain.model.HistorialCita;
-import com.appointy.appointment.domain.port.out.CitaRepositoryPort;
-import com.appointy.appointment.domain.port.out.FranjaRepositoryPort;
-import com.appointy.appointment.domain.port.out.HistorialCitaRepositoryPort;
+import com.appointy.appointment.domain.gateway.CitaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.HistorialCitaRepositoryGateway;
 import com.appointy.appointment.domain.rule.ReglasCita;
 import org.springframework.transaction.annotation.Transactional;
 
 /** La franja sigue OCUPADA: la cita ya se atendio (o el paciente no vino) y ese horario no vuelve a ofrecerse. */
 public class MarcarCitaAtendidaTransaccion {
 
-    private final FranjaRepositoryPort franjas;
-    private final CitaRepositoryPort citas;
-    private final HistorialCitaRepositoryPort historial;
+    private final FranjaRepositoryGateway franjas;
+    private final CitaRepositoryGateway citas;
+    private final HistorialCitaRepositoryGateway historial;
     private final RelojClinica reloj;
 
-    public MarcarCitaAtendidaTransaccion(FranjaRepositoryPort franjas, CitaRepositoryPort citas, HistorialCitaRepositoryPort historial,
+    public MarcarCitaAtendidaTransaccion(FranjaRepositoryGateway franjas, CitaRepositoryGateway citas, HistorialCitaRepositoryGateway historial,
             RelojClinica reloj) {
         this.franjas = franjas;
         this.citas = citas;

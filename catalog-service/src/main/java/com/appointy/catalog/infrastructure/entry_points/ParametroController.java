@@ -1,7 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
-import com.appointy.catalog.domain.port.in.ConfigurarParametrosPort;
-import com.appointy.catalog.domain.port.in.ConsultarParametrosPort;
+import com.appointy.catalog.domain.usecase.ConfigurarParametrosUseCase;
+import com.appointy.catalog.domain.usecase.ConsultarParametrosUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.ParametroResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.ParametrosRequest;
 import jakarta.validation.Valid;
@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class ParametroController {
 
-    private final ConsultarParametrosPort consultar;
-    private final ConfigurarParametrosPort configurar;
+    private final ConsultarParametrosUseCase consultar;
+    private final ConfigurarParametrosUseCase configurar;
 
-    public ParametroController(ConsultarParametrosPort consultar, ConfigurarParametrosPort configurar) {
+    public ParametroController(ConsultarParametrosUseCase consultar, ConfigurarParametrosUseCase configurar) {
         this.consultar = consultar;
         this.configurar = configurar;
     }
@@ -35,6 +35,6 @@ public class ParametroController {
 
     @PutMapping
     public List<ParametroResponse> configurar(@Valid @RequestBody ParametrosRequest s) {
-        return Arrays.stream(configurar.ejecutar(new ConfigurarParametrosPort.Comando(s.comoParametros()))).map(ParametroResponse::de).toList();
+        return Arrays.stream(configurar.ejecutar(new ConfigurarParametrosUseCase.Comando(s.comoParametros()))).map(ParametroResponse::de).toList();
     }
 }

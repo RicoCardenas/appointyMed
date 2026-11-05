@@ -1,14 +1,14 @@
 package com.appointy.catalog.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.catalog.domain.model.HorarioAtencion;
-import com.appointy.catalog.domain.port.out.HorarioRepositoryPort;
+import com.appointy.catalog.domain.gateway.HorarioRepositoryGateway;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.repository.SpringDataHorarioRepository;
 import com.appointy.catalog.infrastructure.mapper.HorarioAtencionEntityMapper;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class HorarioJpaAdapter implements HorarioRepositoryPort {
+public class HorarioJpaAdapter implements HorarioRepositoryGateway {
 
     private final SpringDataHorarioRepository repositorio;
     private final HorarioAtencionEntityMapper mapper;

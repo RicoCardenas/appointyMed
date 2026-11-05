@@ -4,7 +4,7 @@ import com.appointy.catalog.domain.exception.ConflictoCitasException;
 import com.appointy.catalog.domain.exception.ServicioNoDisponibleException;
 import com.appointy.catalog.domain.model.FranjaSolicitada;
 import com.appointy.catalog.domain.model.ResultadoGeneracion;
-import com.appointy.catalog.domain.port.out.AppointmentClientPort;
+import com.appointy.catalog.domain.gateway.AppointmentClientGateway;
 import com.appointy.catalog.infrastructure.config.AppointmentProperties;
 import com.appointy.catalog.infrastructure.config.CorrelationIdFilter;
 import com.appointy.catalog.infrastructure.config.InternalProperties;
@@ -27,7 +27,7 @@ import org.springframework.web.client.RestClientResponseException;
  * timeout o error del servidor se convierte en {@link ServicioNoDisponibleException}: nunca se deja pasar un cuelgue.
  */
 @Component
-public class AppointmentRestClientAdapter implements AppointmentClientPort {
+public class AppointmentRestClientAdapter implements AppointmentClientGateway {
 
     private static final Logger LOG = LoggerFactory.getLogger(AppointmentRestClientAdapter.class);
 

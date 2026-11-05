@@ -18,12 +18,12 @@ import com.appointy.catalog.domain.model.HorarioAtencion;
 import com.appointy.catalog.domain.model.ParametroServicio;
 import com.appointy.catalog.domain.model.Profesional;
 import com.appointy.catalog.domain.model.ResultadoHorario;
-import com.appointy.catalog.domain.port.in.DefinirHorarioPort;
-import com.appointy.catalog.domain.port.in.ModificarHorarioPort;
-import com.appointy.catalog.domain.port.out.CentroRepositoryPort;
-import com.appointy.catalog.domain.port.out.HorarioRepositoryPort;
-import com.appointy.catalog.domain.port.out.ParametroRepositoryPort;
-import com.appointy.catalog.domain.port.out.ProfesionalRepositoryPort;
+import com.appointy.catalog.domain.usecase.DefinirHorarioUseCase;
+import com.appointy.catalog.domain.usecase.ModificarHorarioUseCase;
+import com.appointy.catalog.domain.gateway.CentroRepositoryGateway;
+import com.appointy.catalog.domain.gateway.HorarioRepositoryGateway;
+import com.appointy.catalog.domain.gateway.ParametroRepositoryGateway;
+import com.appointy.catalog.domain.gateway.ProfesionalRepositoryGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -32,17 +32,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class HorariosUseCasesTest {
 
-    @Mock ProfesionalRepositoryPort profesionales;
-    @Mock CentroRepositoryPort centros;
-    @Mock HorarioRepositoryPort horarios;
-    @Mock ParametroRepositoryPort parametros;
+    @Mock ProfesionalRepositoryGateway profesionales;
+    @Mock CentroRepositoryGateway centros;
+    @Mock HorarioRepositoryGateway horarios;
+    @Mock ParametroRepositoryGateway parametros;
     @Mock PublicadorDeFranjas publicador;
 
     final Profesional ana = new Profesional("p1", "u1", "Ana", "Perez", "RM-1", true);
     final Centro sede = new Centro("c1", "Sede", "Calle 1", "Cali", null, true);
 
-    private DefinirHorarioUseCase definir() {
-        return new DefinirHorarioUseCase(profesionales, centros, horarios, parametros, publicador);
+    private DefinirHorarioUseCaseImpl definir() {
+        return new DefinirHorarioUseCaseImpl(profesionales, centros, horarios, parametros, publicador);
     }
 
     private void profesionalYCentroValidos() {
@@ -59,7 +59,7 @@ class HorariosUseCasesTest {
         when(horarios.guardar(any())).thenAnswer(i -> i.getArgument(0));
         when(publicador.publicar(any())).thenAnswer(i -> new ResultadoHorario(i.getArgument(0), true, 8, 0, "Franjas generadas"));
 
-        ResultadoHorario r = definir().ejecutar(new DefinirHorarioPort.Comando("p1", "c1", 1, 480, 600, null));
+        ResultadoHorario r = definir().ejecutar(new DefinirHorarioUseCase.Comando("p1", "c1", 1, 480, 600, null));
 
         assertEquals(30, r.horario().duracionFranjaMin());
         assertTrue(r.horario().activo());
@@ -74,7 +74,7 @@ class HorariosUseCasesTest {
         when(horarios.guardar(any())).thenAnswer(i -> i.getArgument(0));
         when(publicador.publicar(any())).thenAnswer(i -> new ResultadoHorario(i.getArgument(0), false, 0, 0, "se guardo"));
 
-        ResultadoHorario r = definir().ejecutar(new DefinirHorarioPort.Comando("p1", "c1", 2, 480, 600, 30));
+        ResultadoHorario r = definir().ejecutar(new DefinirHorarioUseCase.Comando("p1", "c1", 2, 480, 600, 30));
 
         assertFalse(r.franjasGeneradas());
         verify(horarios).guardar(r.horario());
@@ -86,7 +86,7 @@ class HorariosUseCasesTest {
         when(centros.buscarPorId("c1")).thenReturn(sede);
         when(profesionales.atiendeEnCentro("p1", "c1")).thenReturn(false);
 
-        ValidacionException ex = assertThrows(ValidacionException.class, () -> definir().ejecutar(new DefinirHorarioPort.Comando("p1", "c1", 1, 480, 600, 30)));
+        ValidacionException ex = assertThrows(ValidacionException.class, () -> definir().ejecutar(new DefinirHorarioUseCase.Comando("p1", "c1", 1, 480, 600, 30)));
 
         assertEquals("PROFESIONAL_NO_ATIENDE_EN_CENTRO", ex.codigo());
         verify(horarios, never()).guardar(any());
@@ -98,9 +98,9 @@ class HorariosUseCasesTest {
         when(horarios.listarDeProfesional("p1")).thenReturn(new HorarioAtencion[] {new HorarioAtencion("h0", "p1", "c9", 1, 540, 660, 30, true)});
 
         assertEquals("HORARIO_TRASLAPADO", assertThrows(ConflictoException.class,
-                () -> definir().ejecutar(new DefinirHorarioPort.Comando("p1", "c1", 1, 480, 600, 30))).codigo());
+                () -> definir().ejecutar(new DefinirHorarioUseCase.Comando("p1", "c1", 1, 480, 600, 30))).codigo());
         assertEquals("DURACION_NO_DIVIDE_RANGO", assertThrows(ValidacionException.class,
-                () -> definir().ejecutar(new DefinirHorarioPort.Comando("p1", "c1", 3, 480, 600, 45))).codigo());
+                () -> definir().ejecutar(new DefinirHorarioUseCase.Comando("p1", "c1", 3, 480, 600, 45))).codigo());
         verify(horarios, never()).guardar(any());
     }
 
@@ -108,14 +108,14 @@ class HorariosUseCasesTest {
     void definirRechazaProfesionalInexistenteOInactivoYCentroInactivo() {
         when(profesionales.buscarPorId("nada")).thenReturn(null);
         when(profesionales.buscarPorId("inactivo")).thenReturn(ana.desactivar());
-        assertThrows(NoEncontradoException.class, () -> definir().ejecutar(new DefinirHorarioPort.Comando("nada", "c1", 1, 480, 600, 30)));
+        assertThrows(NoEncontradoException.class, () -> definir().ejecutar(new DefinirHorarioUseCase.Comando("nada", "c1", 1, 480, 600, 30)));
         assertEquals("PROFESIONAL_INACTIVO", assertThrows(ValidacionException.class,
-                () -> definir().ejecutar(new DefinirHorarioPort.Comando("inactivo", "c1", 1, 480, 600, 30))).codigo());
+                () -> definir().ejecutar(new DefinirHorarioUseCase.Comando("inactivo", "c1", 1, 480, 600, 30))).codigo());
 
         when(profesionales.buscarPorId("p1")).thenReturn(ana);
         when(centros.buscarPorId("c1")).thenReturn(sede.desactivar());
         assertEquals("CENTRO_INACTIVO", assertThrows(ValidacionException.class,
-                () -> definir().ejecutar(new DefinirHorarioPort.Comando("p1", "c1", 1, 480, 600, 30))).codigo());
+                () -> definir().ejecutar(new DefinirHorarioUseCase.Comando("p1", "c1", 1, 480, 600, 30))).codigo());
     }
 
     @Test
@@ -128,8 +128,8 @@ class HorariosUseCasesTest {
         when(horarios.guardar(any())).thenAnswer(i -> i.getArgument(0));
         when(publicador.publicar(any())).thenAnswer(i -> new ResultadoHorario(i.getArgument(0), true, 2, 8, "Franjas generadas"));
 
-        ResultadoHorario r = new ModificarHorarioUseCase(profesionales, centros, horarios, parametros, publicador)
-                .ejecutar(new ModificarHorarioPort.Comando("h1", "c1", 1, 480, 660, 30, true));
+        ResultadoHorario r = new ModificarHorarioUseCaseImpl(profesionales, centros, horarios, parametros, publicador)
+                .ejecutar(new ModificarHorarioUseCase.Comando("h1", "c1", 1, 480, 660, 30, true));
 
         assertEquals(660, r.horario().horaFin());
         assertEquals("p1", r.horario().profesionalId());
@@ -140,8 +140,8 @@ class HorariosUseCasesTest {
         when(horarios.buscarPorId("nada")).thenReturn(null);
 
         assertThrows(NoEncontradoException.class,
-                () -> new ModificarHorarioUseCase(profesionales, centros, horarios, parametros, publicador)
-                        .ejecutar(new ModificarHorarioPort.Comando("nada", "c1", 1, 480, 600, 30, true)));
+                () -> new ModificarHorarioUseCaseImpl(profesionales, centros, horarios, parametros, publicador)
+                        .ejecutar(new ModificarHorarioUseCase.Comando("nada", "c1", 1, 480, 600, 30, true)));
     }
 
     @Test
@@ -150,13 +150,13 @@ class HorariosUseCasesTest {
         when(horarios.buscarPorId("h1")).thenReturn(h);
         when(publicador.publicar(h)).thenReturn(new ResultadoHorario(h, false, 0, 0, "caido"));
 
-        assertThrows(ServicioNoDisponibleException.class, () -> new GenerarFranjasUseCase(horarios, publicador).ejecutar("h1"));
+        assertThrows(ServicioNoDisponibleException.class, () -> new GenerarFranjasUseCaseImpl(horarios, publicador).ejecutar("h1"));
     }
 
     @Test
     void reintentarFranjasDeUnHorarioInactivoEsUnConflicto() {
         when(horarios.buscarPorId("h1")).thenReturn(new HorarioAtencion("h1", "p1", "c1", 1, 480, 600, 30, false));
 
-        assertEquals("HORARIO_INACTIVO", assertThrows(ConflictoException.class, () -> new GenerarFranjasUseCase(horarios, publicador).ejecutar("h1")).codigo());
+        assertEquals("HORARIO_INACTIVO", assertThrows(ConflictoException.class, () -> new GenerarFranjasUseCaseImpl(horarios, publicador).ejecutar("h1")).codigo());
     }
 }

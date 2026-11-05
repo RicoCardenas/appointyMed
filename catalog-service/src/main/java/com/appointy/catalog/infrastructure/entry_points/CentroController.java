@@ -1,8 +1,8 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
-import com.appointy.catalog.domain.port.in.ActualizarCentroPort;
-import com.appointy.catalog.domain.port.in.CrearCentroPort;
-import com.appointy.catalog.domain.port.in.DesactivarCentroPort;
+import com.appointy.catalog.domain.usecase.ActualizarCentroUseCase;
+import com.appointy.catalog.domain.usecase.CrearCentroUseCase;
+import com.appointy.catalog.domain.usecase.DesactivarCentroUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroResponse;
 import jakarta.validation.Valid;
@@ -24,11 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class CentroController {
 
-    private final CrearCentroPort crear;
-    private final ActualizarCentroPort actualizar;
-    private final DesactivarCentroPort desactivar;
+    private final CrearCentroUseCase crear;
+    private final ActualizarCentroUseCase actualizar;
+    private final DesactivarCentroUseCase desactivar;
 
-    public CentroController(CrearCentroPort crear, ActualizarCentroPort actualizar, DesactivarCentroPort desactivar) {
+    public CentroController(CrearCentroUseCase crear, ActualizarCentroUseCase actualizar, DesactivarCentroUseCase desactivar) {
         this.crear = crear;
         this.actualizar = actualizar;
         this.desactivar = desactivar;
@@ -37,12 +37,12 @@ public class CentroController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CentroResponse crear(@Valid @RequestBody CentroRequest s) {
-        return CentroResponse.de(crear.ejecutar(new CrearCentroPort.Comando(s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
+        return CentroResponse.de(crear.ejecutar(new CrearCentroUseCase.Comando(s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
     }
 
     @PutMapping("/{id}")
     public CentroResponse actualizar(@PathVariable UUID id, @Valid @RequestBody CentroRequest s) {
-        return CentroResponse.de(actualizar.ejecutar(new ActualizarCentroPort.Comando(id.toString(), s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
+        return CentroResponse.de(actualizar.ejecutar(new ActualizarCentroUseCase.Comando(id.toString(), s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
     }
 
     /** Borrado logico: el centro queda inactivo, no se elimina. */

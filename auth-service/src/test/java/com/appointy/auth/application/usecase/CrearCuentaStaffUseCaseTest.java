@@ -10,9 +10,9 @@ import com.appointy.auth.domain.exception.ConflictoException;
 import com.appointy.auth.domain.exception.ValidacionException;
 import com.appointy.auth.domain.model.Rol;
 import com.appointy.auth.domain.model.Usuario;
-import com.appointy.auth.domain.port.in.CrearCuentaStaffPort.Comando;
-import com.appointy.auth.domain.port.out.CodificadorClavePort;
-import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
+import com.appointy.auth.domain.usecase.CrearCuentaStaffUseCase.Comando;
+import com.appointy.auth.domain.gateway.CodificadorClaveGateway;
+import com.appointy.auth.domain.gateway.UsuarioRepositoryGateway;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -25,14 +25,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CrearCuentaStaffUseCaseTest {
 
-    @Mock UsuarioRepositoryPort usuarios;
-    @Mock CodificadorClavePort codificador;
+    @Mock UsuarioRepositoryGateway usuarios;
+    @Mock CodificadorClaveGateway codificador;
 
-    CrearCuentaStaffUseCase useCase;
+    CrearCuentaStaffUseCaseImpl useCase;
 
     @BeforeEach
     void iniciar() {
-        useCase = new CrearCuentaStaffUseCase(usuarios, codificador, Clock.fixed(Instant.parse("2026-06-01T10:00:00Z"), ZoneOffset.UTC));
+        useCase = new CrearCuentaStaffUseCaseImpl(usuarios, codificador, Clock.fixed(Instant.parse("2026-06-01T10:00:00Z"), ZoneOffset.UTC));
     }
 
     @Test

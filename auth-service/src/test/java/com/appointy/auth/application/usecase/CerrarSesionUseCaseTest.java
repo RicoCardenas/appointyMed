@@ -6,8 +6,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.appointy.auth.domain.model.TokenRevocado;
-import com.appointy.auth.domain.port.in.CerrarSesionPort.Comando;
-import com.appointy.auth.domain.port.out.TokenRevocadoRepositoryPort;
+import com.appointy.auth.domain.usecase.CerrarSesionUseCase.Comando;
+import com.appointy.auth.domain.gateway.TokenRevocadoRepositoryGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,8 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CerrarSesionUseCaseTest {
 
-    @Mock TokenRevocadoRepositoryPort revocados;
-    @InjectMocks CerrarSesionUseCase useCase;
+    @Mock TokenRevocadoRepositoryGateway revocados;
+    @InjectMocks CerrarSesionUseCaseImpl useCase;
 
     final long expira = 1_780_000_000_000L;
 

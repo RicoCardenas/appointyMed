@@ -1,8 +1,8 @@
 package com.appointy.auth.infrastructure.security;
 
 import com.appointy.auth.domain.model.ClaimsToken;
-import com.appointy.auth.domain.port.out.EmisorTokenPort;
-import com.appointy.auth.domain.port.out.TokenRevocadoRepositoryPort;
+import com.appointy.auth.domain.gateway.EmisorTokenGateway;
+import com.appointy.auth.domain.gateway.TokenRevocadoRepositoryGateway;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,10 +20,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String PREFIJO = "Bearer ";
 
-    private final EmisorTokenPort emisor;
-    private final TokenRevocadoRepositoryPort revocados;
+    private final EmisorTokenGateway emisor;
+    private final TokenRevocadoRepositoryGateway revocados;
 
-    public JwtAuthenticationFilter(EmisorTokenPort emisor, TokenRevocadoRepositoryPort revocados) {
+    public JwtAuthenticationFilter(EmisorTokenGateway emisor, TokenRevocadoRepositoryGateway revocados) {
         this.emisor = emisor;
         this.revocados = revocados;
     }

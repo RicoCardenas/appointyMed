@@ -121,7 +121,7 @@ Puerto 8083, base `/api/v1`. Franjas con fecha y hora locales de la clínica; in
 
 Contrato hacia notification (Fase 5): `POST /internal/notificaciones` con `{tipo: CONFIRMADA|REPROGRAMADA|CANCELADA, citaId, pacienteId, profesionalId, centroId, fecha, horaInicio:"HH:mm", actorId}`, llave de servicio y correlation id. Solo ids, sin datos personales. Se envía tras el commit y de forma asíncrona; si falla, solo se registra. Catalog tiene además `GET /internal/profesionales/por-usuario/{usuarioId}` (nuevo).
 
-Decisiones de esta fase (a validar con el docente):
+Decisiones de esta fase:
 - `paciente_id` de la cita es el `usuarioId` del JWT. La agenda y CU-23 resuelven el profesional de la cuenta en catalog.
 - Anticipación mínima aplica a reservar y reprogramar; el límite de cancelación, a cancelar (también al administrativo). Reprogramar puede cambiar de profesional y centro si sigue asociado a la especialidad de la cita.
 - Orden de bloqueos: candado por paciente, franjas por id ascendente, luego la cita (que se relee bajo bloqueo; si se movió, 409 `CITA_CAMBIO`). Espera máxima 5 s (`lock_timeout`), vencida es 409.
@@ -137,9 +137,9 @@ Decisiones de esta fase (a validar con el docente):
 - Prueba de concurrencia contra PostgreSQL real (`ReservaConcurrenteTest`, se activa si `APPOINTMENT_DB_PASSWORD` está definida, p. ej. cargando `.env`): 12 hilos sobre una franja, 1 éxito y 11 conflictos; mismo paciente con dos franjas que se cruzan; reprogramaciones cruzadas sin deadlock; dos reprogramaciones a la misma franja libre; el índice parcial rechaza el duplicado.
 - `scripts/e2e/appointment.sh` (auth, catalog y appointment reales, notification simulado): 131 comprobaciones correctas, 0 fallidas. Cubre los 11 CU, el catalog→appointment real (franjas, idempotencia, bloqueo con 409 y rollback), 8 solicitudes HTTP simultáneas sobre una franja (1 éxito, 7 conflictos), notification caído (la cita se guarda), catalog caído (503), la API interna con y sin llave, y que no hay secretos ni datos personales en el log. Defecto de la propia prueba corregido: un `wait` sin argumentos la dejaba colgada.
 
-## Decisiones propias a validar con el docente
+## Decisiones propias (tomadas por el equipo; no se consultan al docente)
 
-1. Idioma: dominio en español; sufijos técnicos en inglés (`ReservarCitaUseCase`, `FranjaRepositoryPort`).
+1. Idioma: dominio en español; sufijos técnicos en inglés (interfaz `ReservarCitaUseCase`, implementación `ReservarCitaUseCaseImpl`, `FranjaRepositoryGateway`).
 2. Spring Boot 3.5.16 (la especificación dice 3.x).
 3. `MODIFICADA` fuera del CHECK de `cita`; el cambio de franja queda en `historial_cita` (recomendación del docente).
 4. Códigos 422 y 503 además de los de la convención, porque los casos de uso los piden.
@@ -159,12 +159,13 @@ Decisiones de esta fase (a validar con el docente):
 18. Modificar un horario no retira las franjas ya generadas; se usa un bloqueo para dejar de ofrecerlas.
 19. Catalog no comprueba en auth que el `usuarioId` de un profesional exista ni tenga rol PROFESIONAL (no hay llamada auth a catalog en la especificación); confía en el administrativo.
 20. API interna adicional de catalog para CU-18 (`/internal/profesionales/{id}/asociacion`, `/internal/parametros`) y de appointment para CU-25/CU-26: la lista de comunicaciones de la especificación no incluye appointment a catalog.
-21. Las horas del horario llegan y salen como `HH:mm`, con máximo 23:59 (no existe 24:00 en una columna TIME).
+21. Estructura del docente: `domain/usecase` (interfaces de casos de uso), `domain/gateway` (puertos de salida) y `application/usecase` (`*UseCaseImpl`). Antes eran `port/in` y `port/out` con sufijo `Port`.
+22. Las horas del horario llegan y salen como `HH:mm`, con máximo 23:59 (no existe 24:00 en una columna TIME).
 
-## Pedir al docente
+## Supuestos abiertos
 
-- La lista de reglas de negocio RN-xx (el enunciado cita RN-06, 09, 11, 13 y 17).
-- Si el despliegue en AWS se evalúa y con qué presupuesto.
+- La lista de reglas de negocio RN-xx (el enunciado cita RN-06, 09, 11, 13 y 17) no se entregó: se aplican las reglas descritas en los CU.
+- Alcance y presupuesto del despliegue en AWS: se decide al llegar a la Fase 8.
 
 ## Pendientes menores
 

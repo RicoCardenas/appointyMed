@@ -2,14 +2,14 @@ package com.appointy.auth.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.auth.domain.model.Rol;
 import com.appointy.auth.domain.model.Usuario;
-import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
+import com.appointy.auth.domain.gateway.UsuarioRepositoryGateway;
 import com.appointy.auth.infrastructure.driven_adapters.jpa_repository.repository.SpringDataUsuarioRepository;
 import com.appointy.auth.infrastructure.mapper.UsuarioEntityMapper;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UsuarioJpaAdapter implements UsuarioRepositoryPort {
+public class UsuarioJpaAdapter implements UsuarioRepositoryGateway {
 
     private final SpringDataUsuarioRepository repositorio;
     private final UsuarioEntityMapper mapper;

@@ -1,14 +1,14 @@
 package com.appointy.appointment.infrastructure.entry_points;
 
 import com.appointy.appointment.domain.model.Actor;
-import com.appointy.appointment.domain.port.in.CancelarCitaPort;
-import com.appointy.appointment.domain.port.in.ConsultarAgendaPort;
-import com.appointy.appointment.domain.port.in.ConsultarCitaPort;
-import com.appointy.appointment.domain.port.in.ConsultarHistorialCitaPort;
-import com.appointy.appointment.domain.port.in.ConsultarMisCitasPort;
-import com.appointy.appointment.domain.port.in.MarcarCitaAtendidaPort;
-import com.appointy.appointment.domain.port.in.ReprogramarCitaPort;
-import com.appointy.appointment.domain.port.in.ReservarCitaPort;
+import com.appointy.appointment.domain.usecase.CancelarCitaUseCase;
+import com.appointy.appointment.domain.usecase.ConsultarAgendaUseCase;
+import com.appointy.appointment.domain.usecase.ConsultarCitaUseCase;
+import com.appointy.appointment.domain.usecase.ConsultarHistorialCitaUseCase;
+import com.appointy.appointment.domain.usecase.ConsultarMisCitasUseCase;
+import com.appointy.appointment.domain.usecase.MarcarCitaAtendidaUseCase;
+import com.appointy.appointment.domain.usecase.ReprogramarCitaUseCase;
+import com.appointy.appointment.domain.usecase.ReservarCitaUseCase;
 import com.appointy.appointment.infrastructure.entry_points.dto.CancelarCitaRequest;
 import com.appointy.appointment.infrastructure.entry_points.dto.CitaResponse;
 import com.appointy.appointment.infrastructure.entry_points.dto.HistorialCitaResponse;
@@ -39,17 +39,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/citas")
 public class CitaController {
 
-    private final ReservarCitaPort reservar;
-    private final ReprogramarCitaPort reprogramar;
-    private final CancelarCitaPort cancelar;
-    private final ConsultarMisCitasPort misCitas;
-    private final ConsultarAgendaPort agenda;
-    private final ConsultarCitaPort consultar;
-    private final MarcarCitaAtendidaPort marcar;
-    private final ConsultarHistorialCitaPort historial;
+    private final ReservarCitaUseCase reservar;
+    private final ReprogramarCitaUseCase reprogramar;
+    private final CancelarCitaUseCase cancelar;
+    private final ConsultarMisCitasUseCase misCitas;
+    private final ConsultarAgendaUseCase agenda;
+    private final ConsultarCitaUseCase consultar;
+    private final MarcarCitaAtendidaUseCase marcar;
+    private final ConsultarHistorialCitaUseCase historial;
 
-    public CitaController(ReservarCitaPort reservar, ReprogramarCitaPort reprogramar, CancelarCitaPort cancelar, ConsultarMisCitasPort misCitas,
-            ConsultarAgendaPort agenda, ConsultarCitaPort consultar, MarcarCitaAtendidaPort marcar, ConsultarHistorialCitaPort historial) {
+    public CitaController(ReservarCitaUseCase reservar, ReprogramarCitaUseCase reprogramar, CancelarCitaUseCase cancelar, ConsultarMisCitasUseCase misCitas,
+            ConsultarAgendaUseCase agenda, ConsultarCitaUseCase consultar, MarcarCitaAtendidaUseCase marcar, ConsultarHistorialCitaUseCase historial) {
         this.reservar = reservar;
         this.reprogramar = reprogramar;
         this.cancelar = cancelar;
@@ -64,21 +64,21 @@ public class CitaController {
     @PreAuthorize("hasRole('PACIENTE')")
     @ResponseStatus(HttpStatus.CREATED)
     public CitaResponse reservar(@AuthenticationPrincipal UsuarioAutenticado u, @Valid @RequestBody ReservarCitaRequest s) {
-        return CitaResponse.de(reservar.ejecutar(new ReservarCitaPort.Comando(
+        return CitaResponse.de(reservar.ejecutar(new ReservarCitaUseCase.Comando(
                 actor(u), s.especialidadId().toString(), s.profesionalId().toString(), s.centroId().toString(), s.franjaId().toString())));
     }
 
     @PostMapping("/{id}/reprogramar")
     @PreAuthorize("hasRole('PACIENTE')")
     public CitaResponse reprogramar(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id, @Valid @RequestBody ReprogramarCitaRequest s) {
-        return CitaResponse.de(reprogramar.ejecutar(new ReprogramarCitaPort.Comando(actor(u), id.toString(), s.franjaId().toString())));
+        return CitaResponse.de(reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(actor(u), id.toString(), s.franjaId().toString())));
     }
 
     @PostMapping("/{id}/cancelar")
     @PreAuthorize("hasAnyRole('PACIENTE', 'ADMINISTRATIVO')")
     public CitaResponse cancelar(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id,
             @Valid @RequestBody(required = false) CancelarCitaRequest s) {
-        return CitaResponse.de(cancelar.ejecutar(new CancelarCitaPort.Comando(actor(u), id.toString(), s == null ? null : s.motivo())));
+        return CitaResponse.de(cancelar.ejecutar(new CancelarCitaUseCase.Comando(actor(u), id.toString(), s == null ? null : s.motivo())));
     }
 
     @GetMapping("/mias")

@@ -5,18 +5,18 @@ Español, profesional y conciso. Sin emojis ni relleno. Responde primero; no rep
 ## Fuente de verdad
 - `docs/especificacion.md`: requisitos, casos de uso, datos y reglas del docente. Prevalece sobre cualquier otro texto. Léela por secciones con `rg`, no completa.
 - `docs/progreso.md`: al empezar lee solo "Siguiente paso" y la tabla de Fases (las primeras ~25 líneas); las secciones por fase y las decisiones solo si la tarea las toca. Actualízalo al cerrar una fase.
-- Si la especificación no cubre algo o se contradice, pregunta; no inventes reglas de negocio.
+- Si la especificación no cubre algo o se contradice, decide tú la opción más razonable y sencilla, aplícala y anótala en `docs/progreso.md` ("Decisiones propias"). No preguntes ni esperes confirmación del docente.
 - El código anterior sigue en el historial de Git, hasta el commit `efb6897` (`git show efb6897:<ruta>`). Reutiliza piezas sueltas (JWT, filtro, manejador de errores), no su arquitectura.
 
 ## Stack y arquitectura
 Java 21, Spring Boot 3.5, Maven multimódulo, PostgreSQL local (base `appointy`, un schema y un usuario por servicio), Flyway con `ddl-auto: validate`, JUnit 5 y Mockito. Sin Docker ni broker. API en `/api/v1`; `/internal/**` con API key.
 
 Paquetes `com.appointy.<servicio>` (`auth`, `catalog`, `appointment`, `clinicalhistory`, `notification`):
-- `domain`: model, exception, port/in, port/out. **Cero imports ajenos al dominio** (regla del docente): ni librerías, ni Spring, JPA o Lombok, ni siquiera del JDK (`java.util`, `java.time`, `java.nio`). Solo `java.lang` y clases del propio `domain`. Lo vigila `DependenciasEntreCapasTest`.
-- `application`: usecase, config.
+- `domain`: model, exception, rule, usecase (interfaces de los casos de uso), gateway (puertos de salida). **Cero imports ajenos al dominio** (regla del docente): ni librerías, ni Spring, JPA o Lombok, ni siquiera del JDK (`java.util`, `java.time`, `java.nio`). Solo `java.lang` y clases del propio `domain`. Lo vigila `DependenciasEntreCapasTest`.
+- `application`: usecase (implementaciones `*UseCaseImpl`), config.
 - `infrastructure`: entry_points, driven_adapters (jpa_repository, rest_client), mapper, security.
 
-Un caso de uso por clase, puertos pequeños, reglas de negocio componibles. Dominio en español; sufijos técnicos en inglés (`ReservarCitaUseCase`, `FranjaRepositoryPort`).
+Un caso de uso por clase, gateways pequeños, reglas de negocio componibles. Dominio en español; sufijos técnicos en inglés: interfaz `ReservarCitaUseCase` en `domain/usecase`, su implementación `ReservarCitaUseCaseImpl` en `application/usecase`, y `FranjaRepositoryGateway` en `domain/gateway`.
 
 ## Tipos del dominio (sin imports)
 - Ids: `String` (texto de un UUID; lo genera el caso de uso con `UUID.randomUUID().toString()`).

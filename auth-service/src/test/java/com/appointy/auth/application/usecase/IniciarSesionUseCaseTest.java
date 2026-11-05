@@ -11,11 +11,11 @@ import com.appointy.auth.domain.exception.CredencialesInvalidasException;
 import com.appointy.auth.domain.model.Rol;
 import com.appointy.auth.domain.model.TokenEmitido;
 import com.appointy.auth.domain.model.Usuario;
-import com.appointy.auth.domain.port.in.IniciarSesionPort.Comando;
-import com.appointy.auth.domain.port.in.IniciarSesionPort.Resultado;
-import com.appointy.auth.domain.port.out.CodificadorClavePort;
-import com.appointy.auth.domain.port.out.EmisorTokenPort;
-import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
+import com.appointy.auth.domain.usecase.IniciarSesionUseCase.Comando;
+import com.appointy.auth.domain.usecase.IniciarSesionUseCase.Resultado;
+import com.appointy.auth.domain.gateway.CodificadorClaveGateway;
+import com.appointy.auth.domain.gateway.EmisorTokenGateway;
+import com.appointy.auth.domain.gateway.UsuarioRepositoryGateway;
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,16 +28,16 @@ class IniciarSesionUseCaseTest {
 
     static final long AHORA = Instant.parse("2026-06-01T10:00:00Z").toEpochMilli();
 
-    @Mock UsuarioRepositoryPort usuarios;
-    @Mock CodificadorClavePort codificador;
-    @Mock EmisorTokenPort emisor;
+    @Mock UsuarioRepositoryGateway usuarios;
+    @Mock CodificadorClaveGateway codificador;
+    @Mock EmisorTokenGateway emisor;
 
-    IniciarSesionUseCase useCase;
+    IniciarSesionUseCaseImpl useCase;
 
     @BeforeEach
     void iniciar() {
         when(codificador.codificar("senuelo-sin-uso")).thenReturn("hash-senuelo");
-        useCase = new IniciarSesionUseCase(usuarios, codificador, emisor);
+        useCase = new IniciarSesionUseCaseImpl(usuarios, codificador, emisor);
     }
 
     private Usuario usuario(boolean activo) {

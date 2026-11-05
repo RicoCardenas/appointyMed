@@ -1,13 +1,13 @@
 package com.appointy.catalog.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.catalog.domain.model.ParametroServicio;
-import com.appointy.catalog.domain.port.out.ParametroRepositoryPort;
+import com.appointy.catalog.domain.gateway.ParametroRepositoryGateway;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.repository.SpringDataParametroRepository;
 import com.appointy.catalog.infrastructure.mapper.ParametroServicioEntityMapper;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ParametroJpaAdapter implements ParametroRepositoryPort {
+public class ParametroJpaAdapter implements ParametroRepositoryGateway {
 
     private final SpringDataParametroRepository repositorio;
     private final ParametroServicioEntityMapper mapper;

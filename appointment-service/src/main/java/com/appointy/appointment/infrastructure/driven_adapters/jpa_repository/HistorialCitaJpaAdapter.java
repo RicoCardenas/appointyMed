@@ -1,7 +1,7 @@
 package com.appointy.appointment.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.appointment.domain.model.HistorialCita;
-import com.appointy.appointment.domain.port.out.HistorialCitaRepositoryPort;
+import com.appointy.appointment.domain.gateway.HistorialCitaRepositoryGateway;
 import com.appointy.appointment.infrastructure.driven_adapters.jpa_repository.repository.SpringDataHistorialCitaRepository;
 import com.appointy.appointment.infrastructure.mapper.HistorialCitaEntityMapper;
 import jakarta.persistence.EntityManager;
@@ -10,7 +10,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class HistorialCitaJpaAdapter implements HistorialCitaRepositoryPort {
+public class HistorialCitaJpaAdapter implements HistorialCitaRepositoryGateway {
 
     @PersistenceContext
     private EntityManager em;

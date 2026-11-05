@@ -1,9 +1,9 @@
 package com.appointy.appointment.infrastructure.entry_points;
 
 import com.appointy.appointment.domain.model.ResultadoGeneracion;
-import com.appointy.appointment.domain.port.in.BloquearFranjasPort;
-import com.appointy.appointment.domain.port.in.GenerarFranjasPort;
-import com.appointy.appointment.domain.port.in.ValidarRelacionPort;
+import com.appointy.appointment.domain.usecase.BloquearFranjasUseCase;
+import com.appointy.appointment.domain.usecase.GenerarFranjasUseCase;
+import com.appointy.appointment.domain.usecase.ValidarRelacionUseCase;
 import com.appointy.appointment.infrastructure.entry_points.dto.BloquearFranjasRequest;
 import com.appointy.appointment.infrastructure.entry_points.dto.GenerarFranjasRequest;
 import jakarta.validation.Valid;
@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal")
 public class InternalController {
 
-    private final GenerarFranjasPort generar;
-    private final BloquearFranjasPort bloquear;
-    private final ValidarRelacionPort relacion;
+    private final GenerarFranjasUseCase generar;
+    private final BloquearFranjasUseCase bloquear;
+    private final ValidarRelacionUseCase relacion;
 
-    public InternalController(GenerarFranjasPort generar, BloquearFranjasPort bloquear, ValidarRelacionPort relacion) {
+    public InternalController(GenerarFranjasUseCase generar, BloquearFranjasUseCase bloquear, ValidarRelacionUseCase relacion) {
         this.generar = generar;
         this.bloquear = bloquear;
         this.relacion = relacion;

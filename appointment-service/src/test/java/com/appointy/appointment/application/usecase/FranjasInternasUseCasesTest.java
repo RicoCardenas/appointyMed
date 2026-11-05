@@ -16,15 +16,15 @@ import com.appointy.appointment.domain.model.EstadoFranja;
 import com.appointy.appointment.domain.model.Franja;
 import com.appointy.appointment.domain.model.FranjaNueva;
 import com.appointy.appointment.domain.model.ResultadoGeneracion;
-import com.appointy.appointment.domain.port.out.CitaRepositoryPort;
-import com.appointy.appointment.domain.port.out.FranjaRepositoryPort;
+import com.appointy.appointment.domain.gateway.CitaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class FranjasInternasUseCasesTest {
 
-    FranjaRepositoryPort franjas = mock(FranjaRepositoryPort.class);
-    CitaRepositoryPort citas = mock(CitaRepositoryPort.class);
+    FranjaRepositoryGateway franjas = mock(FranjaRepositoryGateway.class);
+    CitaRepositoryGateway citas = mock(CitaRepositoryGateway.class);
 
     static Franja franja(String id, EstadoFranja estado) {
         return new Franja(id, "prof", "centro", "2030-06-11", 480, 510, estado, 0L);
@@ -34,7 +34,7 @@ class FranjasInternasUseCasesTest {
     void generarCuentaLasCreadasYLasQueYaExistian() {
         when(franjas.insertarSiNoExiste(any())).thenReturn(true, false, true);
 
-        ResultadoGeneracion r = new GenerarFranjasUseCase(franjas).ejecutar("prof", "centro",
+        ResultadoGeneracion r = new GenerarFranjasUseCaseImpl(franjas).ejecutar("prof", "centro",
                 new FranjaNueva[] {new FranjaNueva("2030-06-11", 480, 510), new FranjaNueva("2030-06-11", 510, 540), new FranjaNueva("2030-06-11", 540, 570)});
 
         assertEquals(2, r.creadas());
@@ -46,7 +46,7 @@ class FranjasInternasUseCasesTest {
 
     @Test
     void generarRechazaHorasInvertidasOFueraDelDia() {
-        GenerarFranjasUseCase uc = new GenerarFranjasUseCase(franjas);
+        GenerarFranjasUseCaseImpl uc = new GenerarFranjasUseCaseImpl(franjas);
         assertEquals("FRANJA_INVALIDA", assertThrows(ValidacionException.class,
                 () -> uc.ejecutar("p", "c", new FranjaNueva[] {new FranjaNueva("2030-06-11", 510, 510)})).codigo());
         assertThrows(ValidacionException.class, () -> uc.ejecutar("p", "c", new FranjaNueva[] {new FranjaNueva("2030-06-11", 480, 1440)}));
@@ -60,7 +60,7 @@ class FranjasInternasUseCasesTest {
         when(citas.idsConfirmadasEnRango("prof", "centro", "2030-06-11", "2030-06-12")).thenReturn(new String[0]);
         when(franjas.guardar(any())).thenAnswer(i -> i.getArgument(0));
 
-        assertEquals(2, new BloquearFranjasUseCase(franjas, citas).ejecutar("prof", "centro", "2030-06-11", "2030-06-12"));
+        assertEquals(2, new BloquearFranjasUseCaseImpl(franjas, citas).ejecutar("prof", "centro", "2030-06-11", "2030-06-12"));
 
         ArgumentCaptor<Franja> f = ArgumentCaptor.forClass(Franja.class);
         verify(franjas, times(2)).guardar(f.capture());
@@ -73,7 +73,7 @@ class FranjasInternasUseCasesTest {
         when(citas.idsConfirmadasEnRango("prof", "centro", "2030-06-11", "2030-06-12")).thenReturn(new String[] {"cita1", "cita2"});
 
         ConflictoCitasException ex = assertThrows(ConflictoCitasException.class,
-                () -> new BloquearFranjasUseCase(franjas, citas).ejecutar("prof", "centro", "2030-06-11", "2030-06-12"));
+                () -> new BloquearFranjasUseCaseImpl(franjas, citas).ejecutar("prof", "centro", "2030-06-11", "2030-06-12"));
 
         assertArrayEquals(new String[] {"cita1", "cita2"}, ex.citasAfectadas());
         verify(franjas, never()).guardar(any());
@@ -82,6 +82,6 @@ class FranjasInternasUseCasesTest {
     @Test
     void bloquearRechazaUnRangoInvertido() {
         assertEquals("RANGO_INVALIDO", assertThrows(ValidacionException.class,
-                () -> new BloquearFranjasUseCase(franjas, citas).ejecutar("p", "c", "2030-06-12", "2030-06-11")).codigo());
+                () -> new BloquearFranjasUseCaseImpl(franjas, citas).ejecutar("p", "c", "2030-06-12", "2030-06-11")).codigo());
     }
 }

@@ -1,6 +1,6 @@
 package com.appointy.auth.infrastructure.config;
 
-import com.appointy.auth.domain.port.in.LimpiarTokensVencidosPort;
+import com.appointy.auth.domain.usecase.LimpiarTokensVencidosUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,9 +11,9 @@ public class LimpiezaTokensScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(LimpiezaTokensScheduler.class);
 
-    private final LimpiarTokensVencidosPort limpiar;
+    private final LimpiarTokensVencidosUseCase limpiar;
 
-    public LimpiezaTokensScheduler(LimpiarTokensVencidosPort limpiar) {
+    public LimpiezaTokensScheduler(LimpiarTokensVencidosUseCase limpiar) {
         this.limpiar = limpiar;
     }
 

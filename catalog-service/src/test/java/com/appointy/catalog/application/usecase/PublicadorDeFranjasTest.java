@@ -15,8 +15,8 @@ import com.appointy.catalog.domain.model.HorarioAtencion;
 import com.appointy.catalog.domain.model.ParametroServicio;
 import com.appointy.catalog.domain.model.ResultadoGeneracion;
 import com.appointy.catalog.domain.model.ResultadoHorario;
-import com.appointy.catalog.domain.port.out.AppointmentClientPort;
-import com.appointy.catalog.domain.port.out.ParametroRepositoryPort;
+import com.appointy.catalog.domain.gateway.AppointmentClientGateway;
+import com.appointy.catalog.domain.gateway.ParametroRepositoryGateway;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -29,8 +29,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class PublicadorDeFranjasTest {
 
-    @Mock ParametroRepositoryPort parametros;
-    @Mock AppointmentClientPort appointment;
+    @Mock ParametroRepositoryGateway parametros;
+    @Mock AppointmentClientGateway appointment;
 
     /** 2026-06-02T03:00Z es el 2026-06-01 a las 22:00 en Bogota: "hoy" para la clinica es el lunes 1. */
     final Clock reloj = Clock.fixed(Instant.parse("2026-06-02T03:00:00Z"), ZoneId.of("America/Bogota"));

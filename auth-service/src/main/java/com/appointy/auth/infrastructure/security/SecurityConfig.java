@@ -1,7 +1,7 @@
 package com.appointy.auth.infrastructure.security;
 
-import com.appointy.auth.domain.port.out.EmisorTokenPort;
-import com.appointy.auth.domain.port.out.TokenRevocadoRepositoryPort;
+import com.appointy.auth.domain.gateway.EmisorTokenGateway;
+import com.appointy.auth.domain.gateway.TokenRevocadoRepositoryGateway;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +18,7 @@ public class SecurityConfig {
 
     @Bean
     SecurityFilterChain cadenaDeSeguridad(
-            HttpSecurity http, EmisorTokenPort emisor, TokenRevocadoRepositoryPort revocados, JsonErrorWriter errores)
+            HttpSecurity http, EmisorTokenGateway emisor, TokenRevocadoRepositoryGateway revocados, JsonErrorWriter errores)
             throws Exception {
         http.csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

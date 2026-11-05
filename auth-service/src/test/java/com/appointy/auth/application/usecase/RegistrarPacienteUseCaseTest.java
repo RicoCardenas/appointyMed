@@ -15,10 +15,10 @@ import com.appointy.auth.domain.exception.ValidacionException;
 import com.appointy.auth.domain.model.PacienteConCuenta;
 import com.appointy.auth.domain.model.PacientePerfil;
 import com.appointy.auth.domain.model.Rol;
-import com.appointy.auth.domain.port.in.RegistrarPacientePort.Comando;
-import com.appointy.auth.domain.port.out.CodificadorClavePort;
-import com.appointy.auth.domain.port.out.PacientePerfilRepositoryPort;
-import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
+import com.appointy.auth.domain.usecase.RegistrarPacienteUseCase.Comando;
+import com.appointy.auth.domain.gateway.CodificadorClaveGateway;
+import com.appointy.auth.domain.gateway.PacientePerfilRepositoryGateway;
+import com.appointy.auth.domain.gateway.UsuarioRepositoryGateway;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -32,16 +32,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RegistrarPacienteUseCaseTest {
 
-    @Mock UsuarioRepositoryPort usuarios;
-    @Mock PacientePerfilRepositoryPort perfiles;
-    @Mock CodificadorClavePort codificador;
+    @Mock UsuarioRepositoryGateway usuarios;
+    @Mock PacientePerfilRepositoryGateway perfiles;
+    @Mock CodificadorClaveGateway codificador;
 
     final Clock reloj = Clock.fixed(Instant.parse("2026-06-01T10:00:00Z"), ZoneOffset.UTC);
-    RegistrarPacienteUseCase useCase;
+    RegistrarPacienteUseCaseImpl useCase;
 
     @BeforeEach
     void iniciar() {
-        useCase = new RegistrarPacienteUseCase(usuarios, perfiles, codificador, reloj);
+        useCase = new RegistrarPacienteUseCaseImpl(usuarios, perfiles, codificador, reloj);
     }
 
     private Comando comando(String clave, String nacimiento) {

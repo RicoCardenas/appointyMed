@@ -1,14 +1,14 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
-import com.appointy.catalog.domain.port.in.ActualizarProfesionalPort;
-import com.appointy.catalog.domain.port.in.AsociarCentrosPort;
-import com.appointy.catalog.domain.port.in.AsociarEspecialidadesPort;
-import com.appointy.catalog.domain.port.in.ConsultarProfesionalPort;
-import com.appointy.catalog.domain.port.in.CrearProfesionalPort;
-import com.appointy.catalog.domain.port.in.DefinirHorarioPort;
-import com.appointy.catalog.domain.port.in.DesactivarProfesionalPort;
-import com.appointy.catalog.domain.port.in.ListarCentrosDeProfesionalPort;
-import com.appointy.catalog.domain.port.in.ListarHorariosPort;
+import com.appointy.catalog.domain.usecase.ActualizarProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.AsociarCentrosUseCase;
+import com.appointy.catalog.domain.usecase.AsociarEspecialidadesUseCase;
+import com.appointy.catalog.domain.usecase.ConsultarProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.CrearProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.DefinirHorarioUseCase;
+import com.appointy.catalog.domain.usecase.DesactivarProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.ListarCentrosDeProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.ListarHorariosUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.ActualizarProfesionalRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.CrearProfesionalRequest;
@@ -38,26 +38,26 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/profesionales")
 public class ProfesionalController {
 
-    private final CrearProfesionalPort crear;
-    private final ActualizarProfesionalPort actualizar;
-    private final DesactivarProfesionalPort desactivar;
-    private final ConsultarProfesionalPort consultar;
-    private final ListarCentrosDeProfesionalPort listarCentros;
-    private final AsociarEspecialidadesPort asociarEspecialidades;
-    private final AsociarCentrosPort asociarCentros;
-    private final DefinirHorarioPort definirHorario;
-    private final ListarHorariosPort listarHorarios;
+    private final CrearProfesionalUseCase crear;
+    private final ActualizarProfesionalUseCase actualizar;
+    private final DesactivarProfesionalUseCase desactivar;
+    private final ConsultarProfesionalUseCase consultar;
+    private final ListarCentrosDeProfesionalUseCase listarCentros;
+    private final AsociarEspecialidadesUseCase asociarEspecialidades;
+    private final AsociarCentrosUseCase asociarCentros;
+    private final DefinirHorarioUseCase definirHorario;
+    private final ListarHorariosUseCase listarHorarios;
 
     public ProfesionalController(
-            CrearProfesionalPort crear,
-            ActualizarProfesionalPort actualizar,
-            DesactivarProfesionalPort desactivar,
-            ConsultarProfesionalPort consultar,
-            ListarCentrosDeProfesionalPort listarCentros,
-            AsociarEspecialidadesPort asociarEspecialidades,
-            AsociarCentrosPort asociarCentros,
-            DefinirHorarioPort definirHorario,
-            ListarHorariosPort listarHorarios) {
+            CrearProfesionalUseCase crear,
+            ActualizarProfesionalUseCase actualizar,
+            DesactivarProfesionalUseCase desactivar,
+            ConsultarProfesionalUseCase consultar,
+            ListarCentrosDeProfesionalUseCase listarCentros,
+            AsociarEspecialidadesUseCase asociarEspecialidades,
+            AsociarCentrosUseCase asociarCentros,
+            DefinirHorarioUseCase definirHorario,
+            ListarHorariosUseCase listarHorarios) {
         this.crear = crear;
         this.actualizar = actualizar;
         this.desactivar = desactivar;
@@ -74,14 +74,14 @@ public class ProfesionalController {
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public ProfesionalResponse crear(@Valid @RequestBody CrearProfesionalRequest s) {
         return ProfesionalResponse.de(
-                crear.ejecutar(new CrearProfesionalPort.Comando(s.usuarioId().toString(), s.nombres(), s.apellidos(), s.registroMedico())));
+                crear.ejecutar(new CrearProfesionalUseCase.Comando(s.usuarioId().toString(), s.nombres(), s.apellidos(), s.registroMedico())));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public ProfesionalResponse actualizar(@PathVariable UUID id, @Valid @RequestBody ActualizarProfesionalRequest s) {
         return ProfesionalResponse.de(
-                actualizar.ejecutar(new ActualizarProfesionalPort.Comando(id.toString(), s.nombres(), s.apellidos(), s.registroMedico())));
+                actualizar.ejecutar(new ActualizarProfesionalUseCase.Comando(id.toString(), s.nombres(), s.apellidos(), s.registroMedico())));
     }
 
     /** Borrado logico: el profesional queda inactivo, no se elimina. */
@@ -107,14 +107,14 @@ public class ProfesionalController {
     @PutMapping("/{id}/especialidades")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public DetalleProfesionalResponse asociarEspecialidades(@PathVariable UUID id, @Valid @RequestBody IdsRequest s) {
-        return DetalleProfesionalResponse.de(asociarEspecialidades.ejecutar(new AsociarEspecialidadesPort.Comando(id.toString(), s.comoTexto())));
+        return DetalleProfesionalResponse.de(asociarEspecialidades.ejecutar(new AsociarEspecialidadesUseCase.Comando(id.toString(), s.comoTexto())));
     }
 
     /** CU-12. */
     @PutMapping("/{id}/centros")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public DetalleProfesionalResponse asociarCentros(@PathVariable UUID id, @Valid @RequestBody IdsRequest s) {
-        return DetalleProfesionalResponse.de(asociarCentros.ejecutar(new AsociarCentrosPort.Comando(id.toString(), s.comoTexto())));
+        return DetalleProfesionalResponse.de(asociarCentros.ejecutar(new AsociarCentrosUseCase.Comando(id.toString(), s.comoTexto())));
     }
 
     @GetMapping("/{id}/horarios")

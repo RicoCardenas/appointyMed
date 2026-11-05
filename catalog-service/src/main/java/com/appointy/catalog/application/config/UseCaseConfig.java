@@ -1,61 +1,61 @@
 package com.appointy.catalog.application.config;
 
-import com.appointy.catalog.application.usecase.ActualizarCentroUseCase;
-import com.appointy.catalog.application.usecase.ActualizarEspecialidadUseCase;
-import com.appointy.catalog.application.usecase.ActualizarProfesionalUseCase;
-import com.appointy.catalog.application.usecase.AsociarCentrosUseCase;
-import com.appointy.catalog.application.usecase.AsociarEspecialidadesUseCase;
-import com.appointy.catalog.application.usecase.BloquearFranjasUseCase;
-import com.appointy.catalog.application.usecase.BuscarProfesionalPorUsuarioUseCase;
-import com.appointy.catalog.application.usecase.ConfigurarParametrosUseCase;
-import com.appointy.catalog.application.usecase.ConsultarParametrosUseCase;
-import com.appointy.catalog.application.usecase.ConsultarProfesionalUseCase;
-import com.appointy.catalog.application.usecase.CrearCentroUseCase;
-import com.appointy.catalog.application.usecase.CrearEspecialidadUseCase;
-import com.appointy.catalog.application.usecase.CrearProfesionalUseCase;
-import com.appointy.catalog.application.usecase.DefinirHorarioUseCase;
-import com.appointy.catalog.application.usecase.DesactivarCentroUseCase;
-import com.appointy.catalog.application.usecase.DesactivarEspecialidadUseCase;
-import com.appointy.catalog.application.usecase.DesactivarProfesionalUseCase;
-import com.appointy.catalog.application.usecase.GenerarFranjasUseCase;
-import com.appointy.catalog.application.usecase.ListarCentrosDeProfesionalUseCase;
-import com.appointy.catalog.application.usecase.ListarEspecialidadesUseCase;
-import com.appointy.catalog.application.usecase.ListarHorariosUseCase;
-import com.appointy.catalog.application.usecase.ListarProfesionalesPorEspecialidadUseCase;
-import com.appointy.catalog.application.usecase.ModificarHorarioUseCase;
+import com.appointy.catalog.application.usecase.ActualizarCentroUseCaseImpl;
+import com.appointy.catalog.application.usecase.ActualizarEspecialidadUseCaseImpl;
+import com.appointy.catalog.application.usecase.ActualizarProfesionalUseCaseImpl;
+import com.appointy.catalog.application.usecase.AsociarCentrosUseCaseImpl;
+import com.appointy.catalog.application.usecase.AsociarEspecialidadesUseCaseImpl;
+import com.appointy.catalog.application.usecase.BloquearFranjasUseCaseImpl;
+import com.appointy.catalog.application.usecase.BuscarProfesionalPorUsuarioUseCaseImpl;
+import com.appointy.catalog.application.usecase.ConfigurarParametrosUseCaseImpl;
+import com.appointy.catalog.application.usecase.ConsultarParametrosUseCaseImpl;
+import com.appointy.catalog.application.usecase.ConsultarProfesionalUseCaseImpl;
+import com.appointy.catalog.application.usecase.CrearCentroUseCaseImpl;
+import com.appointy.catalog.application.usecase.CrearEspecialidadUseCaseImpl;
+import com.appointy.catalog.application.usecase.CrearProfesionalUseCaseImpl;
+import com.appointy.catalog.application.usecase.DefinirHorarioUseCaseImpl;
+import com.appointy.catalog.application.usecase.DesactivarCentroUseCaseImpl;
+import com.appointy.catalog.application.usecase.DesactivarEspecialidadUseCaseImpl;
+import com.appointy.catalog.application.usecase.DesactivarProfesionalUseCaseImpl;
+import com.appointy.catalog.application.usecase.GenerarFranjasUseCaseImpl;
+import com.appointy.catalog.application.usecase.ListarCentrosDeProfesionalUseCaseImpl;
+import com.appointy.catalog.application.usecase.ListarEspecialidadesUseCaseImpl;
+import com.appointy.catalog.application.usecase.ListarHorariosUseCaseImpl;
+import com.appointy.catalog.application.usecase.ListarProfesionalesPorEspecialidadUseCaseImpl;
+import com.appointy.catalog.application.usecase.ModificarHorarioUseCaseImpl;
 import com.appointy.catalog.application.usecase.PublicadorDeFranjas;
-import com.appointy.catalog.application.usecase.ValidarAsociacionUseCase;
-import com.appointy.catalog.domain.port.in.ActualizarCentroPort;
-import com.appointy.catalog.domain.port.in.ActualizarEspecialidadPort;
-import com.appointy.catalog.domain.port.in.ActualizarProfesionalPort;
-import com.appointy.catalog.domain.port.in.AsociarCentrosPort;
-import com.appointy.catalog.domain.port.in.AsociarEspecialidadesPort;
-import com.appointy.catalog.domain.port.in.BloquearFranjasPort;
-import com.appointy.catalog.domain.port.in.BuscarProfesionalPorUsuarioPort;
-import com.appointy.catalog.domain.port.in.ConfigurarParametrosPort;
-import com.appointy.catalog.domain.port.in.ConsultarParametrosPort;
-import com.appointy.catalog.domain.port.in.ConsultarProfesionalPort;
-import com.appointy.catalog.domain.port.in.CrearCentroPort;
-import com.appointy.catalog.domain.port.in.CrearEspecialidadPort;
-import com.appointy.catalog.domain.port.in.CrearProfesionalPort;
-import com.appointy.catalog.domain.port.in.DefinirHorarioPort;
-import com.appointy.catalog.domain.port.in.DesactivarCentroPort;
-import com.appointy.catalog.domain.port.in.DesactivarEspecialidadPort;
-import com.appointy.catalog.domain.port.in.DesactivarProfesionalPort;
-import com.appointy.catalog.domain.port.in.GenerarFranjasPort;
-import com.appointy.catalog.domain.port.in.ListarCentrosDeProfesionalPort;
-import com.appointy.catalog.domain.port.in.ListarEspecialidadesPort;
-import com.appointy.catalog.domain.port.in.ListarHorariosPort;
-import com.appointy.catalog.domain.port.in.ListarProfesionalesPorEspecialidadPort;
-import com.appointy.catalog.domain.port.in.ModificarHorarioPort;
-import com.appointy.catalog.domain.port.in.ValidarAsociacionPort;
-import com.appointy.catalog.domain.port.out.AppointmentClientPort;
-import com.appointy.catalog.domain.port.out.BloqueoRepositoryPort;
-import com.appointy.catalog.domain.port.out.CentroRepositoryPort;
-import com.appointy.catalog.domain.port.out.EspecialidadRepositoryPort;
-import com.appointy.catalog.domain.port.out.HorarioRepositoryPort;
-import com.appointy.catalog.domain.port.out.ParametroRepositoryPort;
-import com.appointy.catalog.domain.port.out.ProfesionalRepositoryPort;
+import com.appointy.catalog.application.usecase.ValidarAsociacionUseCaseImpl;
+import com.appointy.catalog.domain.usecase.ActualizarCentroUseCase;
+import com.appointy.catalog.domain.usecase.ActualizarEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.ActualizarProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.AsociarCentrosUseCase;
+import com.appointy.catalog.domain.usecase.AsociarEspecialidadesUseCase;
+import com.appointy.catalog.domain.usecase.BloquearFranjasUseCase;
+import com.appointy.catalog.domain.usecase.BuscarProfesionalPorUsuarioUseCase;
+import com.appointy.catalog.domain.usecase.ConfigurarParametrosUseCase;
+import com.appointy.catalog.domain.usecase.ConsultarParametrosUseCase;
+import com.appointy.catalog.domain.usecase.ConsultarProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.CrearCentroUseCase;
+import com.appointy.catalog.domain.usecase.CrearEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.CrearProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.DefinirHorarioUseCase;
+import com.appointy.catalog.domain.usecase.DesactivarCentroUseCase;
+import com.appointy.catalog.domain.usecase.DesactivarEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.DesactivarProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.GenerarFranjasUseCase;
+import com.appointy.catalog.domain.usecase.ListarCentrosDeProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.ListarEspecialidadesUseCase;
+import com.appointy.catalog.domain.usecase.ListarHorariosUseCase;
+import com.appointy.catalog.domain.usecase.ListarProfesionalesPorEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.ModificarHorarioUseCase;
+import com.appointy.catalog.domain.usecase.ValidarAsociacionUseCase;
+import com.appointy.catalog.domain.gateway.AppointmentClientGateway;
+import com.appointy.catalog.domain.gateway.BloqueoRepositoryGateway;
+import com.appointy.catalog.domain.gateway.CentroRepositoryGateway;
+import com.appointy.catalog.domain.gateway.EspecialidadRepositoryGateway;
+import com.appointy.catalog.domain.gateway.HorarioRepositoryGateway;
+import com.appointy.catalog.domain.gateway.ParametroRepositoryGateway;
+import com.appointy.catalog.domain.gateway.ProfesionalRepositoryGateway;
 import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -65,144 +65,144 @@ import org.springframework.context.annotation.Configuration;
 public class UseCaseConfig {
 
     @Bean
-    CrearEspecialidadPort crearEspecialidad(EspecialidadRepositoryPort especialidades) {
-        return new CrearEspecialidadUseCase(especialidades);
+    CrearEspecialidadUseCase crearEspecialidad(EspecialidadRepositoryGateway especialidades) {
+        return new CrearEspecialidadUseCaseImpl(especialidades);
     }
 
     @Bean
-    ActualizarEspecialidadPort actualizarEspecialidad(EspecialidadRepositoryPort especialidades) {
-        return new ActualizarEspecialidadUseCase(especialidades);
+    ActualizarEspecialidadUseCase actualizarEspecialidad(EspecialidadRepositoryGateway especialidades) {
+        return new ActualizarEspecialidadUseCaseImpl(especialidades);
     }
 
     @Bean
-    DesactivarEspecialidadPort desactivarEspecialidad(EspecialidadRepositoryPort especialidades) {
-        return new DesactivarEspecialidadUseCase(especialidades);
+    DesactivarEspecialidadUseCase desactivarEspecialidad(EspecialidadRepositoryGateway especialidades) {
+        return new DesactivarEspecialidadUseCaseImpl(especialidades);
     }
 
     @Bean
-    ListarEspecialidadesPort listarEspecialidades(EspecialidadRepositoryPort especialidades) {
-        return new ListarEspecialidadesUseCase(especialidades);
+    ListarEspecialidadesUseCase listarEspecialidades(EspecialidadRepositoryGateway especialidades) {
+        return new ListarEspecialidadesUseCaseImpl(especialidades);
     }
 
     @Bean
-    CrearCentroPort crearCentro(CentroRepositoryPort centros) {
-        return new CrearCentroUseCase(centros);
+    CrearCentroUseCase crearCentro(CentroRepositoryGateway centros) {
+        return new CrearCentroUseCaseImpl(centros);
     }
 
     @Bean
-    ActualizarCentroPort actualizarCentro(CentroRepositoryPort centros) {
-        return new ActualizarCentroUseCase(centros);
+    ActualizarCentroUseCase actualizarCentro(CentroRepositoryGateway centros) {
+        return new ActualizarCentroUseCaseImpl(centros);
     }
 
     @Bean
-    DesactivarCentroPort desactivarCentro(CentroRepositoryPort centros) {
-        return new DesactivarCentroUseCase(centros);
+    DesactivarCentroUseCase desactivarCentro(CentroRepositoryGateway centros) {
+        return new DesactivarCentroUseCaseImpl(centros);
     }
 
     @Bean
-    ListarCentrosDeProfesionalPort listarCentrosDeProfesional(ProfesionalRepositoryPort profesionales, CentroRepositoryPort centros) {
-        return new ListarCentrosDeProfesionalUseCase(profesionales, centros);
+    ListarCentrosDeProfesionalUseCase listarCentrosDeProfesional(ProfesionalRepositoryGateway profesionales, CentroRepositoryGateway centros) {
+        return new ListarCentrosDeProfesionalUseCaseImpl(profesionales, centros);
     }
 
     @Bean
-    CrearProfesionalPort crearProfesional(ProfesionalRepositoryPort profesionales) {
-        return new CrearProfesionalUseCase(profesionales);
+    CrearProfesionalUseCase crearProfesional(ProfesionalRepositoryGateway profesionales) {
+        return new CrearProfesionalUseCaseImpl(profesionales);
     }
 
     @Bean
-    ActualizarProfesionalPort actualizarProfesional(ProfesionalRepositoryPort profesionales) {
-        return new ActualizarProfesionalUseCase(profesionales);
+    ActualizarProfesionalUseCase actualizarProfesional(ProfesionalRepositoryGateway profesionales) {
+        return new ActualizarProfesionalUseCaseImpl(profesionales);
     }
 
     @Bean
-    DesactivarProfesionalPort desactivarProfesional(ProfesionalRepositoryPort profesionales) {
-        return new DesactivarProfesionalUseCase(profesionales);
+    DesactivarProfesionalUseCase desactivarProfesional(ProfesionalRepositoryGateway profesionales) {
+        return new DesactivarProfesionalUseCaseImpl(profesionales);
     }
 
     @Bean
-    ListarProfesionalesPorEspecialidadPort listarProfesionalesPorEspecialidad(
-            EspecialidadRepositoryPort especialidades, ProfesionalRepositoryPort profesionales) {
-        return new ListarProfesionalesPorEspecialidadUseCase(especialidades, profesionales);
+    ListarProfesionalesPorEspecialidadUseCase listarProfesionalesPorEspecialidad(
+            EspecialidadRepositoryGateway especialidades, ProfesionalRepositoryGateway profesionales) {
+        return new ListarProfesionalesPorEspecialidadUseCaseImpl(especialidades, profesionales);
     }
 
     @Bean
-    ConsultarProfesionalPort consultarProfesional(ProfesionalRepositoryPort profesionales) {
-        return new ConsultarProfesionalUseCase(profesionales);
+    ConsultarProfesionalUseCase consultarProfesional(ProfesionalRepositoryGateway profesionales) {
+        return new ConsultarProfesionalUseCaseImpl(profesionales);
     }
 
     @Bean
-    AsociarEspecialidadesPort asociarEspecialidades(ProfesionalRepositoryPort profesionales, EspecialidadRepositoryPort especialidades) {
-        return new AsociarEspecialidadesUseCase(profesionales, especialidades);
+    AsociarEspecialidadesUseCase asociarEspecialidades(ProfesionalRepositoryGateway profesionales, EspecialidadRepositoryGateway especialidades) {
+        return new AsociarEspecialidadesUseCaseImpl(profesionales, especialidades);
     }
 
     @Bean
-    AsociarCentrosPort asociarCentros(
-            ProfesionalRepositoryPort profesionales, CentroRepositoryPort centros, HorarioRepositoryPort horarios, BloqueoRepositoryPort bloqueos) {
-        return new AsociarCentrosUseCase(profesionales, centros, horarios, bloqueos);
+    AsociarCentrosUseCase asociarCentros(
+            ProfesionalRepositoryGateway profesionales, CentroRepositoryGateway centros, HorarioRepositoryGateway horarios, BloqueoRepositoryGateway bloqueos) {
+        return new AsociarCentrosUseCaseImpl(profesionales, centros, horarios, bloqueos);
     }
 
     @Bean
-    PublicadorDeFranjas publicadorDeFranjas(ParametroRepositoryPort parametros, AppointmentClientPort appointment, Clock reloj) {
+    PublicadorDeFranjas publicadorDeFranjas(ParametroRepositoryGateway parametros, AppointmentClientGateway appointment, Clock reloj) {
         return new PublicadorDeFranjas(parametros, appointment, reloj);
     }
 
     @Bean
-    DefinirHorarioPort definirHorario(
-            ProfesionalRepositoryPort profesionales,
-            CentroRepositoryPort centros,
-            HorarioRepositoryPort horarios,
-            ParametroRepositoryPort parametros,
+    DefinirHorarioUseCase definirHorario(
+            ProfesionalRepositoryGateway profesionales,
+            CentroRepositoryGateway centros,
+            HorarioRepositoryGateway horarios,
+            ParametroRepositoryGateway parametros,
             PublicadorDeFranjas publicador) {
-        return new DefinirHorarioUseCase(profesionales, centros, horarios, parametros, publicador);
+        return new DefinirHorarioUseCaseImpl(profesionales, centros, horarios, parametros, publicador);
     }
 
     @Bean
-    ModificarHorarioPort modificarHorario(
-            ProfesionalRepositoryPort profesionales,
-            CentroRepositoryPort centros,
-            HorarioRepositoryPort horarios,
-            ParametroRepositoryPort parametros,
+    ModificarHorarioUseCase modificarHorario(
+            ProfesionalRepositoryGateway profesionales,
+            CentroRepositoryGateway centros,
+            HorarioRepositoryGateway horarios,
+            ParametroRepositoryGateway parametros,
             PublicadorDeFranjas publicador) {
-        return new ModificarHorarioUseCase(profesionales, centros, horarios, parametros, publicador);
+        return new ModificarHorarioUseCaseImpl(profesionales, centros, horarios, parametros, publicador);
     }
 
     @Bean
-    GenerarFranjasPort generarFranjas(HorarioRepositoryPort horarios, PublicadorDeFranjas publicador) {
-        return new GenerarFranjasUseCase(horarios, publicador);
+    GenerarFranjasUseCase generarFranjas(HorarioRepositoryGateway horarios, PublicadorDeFranjas publicador) {
+        return new GenerarFranjasUseCaseImpl(horarios, publicador);
     }
 
     @Bean
-    ListarHorariosPort listarHorarios(ProfesionalRepositoryPort profesionales, HorarioRepositoryPort horarios) {
-        return new ListarHorariosUseCase(profesionales, horarios);
+    ListarHorariosUseCase listarHorarios(ProfesionalRepositoryGateway profesionales, HorarioRepositoryGateway horarios) {
+        return new ListarHorariosUseCaseImpl(profesionales, horarios);
     }
 
     @Bean
-    ConsultarParametrosPort consultarParametros(ParametroRepositoryPort parametros) {
-        return new ConsultarParametrosUseCase(parametros);
+    ConsultarParametrosUseCase consultarParametros(ParametroRepositoryGateway parametros) {
+        return new ConsultarParametrosUseCaseImpl(parametros);
     }
 
     @Bean
-    ConfigurarParametrosPort configurarParametros(ParametroRepositoryPort parametros) {
-        return new ConfigurarParametrosUseCase(parametros);
+    ConfigurarParametrosUseCase configurarParametros(ParametroRepositoryGateway parametros) {
+        return new ConfigurarParametrosUseCaseImpl(parametros);
     }
 
     @Bean
-    BloquearFranjasPort bloquearFranjas(
-            ProfesionalRepositoryPort profesionales,
-            CentroRepositoryPort centros,
-            BloqueoRepositoryPort bloqueos,
-            AppointmentClientPort appointment,
+    BloquearFranjasUseCase bloquearFranjas(
+            ProfesionalRepositoryGateway profesionales,
+            CentroRepositoryGateway centros,
+            BloqueoRepositoryGateway bloqueos,
+            AppointmentClientGateway appointment,
             Clock reloj) {
-        return new BloquearFranjasUseCase(profesionales, centros, bloqueos, appointment, reloj);
+        return new BloquearFranjasUseCaseImpl(profesionales, centros, bloqueos, appointment, reloj);
     }
 
     @Bean
-    ValidarAsociacionPort validarAsociacion(ProfesionalRepositoryPort profesionales) {
-        return new ValidarAsociacionUseCase(profesionales);
+    ValidarAsociacionUseCase validarAsociacion(ProfesionalRepositoryGateway profesionales) {
+        return new ValidarAsociacionUseCaseImpl(profesionales);
     }
 
     @Bean
-    BuscarProfesionalPorUsuarioPort buscarProfesionalPorUsuario(ProfesionalRepositoryPort profesionales) {
-        return new BuscarProfesionalPorUsuarioUseCase(profesionales);
+    BuscarProfesionalPorUsuarioUseCase buscarProfesionalPorUsuario(ProfesionalRepositoryGateway profesionales) {
+        return new BuscarProfesionalPorUsuarioUseCaseImpl(profesionales);
     }
 }

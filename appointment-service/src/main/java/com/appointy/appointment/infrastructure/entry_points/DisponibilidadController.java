@@ -1,6 +1,6 @@
 package com.appointy.appointment.infrastructure.entry_points;
 
-import com.appointy.appointment.domain.port.in.ConsultarDisponibilidadPort;
+import com.appointy.appointment.domain.usecase.ConsultarDisponibilidadUseCase;
 import com.appointy.appointment.infrastructure.entry_points.dto.FranjaResponse;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/disponibilidad")
 public class DisponibilidadController {
 
-    private final ConsultarDisponibilidadPort consultar;
+    private final ConsultarDisponibilidadUseCase consultar;
 
-    public DisponibilidadController(ConsultarDisponibilidadPort consultar) {
+    public DisponibilidadController(ConsultarDisponibilidadUseCase consultar) {
         this.consultar = consultar;
     }
 

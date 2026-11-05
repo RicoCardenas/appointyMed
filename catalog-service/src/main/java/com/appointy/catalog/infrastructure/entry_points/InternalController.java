@@ -3,9 +3,9 @@ package com.appointy.catalog.infrastructure.entry_points;
 import com.appointy.catalog.domain.exception.NoEncontradoException;
 import com.appointy.catalog.domain.model.ParametroServicio;
 import com.appointy.catalog.domain.model.Profesional;
-import com.appointy.catalog.domain.port.in.BuscarProfesionalPorUsuarioPort;
-import com.appointy.catalog.domain.port.in.ConsultarParametrosPort;
-import com.appointy.catalog.domain.port.in.ValidarAsociacionPort;
+import com.appointy.catalog.domain.usecase.BuscarProfesionalPorUsuarioUseCase;
+import com.appointy.catalog.domain.usecase.ConsultarParametrosUseCase;
+import com.appointy.catalog.domain.usecase.ValidarAsociacionUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.AsociacionResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.ProfesionalInternoResponse;
 import java.util.LinkedHashMap;
@@ -22,12 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal")
 public class InternalController {
 
-    private final ValidarAsociacionPort validarAsociacion;
-    private final ConsultarParametrosPort consultarParametros;
-    private final BuscarProfesionalPorUsuarioPort buscarPorUsuario;
+    private final ValidarAsociacionUseCase validarAsociacion;
+    private final ConsultarParametrosUseCase consultarParametros;
+    private final BuscarProfesionalPorUsuarioUseCase buscarPorUsuario;
 
-    public InternalController(ValidarAsociacionPort validarAsociacion, ConsultarParametrosPort consultarParametros,
-            BuscarProfesionalPorUsuarioPort buscarPorUsuario) {
+    public InternalController(ValidarAsociacionUseCase validarAsociacion, ConsultarParametrosUseCase consultarParametros,
+            BuscarProfesionalPorUsuarioUseCase buscarPorUsuario) {
         this.validarAsociacion = validarAsociacion;
         this.consultarParametros = consultarParametros;
         this.buscarPorUsuario = buscarPorUsuario;

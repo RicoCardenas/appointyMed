@@ -31,14 +31,14 @@ import com.appointy.appointment.domain.model.Franja;
 import com.appointy.appointment.domain.model.HistorialCita;
 import com.appointy.appointment.domain.model.ParametrosCita;
 import com.appointy.appointment.domain.model.ProfesionalDeUsuario;
-import com.appointy.appointment.domain.port.in.CancelarCitaPort;
-import com.appointy.appointment.domain.port.in.ReprogramarCitaPort;
-import com.appointy.appointment.domain.port.in.ReservarCitaPort;
-import com.appointy.appointment.domain.port.out.CatalogClientPort;
-import com.appointy.appointment.domain.port.out.CitaRepositoryPort;
-import com.appointy.appointment.domain.port.out.FranjaRepositoryPort;
-import com.appointy.appointment.domain.port.out.HistorialCitaRepositoryPort;
-import com.appointy.appointment.domain.port.out.PublicadorEventosPort;
+import com.appointy.appointment.domain.usecase.CancelarCitaUseCase;
+import com.appointy.appointment.domain.usecase.ReprogramarCitaUseCase;
+import com.appointy.appointment.domain.usecase.ReservarCitaUseCase;
+import com.appointy.appointment.domain.gateway.CatalogClientGateway;
+import com.appointy.appointment.domain.gateway.CitaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.HistorialCitaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.PublicadorEventosGateway;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -58,24 +58,24 @@ class CitasUseCasesTest {
     static final Actor DOCTOR = new Actor("usr-doc", "PROFESIONAL");
     static final ParametrosCita PARAMETROS = new ParametrosCita(2, 24, 60);
 
-    FranjaRepositoryPort franjas = mock(FranjaRepositoryPort.class);
-    CitaRepositoryPort citas = mock(CitaRepositoryPort.class);
-    HistorialCitaRepositoryPort historial = mock(HistorialCitaRepositoryPort.class);
-    PublicadorEventosPort eventos = mock(PublicadorEventosPort.class);
-    CatalogClientPort catalog = mock(CatalogClientPort.class);
+    FranjaRepositoryGateway franjas = mock(FranjaRepositoryGateway.class);
+    CitaRepositoryGateway citas = mock(CitaRepositoryGateway.class);
+    HistorialCitaRepositoryGateway historial = mock(HistorialCitaRepositoryGateway.class);
+    PublicadorEventosGateway eventos = mock(PublicadorEventosGateway.class);
+    CatalogClientGateway catalog = mock(CatalogClientGateway.class);
     RelojClinica reloj = new RelojClinica(Clock.fixed(Instant.parse("2030-06-10T15:00:00Z"), ZoneId.of("America/Bogota")));
 
-    ReservarCitaUseCase reservar;
-    ReprogramarCitaUseCase reprogramar;
-    CancelarCitaUseCase cancelar;
-    MarcarCitaAtendidaUseCase marcar;
+    ReservarCitaUseCaseImpl reservar;
+    ReprogramarCitaUseCaseImpl reprogramar;
+    CancelarCitaUseCaseImpl cancelar;
+    MarcarCitaAtendidaUseCaseImpl marcar;
 
     @BeforeEach
     void preparar() {
-        reservar = new ReservarCitaUseCase(catalog, new ReservarCitaTransaccion(franjas, citas, historial, eventos, reloj));
-        reprogramar = new ReprogramarCitaUseCase(citas, franjas, catalog, new ReprogramarCitaTransaccion(franjas, citas, historial, eventos, reloj));
-        cancelar = new CancelarCitaUseCase(citas, catalog, new CancelarCitaTransaccion(franjas, citas, historial, eventos, reloj));
-        marcar = new MarcarCitaAtendidaUseCase(catalog, citas, new MarcarCitaAtendidaTransaccion(franjas, citas, historial, reloj));
+        reservar = new ReservarCitaUseCaseImpl(catalog, new ReservarCitaTransaccion(franjas, citas, historial, eventos, reloj));
+        reprogramar = new ReprogramarCitaUseCaseImpl(citas, franjas, catalog, new ReprogramarCitaTransaccion(franjas, citas, historial, eventos, reloj));
+        cancelar = new CancelarCitaUseCaseImpl(citas, catalog, new CancelarCitaTransaccion(franjas, citas, historial, eventos, reloj));
+        marcar = new MarcarCitaAtendidaUseCaseImpl(catalog, citas, new MarcarCitaAtendidaTransaccion(franjas, citas, historial, reloj));
         when(catalog.obtenerParametros()).thenReturn(PARAMETROS);
         when(catalog.validarAsociacion(anyString(), anyString(), anyString())).thenReturn(new AsociacionProfesional(true, true));
         when(franjas.franjasDeCitasConfirmadasDelPaciente(anyString(), anyString())).thenReturn(new Franja[0]);
@@ -91,8 +91,8 @@ class CitasUseCasesTest {
         return new Cita("cita1", "pac", "prof", "esp", "centro", franjaId, estado, 1, 1, 1L);
     }
 
-    ReservarCitaPort.Comando comandoReserva(String franjaId) {
-        return new ReservarCitaPort.Comando(PACIENTE, "esp", "prof", "centro", franjaId);
+    ReservarCitaUseCase.Comando comandoReserva(String franjaId) {
+        return new ReservarCitaUseCase.Comando(PACIENTE, "esp", "prof", "centro", franjaId);
     }
 
     // ---- CU-18
@@ -196,7 +196,7 @@ class CitasUseCasesTest {
         when(franjas.buscarParaActualizar("f2")).thenReturn(nueva);
         when(franjas.franjasDeCitasConfirmadasDelPaciente("pac", "2030-06-13")).thenReturn(new Franja[0]);
 
-        CitaConFranja r = reprogramar.ejecutar(new ReprogramarCitaPort.Comando(PACIENTE, "cita1", "f2"));
+        CitaConFranja r = reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(PACIENTE, "cita1", "f2"));
 
         assertEquals("f2", r.cita().franjaId());
         assertEquals(EstadoCita.CONFIRMADA, r.cita().estado());
@@ -223,7 +223,7 @@ class CitasUseCasesTest {
         when(franjas.buscarParaActualizar("f9")).thenReturn(franja("f9", "2030-06-12", 480, EstadoFranja.OCUPADA));
 
         assertEquals("FRANJA_NO_DISPONIBLE", assertThrows(ConflictoException.class,
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(PACIENTE, "cita1", "f2"))).codigo());
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(PACIENTE, "cita1", "f2"))).codigo());
 
         verify(franjas, never()).guardar(any());
         verify(citas, never()).guardar(any());
@@ -235,7 +235,7 @@ class CitasUseCasesTest {
         for (EstadoCita e : new EstadoCita[] {EstadoCita.CANCELADA, EstadoCita.COMPLETADA}) {
             when(citas.buscarPorId("cita1")).thenReturn(cita("f9", e));
             assertEquals("CITA_NO_MODIFICABLE", assertThrows(ConflictoException.class,
-                    () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(PACIENTE, "cita1", "f2"))).codigo());
+                    () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(PACIENTE, "cita1", "f2"))).codigo());
         }
         verify(franjas, never()).guardar(any());
     }
@@ -244,7 +244,7 @@ class CitasUseCasesTest {
     void reprogramarCitaAjenaEs403() {
         when(citas.buscarPorId("cita1")).thenReturn(cita("f9", EstadoCita.CONFIRMADA));
         assertThrows(AccesoProhibidoException.class,
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(new Actor("otro", "PACIENTE"), "cita1", "f2")));
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor("otro", "PACIENTE"), "cita1", "f2")));
     }
 
     @Test
@@ -258,7 +258,7 @@ class CitasUseCasesTest {
         when(franjas.buscarParaActualizar("f2")).thenReturn(nueva);
 
         assertEquals("ANTICIPACION_INSUFICIENTE", assertThrows(ReglaNegocioException.class,
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(PACIENTE, "cita1", "f2"))).codigo());
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(PACIENTE, "cita1", "f2"))).codigo());
     }
 
     @Test
@@ -266,7 +266,7 @@ class CitasUseCasesTest {
         when(citas.buscarPorId("cita1")).thenReturn(cita("f9", EstadoCita.CONFIRMADA));
         when(franjas.buscarPorId("f9")).thenReturn(franja("f9", "2030-06-12", 480, EstadoFranja.OCUPADA));
         assertEquals("MISMA_FRANJA", assertThrows(ReglaNegocioException.class,
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(PACIENTE, "cita1", "f9"))).codigo());
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(PACIENTE, "cita1", "f9"))).codigo());
     }
 
     @Test
@@ -280,7 +280,7 @@ class CitasUseCasesTest {
         when(franjas.buscarParaActualizar("f2")).thenReturn(nueva);
         when(franjas.franjasDeCitasConfirmadasDelPaciente("pac", "2030-06-13")).thenReturn(new Franja[] {anterior});
 
-        assertEquals("f2", reprogramar.ejecutar(new ReprogramarCitaPort.Comando(PACIENTE, "cita1", "f2")).cita().franjaId());
+        assertEquals("f2", reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(PACIENTE, "cita1", "f2")).cita().franjaId());
     }
 
     // ---- CU-20
@@ -291,7 +291,7 @@ class CitasUseCasesTest {
         when(citas.buscarPorId("cita1")).thenReturn(cita("f9", EstadoCita.CONFIRMADA));
         when(franjas.buscarParaActualizar("f9")).thenReturn(ocupada);
 
-        CitaConFranja r = cancelar.ejecutar(new CancelarCitaPort.Comando(ADMIN, "cita1", "paciente enfermo"));
+        CitaConFranja r = cancelar.ejecutar(new CancelarCitaUseCase.Comando(ADMIN, "cita1", "paciente enfermo"));
 
         assertEquals(EstadoCita.CANCELADA, r.cita().estado());
         assertEquals(EstadoFranja.DISPONIBLE, r.franja().estado());
@@ -314,7 +314,7 @@ class CitasUseCasesTest {
         when(franjas.buscarParaActualizar("f9")).thenReturn(franja("f9", "2030-06-11", 480, EstadoFranja.OCUPADA));
 
         assertEquals("FUERA_DEL_PLAZO_DE_CANCELACION", assertThrows(ReglaNegocioException.class,
-                () -> cancelar.ejecutar(new CancelarCitaPort.Comando(PACIENTE, "cita1", null))).codigo());
+                () -> cancelar.ejecutar(new CancelarCitaUseCase.Comando(PACIENTE, "cita1", null))).codigo());
 
         verify(citas, never()).guardar(any());
         verifyNoInteractions(historial, eventos);
@@ -325,14 +325,14 @@ class CitasUseCasesTest {
         for (EstadoCita e : new EstadoCita[] {EstadoCita.CANCELADA, EstadoCita.COMPLETADA}) {
             when(citas.buscarPorId("cita1")).thenReturn(cita("f9", e));
             assertEquals("CITA_NO_MODIFICABLE", assertThrows(ConflictoException.class,
-                    () -> cancelar.ejecutar(new CancelarCitaPort.Comando(PACIENTE, "cita1", null))).codigo());
+                    () -> cancelar.ejecutar(new CancelarCitaUseCase.Comando(PACIENTE, "cita1", null))).codigo());
         }
     }
 
     @Test
     void cancelarCitaAjenaEs403() {
         when(citas.buscarPorId("cita1")).thenReturn(cita("f9", EstadoCita.CONFIRMADA));
-        assertThrows(AccesoProhibidoException.class, () -> cancelar.ejecutar(new CancelarCitaPort.Comando(new Actor("otro", "PACIENTE"), "cita1", null)));
+        assertThrows(AccesoProhibidoException.class, () -> cancelar.ejecutar(new CancelarCitaUseCase.Comando(new Actor("otro", "PACIENTE"), "cita1", null)));
     }
 
     @Test
@@ -341,7 +341,7 @@ class CitasUseCasesTest {
         when(franjas.buscarParaActualizar("f9")).thenReturn(franja("f9", "2030-06-12", 480, EstadoFranja.OCUPADA));
 
         assertEquals("CITA_CAMBIO", assertThrows(ConflictoException.class,
-                () -> cancelar.ejecutar(new CancelarCitaPort.Comando(PACIENTE, "cita1", null))).codigo());
+                () -> cancelar.ejecutar(new CancelarCitaUseCase.Comando(PACIENTE, "cita1", null))).codigo());
 
         verify(franjas, never()).guardar(any());
     }
@@ -384,7 +384,7 @@ class CitasUseCasesTest {
         when(citas.listarDePaciente("pac", "2030-06-10", RelojClinica.FECHA_MAXIMA)).thenReturn(new Cita[] {c1, c2});
         when(citas.listarDePaciente("pac", RelojClinica.FECHA_MINIMA, "2030-06-09")).thenReturn(new Cita[] {c1, c2});
         when(franjas.buscarPorIds(any())).thenReturn(new Franja[] {franja("f1", "2030-06-11", 480, EstadoFranja.OCUPADA), franja("f2", "2030-06-12", 480, EstadoFranja.OCUPADA)});
-        ConsultarMisCitasUseCase uc = new ConsultarMisCitasUseCase(citas, franjas, reloj);
+        ConsultarMisCitasUseCaseImpl uc = new ConsultarMisCitasUseCaseImpl(citas, franjas, reloj);
 
         assertEquals("cita1", uc.ejecutar("pac", "PROXIMAS")[0].cita().id());
         assertEquals("cita2", uc.ejecutar("pac", "PASADAS")[0].cita().id());
@@ -396,7 +396,7 @@ class CitasUseCasesTest {
         when(catalog.buscarProfesionalDeUsuario("usr-doc")).thenReturn(new ProfesionalDeUsuario("prof", true));
         when(citas.listarAgendaConfirmada(anyString(), anyString(), anyString())).thenReturn(new Cita[0]);
         when(franjas.buscarPorIds(any())).thenReturn(new Franja[0]);
-        ConsultarAgendaUseCase uc = new ConsultarAgendaUseCase(catalog, citas, franjas, reloj);
+        ConsultarAgendaUseCaseImpl uc = new ConsultarAgendaUseCaseImpl(catalog, citas, franjas, reloj);
 
         uc.ejecutar("usr-doc", null);
         verify(citas).listarAgendaConfirmada("prof", "2030-06-10", RelojClinica.FECHA_MAXIMA);
@@ -410,7 +410,7 @@ class CitasUseCasesTest {
         when(historial.listarPorCita("cita1")).thenReturn(new HistorialCita[0]);
         when(catalog.buscarProfesionalDeUsuario("usr-doc")).thenReturn(new ProfesionalDeUsuario("prof", true));
         when(catalog.buscarProfesionalDeUsuario("usr-otro")).thenReturn(new ProfesionalDeUsuario("otro", true));
-        ConsultarHistorialCitaUseCase uc = new ConsultarHistorialCitaUseCase(catalog, citas, historial);
+        ConsultarHistorialCitaUseCaseImpl uc = new ConsultarHistorialCitaUseCaseImpl(catalog, citas, historial);
 
         assertArrayEquals(new HistorialCita[0], uc.ejecutar(PACIENTE, "cita1"));
         uc.ejecutar(ADMIN, "cita1");
@@ -426,7 +426,7 @@ class CitasUseCasesTest {
             franja("a", "2030-06-10", 540, EstadoFranja.DISPONIBLE), franja("b", "2030-06-10", 600, EstadoFranja.DISPONIBLE),
             franja("c", "2030-06-10", 630, EstadoFranja.DISPONIBLE)});
 
-        Franja[] r = new ConsultarDisponibilidadUseCase(franjas, reloj).ejecutar("prof", "centro", "2030-06-10");
+        Franja[] r = new ConsultarDisponibilidadUseCaseImpl(franjas, reloj).ejecutar("prof", "centro", "2030-06-10");
 
         assertEquals(1, r.length);
         assertEquals("c", r[0].id());

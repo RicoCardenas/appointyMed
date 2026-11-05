@@ -1,10 +1,10 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
-import com.appointy.catalog.domain.port.in.ActualizarEspecialidadPort;
-import com.appointy.catalog.domain.port.in.CrearEspecialidadPort;
-import com.appointy.catalog.domain.port.in.DesactivarEspecialidadPort;
-import com.appointy.catalog.domain.port.in.ListarEspecialidadesPort;
-import com.appointy.catalog.domain.port.in.ListarProfesionalesPorEspecialidadPort;
+import com.appointy.catalog.domain.usecase.ActualizarEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.CrearEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.DesactivarEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.ListarEspecialidadesUseCase;
+import com.appointy.catalog.domain.usecase.ListarProfesionalesPorEspecialidadUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.EspecialidadRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.EspecialidadResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.ProfesionalResponse;
@@ -32,18 +32,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/especialidades")
 public class EspecialidadController {
 
-    private final ListarEspecialidadesPort listar;
-    private final CrearEspecialidadPort crear;
-    private final ActualizarEspecialidadPort actualizar;
-    private final DesactivarEspecialidadPort desactivar;
-    private final ListarProfesionalesPorEspecialidadPort listarProfesionales;
+    private final ListarEspecialidadesUseCase listar;
+    private final CrearEspecialidadUseCase crear;
+    private final ActualizarEspecialidadUseCase actualizar;
+    private final DesactivarEspecialidadUseCase desactivar;
+    private final ListarProfesionalesPorEspecialidadUseCase listarProfesionales;
 
     public EspecialidadController(
-            ListarEspecialidadesPort listar,
-            CrearEspecialidadPort crear,
-            ActualizarEspecialidadPort actualizar,
-            DesactivarEspecialidadPort desactivar,
-            ListarProfesionalesPorEspecialidadPort listarProfesionales) {
+            ListarEspecialidadesUseCase listar,
+            CrearEspecialidadUseCase crear,
+            ActualizarEspecialidadUseCase actualizar,
+            DesactivarEspecialidadUseCase desactivar,
+            ListarProfesionalesPorEspecialidadUseCase listarProfesionales) {
         this.listar = listar;
         this.crear = crear;
         this.actualizar = actualizar;
@@ -71,14 +71,14 @@ public class EspecialidadController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public EspecialidadResponse crear(@Valid @RequestBody EspecialidadRequest solicitud) {
-        return EspecialidadResponse.de(crear.ejecutar(new CrearEspecialidadPort.Comando(solicitud.nombre(), solicitud.descripcion())));
+        return EspecialidadResponse.de(crear.ejecutar(new CrearEspecialidadUseCase.Comando(solicitud.nombre(), solicitud.descripcion())));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public EspecialidadResponse actualizar(@PathVariable UUID id, @Valid @RequestBody EspecialidadRequest solicitud) {
         return EspecialidadResponse.de(
-                actualizar.ejecutar(new ActualizarEspecialidadPort.Comando(id.toString(), solicitud.nombre(), solicitud.descripcion())));
+                actualizar.ejecutar(new ActualizarEspecialidadUseCase.Comando(id.toString(), solicitud.nombre(), solicitud.descripcion())));
     }
 
     /** Borrado logico: la especialidad queda inactiva, no se elimina. */

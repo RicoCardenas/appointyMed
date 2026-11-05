@@ -1,14 +1,14 @@
 package com.appointy.catalog.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.catalog.domain.model.Bloqueo;
-import com.appointy.catalog.domain.port.out.BloqueoRepositoryPort;
+import com.appointy.catalog.domain.gateway.BloqueoRepositoryGateway;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.repository.SpringDataBloqueoRepository;
 import com.appointy.catalog.infrastructure.mapper.BloqueoEntityMapper;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BloqueoJpaAdapter implements BloqueoRepositoryPort {
+public class BloqueoJpaAdapter implements BloqueoRepositoryGateway {
 
     private final SpringDataBloqueoRepository repositorio;
     private final BloqueoEntityMapper mapper;

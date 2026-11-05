@@ -1,7 +1,7 @@
 package com.appointy.catalog.infrastructure.driven_adapters.jpa_repository;
 
 import com.appointy.catalog.domain.model.Especialidad;
-import com.appointy.catalog.domain.port.out.EspecialidadRepositoryPort;
+import com.appointy.catalog.domain.gateway.EspecialidadRepositoryGateway;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.entity.EspecialidadEntity;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.repository.SpringDataEspecialidadRepository;
 import com.appointy.catalog.infrastructure.mapper.EspecialidadEntityMapper;
@@ -9,7 +9,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EspecialidadJpaAdapter implements EspecialidadRepositoryPort {
+public class EspecialidadJpaAdapter implements EspecialidadRepositoryGateway {
 
     private final SpringDataEspecialidadRepository repositorio;
     private final EspecialidadEntityMapper mapper;

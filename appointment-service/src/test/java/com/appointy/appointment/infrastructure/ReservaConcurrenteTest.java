@@ -13,11 +13,11 @@ import com.appointy.appointment.domain.model.AsociacionProfesional;
 import com.appointy.appointment.domain.model.EstadoFranja;
 import com.appointy.appointment.domain.model.Franja;
 import com.appointy.appointment.domain.model.ParametrosCita;
-import com.appointy.appointment.domain.port.in.ReprogramarCitaPort;
-import com.appointy.appointment.domain.port.in.ReservarCitaPort;
-import com.appointy.appointment.domain.port.out.CatalogClientPort;
-import com.appointy.appointment.domain.port.out.FranjaRepositoryPort;
-import com.appointy.appointment.domain.port.out.NotificacionClientPort;
+import com.appointy.appointment.domain.usecase.ReprogramarCitaUseCase;
+import com.appointy.appointment.domain.usecase.ReservarCitaUseCase;
+import com.appointy.appointment.domain.gateway.CatalogClientGateway;
+import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
+import com.appointy.appointment.domain.gateway.NotificacionClientGateway;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -53,13 +53,13 @@ class ReservaConcurrenteTest {
 
     static final int HILOS = 12;
 
-    @Autowired ReservarCitaPort reservar;
-    @Autowired ReprogramarCitaPort reprogramar;
-    @Autowired FranjaRepositoryPort franjas;
+    @Autowired ReservarCitaUseCase reservar;
+    @Autowired ReprogramarCitaUseCase reprogramar;
+    @Autowired FranjaRepositoryGateway franjas;
     @Autowired JdbcTemplate jdbc;
     @Autowired TransactionTemplate tx;
-    @MockitoBean CatalogClientPort catalog;
-    @MockitoBean NotificacionClientPort notificacion;
+    @MockitoBean CatalogClientGateway catalog;
+    @MockitoBean NotificacionClientGateway notificacion;
 
     final String profesionalId = UUID.randomUUID().toString();
     final String centroId = UUID.randomUUID().toString();
@@ -86,8 +86,8 @@ class ReservaConcurrenteTest {
         return id;
     }
 
-    ReservarCitaPort.Comando reserva(String paciente, String franjaId) {
-        return new ReservarCitaPort.Comando(new Actor(paciente, "PACIENTE"), especialidadId, profesionalId, centroId, franjaId);
+    ReservarCitaUseCase.Comando reserva(String paciente, String franjaId) {
+        return new ReservarCitaUseCase.Comando(new Actor(paciente, "PACIENTE"), especialidadId, profesionalId, centroId, franjaId);
     }
 
     /** Suelta todas las tareas a la vez y devuelve el resultado de cada una: null si tuvo exito, o la excepcion. */
@@ -161,8 +161,8 @@ class ReservaConcurrenteTest {
 
         // A pide la franja de B y B la de A, a la vez: ambas estan OCUPADAS, asi que ambas deben rechazarse sin deadlock.
         List<Throwable> resultados = correrJuntas(List.of(
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(new Actor(pacienteA, "PACIENTE"), citaA, f2)),
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(new Actor(pacienteB, "PACIENTE"), citaB, f1))));
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteA, "PACIENTE"), citaA, f2)),
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteB, "PACIENTE"), citaB, f1))));
 
         resultados.forEach(r -> assertInstanceOf(ConflictoException.class, r, "rechazo controlado, no deadlock: " + r));
         assertEquals(f1, jdbc.queryForObject("select franja_id::text from cita where id = ?::uuid", String.class, citaA));
@@ -181,8 +181,8 @@ class ReservaConcurrenteTest {
         String citaB = reservar.ejecutar(reserva(pacienteB, f2)).cita().id();
 
         List<Throwable> resultados = correrJuntas(List.of(
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(new Actor(pacienteA, "PACIENTE"), citaA, libre)),
-                () -> reprogramar.ejecutar(new ReprogramarCitaPort.Comando(new Actor(pacienteB, "PACIENTE"), citaB, libre))));
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteA, "PACIENTE"), citaA, libre)),
+                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteB, "PACIENTE"), citaB, libre))));
 
         assertEquals(1, resultados.stream().filter(r -> r == null).count(), "una gana y la otra recibe conflicto: " + resultados);
         assertEquals(1, jdbc.queryForObject("select count(*) from cita where franja_id = ?::uuid and estado = 'CONFIRMADA'", Integer.class, libre));

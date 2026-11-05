@@ -5,8 +5,8 @@ import com.appointy.catalog.domain.model.FranjaSolicitada;
 import com.appointy.catalog.domain.model.HorarioAtencion;
 import com.appointy.catalog.domain.model.ResultadoGeneracion;
 import com.appointy.catalog.domain.model.ResultadoHorario;
-import com.appointy.catalog.domain.port.out.AppointmentClientPort;
-import com.appointy.catalog.domain.port.out.ParametroRepositoryPort;
+import com.appointy.catalog.domain.gateway.AppointmentClientGateway;
+import com.appointy.catalog.domain.gateway.ParametroRepositoryGateway;
 import com.appointy.catalog.domain.rule.ReglasParametro;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -21,11 +21,11 @@ public class PublicadorDeFranjas {
 
     private static final Logger LOG = LoggerFactory.getLogger(PublicadorDeFranjas.class);
 
-    private final ParametroRepositoryPort parametros;
-    private final AppointmentClientPort appointment;
+    private final ParametroRepositoryGateway parametros;
+    private final AppointmentClientGateway appointment;
     private final Clock reloj;
 
-    public PublicadorDeFranjas(ParametroRepositoryPort parametros, AppointmentClientPort appointment, Clock reloj) {
+    public PublicadorDeFranjas(ParametroRepositoryGateway parametros, AppointmentClientGateway appointment, Clock reloj) {
         this.parametros = parametros;
         this.appointment = appointment;
         this.reloj = reloj;

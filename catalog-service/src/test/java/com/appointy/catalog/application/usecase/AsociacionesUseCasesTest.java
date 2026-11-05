@@ -15,13 +15,13 @@ import com.appointy.catalog.domain.model.Centro;
 import com.appointy.catalog.domain.model.DetalleProfesional;
 import com.appointy.catalog.domain.model.Especialidad;
 import com.appointy.catalog.domain.model.Profesional;
-import com.appointy.catalog.domain.port.in.AsociarCentrosPort;
-import com.appointy.catalog.domain.port.in.AsociarEspecialidadesPort;
-import com.appointy.catalog.domain.port.out.BloqueoRepositoryPort;
-import com.appointy.catalog.domain.port.out.CentroRepositoryPort;
-import com.appointy.catalog.domain.port.out.EspecialidadRepositoryPort;
-import com.appointy.catalog.domain.port.out.HorarioRepositoryPort;
-import com.appointy.catalog.domain.port.out.ProfesionalRepositoryPort;
+import com.appointy.catalog.domain.usecase.AsociarCentrosUseCase;
+import com.appointy.catalog.domain.usecase.AsociarEspecialidadesUseCase;
+import com.appointy.catalog.domain.gateway.BloqueoRepositoryGateway;
+import com.appointy.catalog.domain.gateway.CentroRepositoryGateway;
+import com.appointy.catalog.domain.gateway.EspecialidadRepositoryGateway;
+import com.appointy.catalog.domain.gateway.HorarioRepositoryGateway;
+import com.appointy.catalog.domain.gateway.ProfesionalRepositoryGateway;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -30,11 +30,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AsociacionesUseCasesTest {
 
-    @Mock ProfesionalRepositoryPort profesionales;
-    @Mock EspecialidadRepositoryPort especialidades;
-    @Mock CentroRepositoryPort centros;
-    @Mock HorarioRepositoryPort horarios;
-    @Mock BloqueoRepositoryPort bloqueos;
+    @Mock ProfesionalRepositoryGateway profesionales;
+    @Mock EspecialidadRepositoryGateway especialidades;
+    @Mock CentroRepositoryGateway centros;
+    @Mock HorarioRepositoryGateway horarios;
+    @Mock BloqueoRepositoryGateway bloqueos;
 
     final Profesional ana = new Profesional("p1", "u1", "Ana", "Perez", "RM-1", true);
 
@@ -45,8 +45,8 @@ class AsociacionesUseCasesTest {
         when(especialidades.buscarPorId("e2")).thenReturn(new Especialidad("e2", "B", null, true));
         when(profesionales.idsCentros("p1")).thenReturn(new String[] {"c1"});
 
-        DetalleProfesional d = new AsociarEspecialidadesUseCase(profesionales, especialidades)
-                .ejecutar(new AsociarEspecialidadesPort.Comando("p1", new String[] {"e1", "e2", "e1"}));
+        DetalleProfesional d = new AsociarEspecialidadesUseCaseImpl(profesionales, especialidades)
+                .ejecutar(new AsociarEspecialidadesUseCase.Comando("p1", new String[] {"e1", "e2", "e1"}));
 
         verify(profesionales).reemplazarEspecialidades("p1", new String[] {"e1", "e2"});
         assertArrayEquals(new String[] {"e1", "e2"}, d.especialidadIds());
@@ -59,12 +59,12 @@ class AsociacionesUseCasesTest {
         when(especialidades.buscarPorId("inactiva")).thenReturn(new Especialidad("inactiva", "X", null, false));
         when(especialidades.buscarPorId("nada")).thenReturn(null);
         when(profesionales.buscarPorId("fantasma")).thenReturn(null);
-        AsociarEspecialidadesUseCase useCase = new AsociarEspecialidadesUseCase(profesionales, especialidades);
+        AsociarEspecialidadesUseCaseImpl useCase = new AsociarEspecialidadesUseCaseImpl(profesionales, especialidades);
 
         assertEquals("ESPECIALIDAD_INACTIVA", assertThrows(ValidacionException.class,
-                () -> useCase.ejecutar(new AsociarEspecialidadesPort.Comando("p1", new String[] {"inactiva"}))).codigo());
-        assertThrows(NoEncontradoException.class, () -> useCase.ejecutar(new AsociarEspecialidadesPort.Comando("p1", new String[] {"nada"})));
-        assertThrows(NoEncontradoException.class, () -> useCase.ejecutar(new AsociarEspecialidadesPort.Comando("fantasma", new String[0])));
+                () -> useCase.ejecutar(new AsociarEspecialidadesUseCase.Comando("p1", new String[] {"inactiva"}))).codigo());
+        assertThrows(NoEncontradoException.class, () -> useCase.ejecutar(new AsociarEspecialidadesUseCase.Comando("p1", new String[] {"nada"})));
+        assertThrows(NoEncontradoException.class, () -> useCase.ejecutar(new AsociarEspecialidadesUseCase.Comando("fantasma", new String[0])));
         verify(profesionales, never()).reemplazarEspecialidades(any(), any());
     }
 
@@ -75,7 +75,7 @@ class AsociacionesUseCasesTest {
         when(profesionales.idsCentros("p1")).thenReturn(new String[0]);
         when(profesionales.idsEspecialidades("p1")).thenReturn(new String[0]);
 
-        new AsociarCentrosUseCase(profesionales, centros, horarios, bloqueos).ejecutar(new AsociarCentrosPort.Comando("p1", new String[] {"c1"}));
+        new AsociarCentrosUseCaseImpl(profesionales, centros, horarios, bloqueos).ejecutar(new AsociarCentrosUseCase.Comando("p1", new String[] {"c1"}));
 
         verify(profesionales).reemplazarCentros("p1", new String[] {"c1"});
     }
@@ -85,10 +85,10 @@ class AsociacionesUseCasesTest {
         when(profesionales.buscarPorId("p1")).thenReturn(ana);
         when(profesionales.idsCentros("p1")).thenReturn(new String[] {"c1", "c2"});
         when(horarios.contarPorProfesionalYCentro("p1", "c1")).thenReturn(2);
-        AsociarCentrosUseCase useCase = new AsociarCentrosUseCase(profesionales, centros, horarios, bloqueos);
+        AsociarCentrosUseCaseImpl useCase = new AsociarCentrosUseCaseImpl(profesionales, centros, horarios, bloqueos);
 
         ConflictoException ex = assertThrows(ConflictoException.class,
-                () -> useCase.ejecutar(new AsociarCentrosPort.Comando("p1", new String[0])));
+                () -> useCase.ejecutar(new AsociarCentrosUseCase.Comando("p1", new String[0])));
 
         assertEquals("CENTRO_CON_HORARIOS", ex.codigo());
         verify(profesionales, never()).reemplazarCentros(any(), any());
@@ -102,7 +102,7 @@ class AsociacionesUseCasesTest {
         when(bloqueos.contarPorProfesionalYCentro("p1", "c1")).thenReturn(0);
         when(profesionales.idsEspecialidades("p1")).thenReturn(new String[0]);
 
-        new AsociarCentrosUseCase(profesionales, centros, horarios, bloqueos).ejecutar(new AsociarCentrosPort.Comando("p1", new String[0]));
+        new AsociarCentrosUseCaseImpl(profesionales, centros, horarios, bloqueos).ejecutar(new AsociarCentrosUseCase.Comando("p1", new String[0]));
 
         verify(profesionales).reemplazarCentros("p1", new String[0]);
     }
