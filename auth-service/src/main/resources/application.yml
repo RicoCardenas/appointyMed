@@ -8,16 +8,34 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/appointy}
     username: ${AUTH_DB_USER:auth_svc}
     password: ${AUTH_DB_PASSWORD}
+  jackson:
+    deserialization:
+      # Un campo desconocido (p. ej. la cedula en la actualizacion del paciente) se rechaza con 400.
+      fail-on-unknown-properties: true
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate.default_schema: auth
+      hibernate.jdbc.time_zone: UTC
   flyway:
     schemas: auth
     default-schema: auth
     create-schemas: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}            # minimo 32 caracteres; el mismo valor en todos los servicios
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:15}
+    issuer: appointy-auth
+  admin:                             # administrador inicial, solo si aun no existe ninguno
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"
 
 management:
   endpoints:
