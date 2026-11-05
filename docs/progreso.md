@@ -2,14 +2,11 @@
 
 Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-05.
 
-## Siguiente paso: Fase 3, appointment-service (CU-17 a CU-27)
+## Siguiente paso: Fase 4, clinical-history-service (CU-28 a CU-32)
 
-Leer solo lo necesario, con `rg` o lecturas por secciones: de `docs/especificacion.md`, los CU-17 a CU-27 y los detalles de CU-18, CU-19 y CU-20 (sección 9), "Concurrencia" (sección 6) y las tablas franja, cita e historial_cita (sección 10). De este archivo, el contrato de appointment en "Fase 2" y las decisiones 5, 6, 7, 8 y 20. Skills: `reserva-concurrente`, `flyway-schemas`, `spring-data-jpa`, `spring-boot-event-driven-patterns` y `spring-boot-test-patterns`.
+Leer de `docs/especificacion.md` los CU-28 a CU-32 y el schema clinical. Para CU-27 (validar relación profesional-paciente) llamar a `GET /internal/relaciones?profesionalId=&pacienteId=` de appointment (ver "Fase 3"); el `profesionalId` es el de catalog, y se obtiene con `GET /internal/profesionales/por-usuario/{usuarioId}` de catalog. Cache Caffeine según la especificación. Copiar el estilo de appointment.
 
-- Copiar el estilo de auth y catalog (dominio sin imports, un caso de uso por clase, DTOs con `HH:mm` y texto ISO, errores con `RespuestaError`, `UTC` en la JVM, cadena de seguridad doble `/api` y `/internal`).
-- notification-service llega en la Fase 5: en la Fase 3 el puerto y el cliente REST hacia notification se escriben igual que catalog hizo con appointment (llave de servicio, timeouts, fallo que no revierte la cita) y se prueban contra un simulado. Appointment también necesita un cliente hacia catalog (`/internal/profesionales/{id}/asociacion` y `/internal/parametros`, ya existentes).
-- Pruebas reales en `scripts/e2e/` (`auth.sh`, `catalog.sh`; ver "Comandos" en `CLAUDE.md`). `catalog.sh` usa `fake-appointment.py`: al existir el appointment real, esa prueba debe pasar a usarlo y apoyarse en una nueva `appointment.sh`. La prueba de concurrencia de la reserva va contra PostgreSQL real, no H2.
-- Pendiente del equipo: `JWT_SECRET` e `INTERNAL_API_KEY` en `.env` (valores al azar, p. ej. `openssl rand -hex 32`; el mismo en todos los servicios).
+- Pendiente del equipo: `JWT_SECRET` e `INTERNAL_API_KEY` en `.env`.
 
 ## Fases
 
@@ -18,7 +15,7 @@ Leer solo lo necesario, con `rg` o lecturas por secciones: de `docs/especificaci
 | 0 | Base: especificación, POM de 5 módulos, schemas, skills, documentación | Hecha y verificada (ver abajo) |
 | 1 | auth-service: CU-01 a CU-07 | Hecha y verificada (ver abajo) |
 | 2 | catalog-service: CU-08 a CU-16 | Hecha y verificada con appointment simulado (ver abajo) |
-| 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Pendiente |
+| 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Hecha (ver abajo) |
 | 4 | clinical-history-service: CU-28 a CU-32 | Pendiente |
 | 5 | notification-service: CU-33 a CU-35 | Pendiente |
 | 6 | Cierre: OpenAPI, colección Postman, cobertura 70 %, correlación de logs | Pendiente |
@@ -104,6 +101,41 @@ Comportamiento a tener en cuenta:
 - Prueba real de punta a punta con auth real, catalog real y un appointment simulado: 121 comprobaciones correctas, 0 fallidas, y repetida la de auth (51 de 51). Incluye el JWT de auth validado en catalog, roles, los 9 CU, la caída de appointment, el reintento idempotente, el timeout (503 en menos de 6 s sin esperar los 8 s del simulado), el rollback del bloqueo, la API interna con y sin llave, que la llave y el id de correlación llegan a appointment y que no hay secretos ni datos personales en los logs. Los datos de prueba se borraron y los parámetros se restauraron.
 - Defecto real encontrado por la prueba y corregido: `hora_inicio` de 08:00 quedaba guardada como 13:00 porque la JVM usaba la zona de Bogotá y JDBC trabaja en UTC; leída de vuelta parecía correcta, pero en AWS (JVM en UTC) se habría leído mal. Cada servicio fija ahora UTC como zona por defecto de la JVM al arrancar. La prueba real comprueba que se guarda `08:00:00`, que las fechas del bloqueo no se desplazan y que `creado_en` está en UTC.
 - No probado: el appointment real (solo simulado hasta la Fase 3), concurrencia de dos administradores editando el mismo horario (la comprobación de cruce y el guardado no son atómicos; la especificación pide validarlo en el dominio), y comportamiento tras mucho tiempo de uso del cliente REST.
+
+## Fase 3: appointment-service
+
+Puerto 8083, base `/api/v1`. Franjas con fecha y hora locales de la clínica; instantes en UTC.
+
+| Método y ruta | Rol | CU |
+|---|---|---|
+| GET `/disponibilidad?profesionalId=&centroId=&fecha=` | cualquiera | CU-17 |
+| POST `/citas` (especialidadId, profesionalId, centroId, franjaId) | PACIENTE | CU-18 |
+| POST `/citas/{id}/reprogramar` (franjaId) | PACIENTE dueño | CU-19 |
+| POST `/citas/{id}/cancelar` (motivo opcional) | PACIENTE dueño o ADMINISTRATIVO | CU-20 |
+| GET `/citas/mias?periodo=PROXIMAS\|PASADAS` | PACIENTE | CU-21 |
+| GET `/citas/agenda?fecha=` (sin fecha: de hoy en adelante) | PROFESIONAL | CU-22 |
+| PATCH `/citas/{id}/estado` (COMPLETADA o NO_ASISTIDA) | PROFESIONAL de la cita | CU-23 |
+| GET `/citas/{id}/historial`, GET `/citas/{id}` | paciente, profesional de la cita o ADMINISTRATIVO | CU-24 |
+| POST `/internal/franjas/generar`, `/internal/franjas/bloquear` | servicio (catalog) | CU-25, CU-26 |
+| GET `/internal/relaciones?profesionalId=&pacienteId=` -> `{existe}` | servicio (clinical) | CU-27 |
+
+Contrato hacia notification (Fase 5): `POST /internal/notificaciones` con `{tipo: CONFIRMADA|REPROGRAMADA|CANCELADA, citaId, pacienteId, profesionalId, centroId, fecha, horaInicio:"HH:mm", actorId}`, llave de servicio y correlation id. Solo ids, sin datos personales. Se envía tras el commit y de forma asíncrona; si falla, solo se registra. Catalog tiene además `GET /internal/profesionales/por-usuario/{usuarioId}` (nuevo).
+
+Decisiones de esta fase (a validar con el docente):
+- `paciente_id` de la cita es el `usuarioId` del JWT. La agenda y CU-23 resuelven el profesional de la cuenta en catalog.
+- Anticipación mínima aplica a reservar y reprogramar; el límite de cancelación, a cancelar (también al administrativo). Reprogramar puede cambiar de profesional y centro si sigue asociado a la especialidad de la cita.
+- Orden de bloqueos: candado por paciente, franjas por id ascendente, luego la cita (que se relee bajo bloqueo; si se movió, 409 `CITA_CAMBIO`). Espera máxima 5 s (`lock_timeout`), vencida es 409.
+- Cada caso de uso con llamadas a catalog se parte en un caso de uso (consulta fuera de la transacción) y una clase `*Transaccion` con el único `@Transactional`.
+- CU-27: hay relación si existe una cita CONFIRMADA, COMPLETADA o NO_ASISTIDA entre ambos.
+- Marcar COMPLETADA o NO_ASISTIDA no exige que la hora ya haya pasado, y la franja sigue OCUPADA.
+- Cancelación por administrativo: el evento solo lleva `pacienteId`; resolver el correo en auth (decisión 7) queda para notification.
+- `catalog.sh` conserva el appointment simulado porque inyecta fallos (timeout de 8 s) que el real no puede; la integración real está en `appointment.sh` (auth, catalog y appointment reales, notification simulado).
+
+## Validado en la Fase 3
+
+- 69 pruebas unitarias en appointment (reglas, casos de uso, clientes REST con servidor simulado, oyente posterior al commit, arquitectura).
+- Prueba de concurrencia contra PostgreSQL real (`ReservaConcurrenteTest`, se activa si `APPOINTMENT_DB_PASSWORD` está definida, p. ej. cargando `.env`): 12 hilos sobre una franja, 1 éxito y 11 conflictos; mismo paciente con dos franjas que se cruzan; reprogramaciones cruzadas sin deadlock; dos reprogramaciones a la misma franja libre; el índice parcial rechaza el duplicado.
+- `scripts/e2e/appointment.sh` (auth, catalog y appointment reales, notification simulado): 131 comprobaciones correctas, 0 fallidas. Cubre los 11 CU, el catalog→appointment real (franjas, idempotencia, bloqueo con 409 y rollback), 8 solicitudes HTTP simultáneas sobre una franja (1 éxito, 7 conflictos), notification caído (la cita se guarda), catalog caído (503), la API interna con y sin llave, y que no hay secretos ni datos personales en el log. Defecto de la propia prueba corregido: un `wait` sin argumentos la dejaba colgada.
 
 ## Decisiones propias a validar con el docente
 

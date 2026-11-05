@@ -6,6 +6,7 @@ import com.appointy.catalog.application.usecase.ActualizarProfesionalUseCase;
 import com.appointy.catalog.application.usecase.AsociarCentrosUseCase;
 import com.appointy.catalog.application.usecase.AsociarEspecialidadesUseCase;
 import com.appointy.catalog.application.usecase.BloquearFranjasUseCase;
+import com.appointy.catalog.application.usecase.BuscarProfesionalPorUsuarioUseCase;
 import com.appointy.catalog.application.usecase.ConfigurarParametrosUseCase;
 import com.appointy.catalog.application.usecase.ConsultarParametrosUseCase;
 import com.appointy.catalog.application.usecase.ConsultarProfesionalUseCase;
@@ -30,6 +31,7 @@ import com.appointy.catalog.domain.port.in.ActualizarProfesionalPort;
 import com.appointy.catalog.domain.port.in.AsociarCentrosPort;
 import com.appointy.catalog.domain.port.in.AsociarEspecialidadesPort;
 import com.appointy.catalog.domain.port.in.BloquearFranjasPort;
+import com.appointy.catalog.domain.port.in.BuscarProfesionalPorUsuarioPort;
 import com.appointy.catalog.domain.port.in.ConfigurarParametrosPort;
 import com.appointy.catalog.domain.port.in.ConsultarParametrosPort;
 import com.appointy.catalog.domain.port.in.ConsultarProfesionalPort;
@@ -197,5 +199,10 @@ public class UseCaseConfig {
     @Bean
     ValidarAsociacionPort validarAsociacion(ProfesionalRepositoryPort profesionales) {
         return new ValidarAsociacionUseCase(profesionales);
+    }
+
+    @Bean
+    BuscarProfesionalPorUsuarioPort buscarProfesionalPorUsuario(ProfesionalRepositoryPort profesionales) {
+        return new BuscarProfesionalPorUsuarioUseCase(profesionales);
     }
 }
