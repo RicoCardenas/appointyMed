@@ -8,7 +8,7 @@ Rama `main`. El código anterior está en el historial hasta el commit `efb6897`
 |---|---|---|
 | 0 | Base: especificación, POM de 5 módulos, schemas, skills, documentación | Hecha y verificada (ver abajo) |
 | 1 | auth-service: CU-01 a CU-07 | Hecha y verificada (ver abajo) |
-| 2 | catalog-service: CU-08 a CU-16 | Pendiente |
+| 2 | catalog-service: CU-08 a CU-16 | Hecha y verificada con appointment simulado (ver abajo) |
 | 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Pendiente |
 | 4 | clinical-history-service: CU-28 a CU-32 | Pendiente |
 | 5 | notification-service: CU-33 a CU-35 | Pendiente |
@@ -55,6 +55,47 @@ Comportamiento a tener en cuenta:
 - Prueba de punta a punta con `curl` contra PostgreSQL 18.6 real: 51 comprobaciones correctas, 0 fallidas. Flyway aplicó `V1`, Hibernate validó contra las tablas, los 7 CU respondieron con los códigos esperados (incluidos 401, 403, 404 y 409), las claves quedan en BCrypt, ni la clave ni el token ni datos personales aparecen en el log. Los datos de prueba se borraron al terminar.
 - No probado: carga o concurrencia sobre el registro (la unicidad se apoya en las restricciones de BD), expiración real del job de limpieza (solo prueba unitaria), arranque con claves reales en `.env`.
 
+## Fase 2: catalog-service
+
+Puerto 8082, base `/api/v1`, JWT de auth validado localmente. Salvo que se indique, "cualquiera" es cualquier usuario autenticado.
+
+| Método y ruta | Rol | CU |
+|---|---|---|
+| GET `/especialidades` (`?incluirInactivas=true` solo ADMINISTRATIVO) | cualquiera | CU-08 |
+| GET `/especialidades/{id}/profesionales` | cualquiera | CU-09 |
+| GET `/profesionales/{id}/centros` | cualquiera | CU-10 |
+| POST, PUT `/especialidades`, `/centros`, `/profesionales`; DELETE = desactivar | ADMINISTRATIVO | CU-11 |
+| GET `/profesionales/{id}` (con especialidades y centros) | cualquiera | |
+| PUT `/profesionales/{id}/especialidades`, `/profesionales/{id}/centros` (lista completa de ids) | ADMINISTRATIVO | CU-12 |
+| POST `/profesionales/{id}/horarios`; GET `/profesionales/{id}/horarios` (ADMINISTRATIVO o PROFESIONAL) | ADMINISTRATIVO | CU-13 |
+| PUT `/horarios/{id}` (incluye `activo`) | ADMINISTRATIVO | CU-14 |
+| POST `/horarios/{id}/franjas` (reintento de generación, 503 si appointment no responde) | ADMINISTRATIVO | CU-13, CU-25 |
+| GET, PUT `/parametros` | ADMINISTRATIVO | CU-15 |
+| POST `/bloqueos` | ADMINISTRATIVO | CU-16, CU-26 |
+| GET `/internal/profesionales/{id}/asociacion?especialidadId=&centroId=` y GET `/internal/parametros` (cabecera `X-Api-Key`) | servicio | para CU-18 |
+
+### Contrato que appointment-service debe cumplir (Fase 3)
+
+Catalog llama a `/internal` con `X-Api-Key` (`INTERNAL_API_KEY`), `X-Correlation-Id`, timeout de conexión 2 s y de lectura 5 s. Cualquier fallo de red, timeout, 5xx o 401 se devuelve al cliente como 503 `APPOINTMENT_NO_DISPONIBLE`.
+
+- `POST /internal/franjas/generar` con `{profesionalId, centroId, franjas:[{fecha:"yyyy-MM-dd", horaInicio:"HH:mm", horaFin:"HH:mm"}]}` responde 200 `{creadas, existentes}`. Idempotente: repetir no duplica (RNF-16; `UNIQUE(profesional_id, centro_id, fecha, hora_inicio)`).
+- `POST /internal/franjas/bloquear` con `{profesionalId, centroId, fechaInicio, fechaFin}` responde 200 `{bloqueadas}`, o 409 `{citasAfectadas:["id", ...]}` si hay citas CONFIRMADAS en el intervalo (no bloquea nada). Idempotente.
+- Catalog genera las franjas desde el "hoy" de la clínica hasta hoy + `horizonte_max_dias`; appointment solo las persiste.
+
+Comportamiento a tener en cuenta:
+- El horario siempre se guarda; si appointment no responde, la respuesta trae `franjasGeneradas:false` y se reintenta con POST `/horarios/{id}/franjas`. Modificar un horario no retira las franjas ya generadas de su versión anterior: para dejar de ofrecerlas se usa un bloqueo.
+- El bloqueo se guarda y se llama a appointment dentro de la misma transacción: si appointment rechaza (409 con la lista de citas) o no responde (503), el bloqueo se revierte y no queda nada en catalog.
+- Un profesional no puede tener horarios activos que se crucen el mismo día, ni siquiera en centros distintos. La duración de la franja debe dividir el rango exacto. Las horas van de 00:00 a 23:59 (se envían como `HH:mm`).
+- No se puede quitar de un profesional un centro que tenga horarios o bloqueos suyos (409 `CENTRO_CON_HORARIOS`).
+- Las rutas `/internal/**` solo aceptan la llave de servicio: un JWT de usuario no las abre y la llave no abre la API de usuarios.
+
+## Validado en la Fase 2
+
+- 85 pruebas unitarias de catalog (149 con las de auth), sin fallos. Cubren las reglas de horario, parámetros y bloqueo, el generador de franjas (incluida la zona horaria: a las 22:00 en Bogotá "hoy" sigue siendo el día local aunque en UTC ya sea el siguiente), los casos de uso, el cliente REST contra un servidor HTTP simulado (éxito, 409 con citas, 500, llave rechazada, servidor caído, timeout), el validador JWT, la llave de API y la arquitectura. La prueba de arquitectura se comprobó con dos infracciones deliberadas (un import y un tipo con nombre completo): falla con ambas.
+- Prueba real de punta a punta con auth real, catalog real y un appointment simulado: 121 comprobaciones correctas, 0 fallidas, y repetida la de auth (51 de 51). Incluye el JWT de auth validado en catalog, roles, los 9 CU, la caída de appointment, el reintento idempotente, el timeout (503 en menos de 6 s sin esperar los 8 s del simulado), el rollback del bloqueo, la API interna con y sin llave, que la llave y el id de correlación llegan a appointment y que no hay secretos ni datos personales en los logs. Los datos de prueba se borraron y los parámetros se restauraron.
+- Defecto real encontrado por la prueba y corregido: `hora_inicio` de 08:00 quedaba guardada como 13:00 porque la JVM usaba la zona de Bogotá y JDBC trabaja en UTC; leída de vuelta parecía correcta, pero en AWS (JVM en UTC) se habría leído mal. Cada servicio fija ahora UTC como zona por defecto de la JVM al arrancar. La prueba real comprueba que se guarda `08:00:00`, que las fechas del bloqueo no se desplazan y que `creado_en` está en UTC.
+- No probado: el appointment real (solo simulado hasta la Fase 3), concurrencia de dos administradores editando el mismo horario (la comprobación de cruce y el guardado no son atómicos; la especificación pide validarlo en el dominio), y comportamiento tras mucho tiempo de uso del cliente REST.
+
 ## Decisiones propias a validar con el docente
 
 1. Idioma: dominio en español; sufijos técnicos en inglés (`ReservarCitaUseCase`, `FranjaRepositoryPort`).
@@ -71,6 +112,13 @@ Comportamiento a tener en cuenta:
 12. auth: política de claves propia (8 a 72 bytes, letra y dígito) y expiración de 15 minutos; sin refresh token (no está en la especificación).
 13. Dominio con cero imports, también del JDK. Se infirió del ejemplo del docente (ids `String`, rol `String`, `Integer`, `long`); falta ver cómo resuelve él las búsquedas vacías, las listas y las fechas. Si lo hace distinto (por ejemplo con `Optional` o `List`), se ajusta el estilo.
 14. Correos solo ASCII (se guardan en minúsculas ASCII; no se admiten correos con tildes o ñ).
+15. Zona horaria: la JVM corre en UTC y "hoy" de la clínica sale de `app.timezone` (America/Bogota por defecto). Antes no había zona clínica explícita.
+16. Desactivar una especialidad, centro o profesional es solo borrado lógico y no consulta si tiene citas futuras (la lista de reglas RN no se entregó). Si el docente quiere impedirlo con citas futuras, catalog necesitaría preguntar a appointment.
+17. Catalog calcula las franjas y las envía a appointment (appointment solo las guarda); el horizonte sale del parámetro `horizonte_max_dias`. Si appointment no responde, el horario queda guardado y se reintenta.
+18. Modificar un horario no retira las franjas ya generadas; se usa un bloqueo para dejar de ofrecerlas.
+19. Catalog no comprueba en auth que el `usuarioId` de un profesional exista ni tenga rol PROFESIONAL (no hay llamada auth a catalog en la especificación); confía en el administrativo.
+20. API interna adicional de catalog para CU-18 (`/internal/profesionales/{id}/asociacion`, `/internal/parametros`) y de appointment para CU-25/CU-26: la lista de comunicaciones de la especificación no incluye appointment a catalog.
+21. Las horas del horario llegan y salen como `HH:mm`, con máximo 23:59 (no existe 24:00 en una columna TIME).
 
 ## Pedir al docente
 

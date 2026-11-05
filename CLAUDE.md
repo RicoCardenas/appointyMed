@@ -33,6 +33,8 @@ Un caso de uso por clase, puertos pequeños, reglas de negocio componibles. Domi
 - Sin FK ni consultas entre schemas. Borrado lógico.
 - Errores uniformes (código, mensaje, detalle, timestamp). Sin datos sensibles ni clínicos en logs.
 - Notificación con `AFTER_COMMIT` y `@Async`; su fallo no revierte la cita.
+- Zona horaria: la JVM corre en UTC (`TimeZone.setDefault` en cada `*Application`) y los instantes se guardan en UTC. El "hoy" de la clínica sale de `app.timezone` (America/Bogota), nunca de la zona de la máquina. Sin esto una hora TIME se guarda desplazada.
+- Entre servicios: solo REST a `/internal/**` con `X-Api-Key` (`INTERNAL_API_KEY`) y `X-Correlation-Id`, con timeouts; todo fallo de red o 5xx se informa como 503. El contrato de appointment está en `docs/progreso.md`. Un JWT de usuario no abre `/internal` ni la llave abre la API de usuarios.
 
 ## Cómo trabajar
 - Una fase a la vez (ver `docs/progreso.md`). Lee solo lo de la fase; usa `rg` y lecturas delimitadas.

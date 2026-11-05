@@ -8,16 +8,37 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/appointy}
     username: ${CATALOG_DB_USER:catalog_svc}
     password: ${CATALOG_DB_PASSWORD}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate.default_schema: catalog
+      hibernate.jdbc.time_zone: UTC
   flyway:
     schemas: catalog
     default-schema: catalog
     create-schemas: false
+
+app:
+  # Zona horaria de la clinica: define "hoy" al generar franjas. Los instantes se guardan en UTC.
+  timezone: ${APP_TIMEZONE:America/Bogota}
+  jwt:
+    secret: ${JWT_SECRET}            # el mismo valor que usa auth-service
+    issuer: appointy-auth
+  internal:
+    api-key: ${INTERNAL_API_KEY}     # protege /internal/**; mismo valor en todos los servicios
+  appointment:
+    base-url: ${APPOINTMENT_SERVICE_URL:http://localhost:8083}
+    connect-timeout-ms: ${APPOINTMENT_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${APPOINTMENT_READ_TIMEOUT_MS:5000}
+
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"
 
 management:
   endpoints:

@@ -1,9 +1,5 @@
 package com.appointy.auth.domain.model;
 
-/**
- * Cuenta de acceso. Los instantes son milisegundos desde 1970 en UTC y {@code id} es el texto de un UUID.
- * {@code version} es nula mientras la cuenta no se ha guardado.
- */
 public record Usuario(
         String id,
         String correo,
