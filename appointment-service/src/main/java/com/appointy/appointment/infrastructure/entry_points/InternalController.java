@@ -1,8 +1,10 @@
 package com.appointy.appointment.infrastructure.entry_points;
 
+import com.appointy.appointment.domain.model.Cita;
 import com.appointy.appointment.domain.model.ResultadoGeneracion;
 import com.appointy.appointment.domain.usecase.BloquearFranjasUseCase;
 import com.appointy.appointment.domain.usecase.GenerarFranjasUseCase;
+import com.appointy.appointment.domain.usecase.ObtenerCitaServicioUseCase;
 import com.appointy.appointment.domain.usecase.ValidarRelacionUseCase;
 import com.appointy.appointment.infrastructure.entry_points.dto.BloquearFranjasRequest;
 import com.appointy.appointment.infrastructure.entry_points.dto.GenerarFranjasRequest;
@@ -10,6 +12,7 @@ import jakarta.validation.Valid;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,11 +27,14 @@ public class InternalController {
     private final GenerarFranjasUseCase generar;
     private final BloquearFranjasUseCase bloquear;
     private final ValidarRelacionUseCase relacion;
+    private final ObtenerCitaServicioUseCase cita;
 
-    public InternalController(GenerarFranjasUseCase generar, BloquearFranjasUseCase bloquear, ValidarRelacionUseCase relacion) {
+    public InternalController(GenerarFranjasUseCase generar, BloquearFranjasUseCase bloquear, ValidarRelacionUseCase relacion,
+            ObtenerCitaServicioUseCase cita) {
         this.generar = generar;
         this.bloquear = bloquear;
         this.relacion = relacion;
+        this.cita = cita;
     }
 
     @PostMapping("/franjas/generar")
@@ -46,5 +52,12 @@ public class InternalController {
     @GetMapping("/relaciones")
     public Map<String, Boolean> relacion(@RequestParam UUID profesionalId, @RequestParam UUID pacienteId) {
         return Map.of("existe", relacion.ejecutar(profesionalId.toString(), pacienteId.toString()));
+    }
+
+    /** CU-28: clinical comprueba el profesional y el estado de la cita. Solo ids y estado, sin datos personales. */
+    @GetMapping("/citas/{id}")
+    public Map<String, String> cita(@PathVariable UUID id) {
+        Cita c = cita.ejecutar(id.toString());
+        return Map.of("citaId", c.id(), "pacienteId", c.pacienteId(), "profesionalId", c.profesionalId(), "estado", c.estado().name());
     }
 }

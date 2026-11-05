@@ -8,16 +8,44 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/appointy}
     username: ${CLINICAL_DB_USER:clinical_svc}
     password: ${CLINICAL_DB_PASSWORD}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate.default_schema: clinical
+      hibernate.jdbc.time_zone: UTC
   flyway:
     schemas: clinical
     default-schema: clinical
     create-schemas: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}            # el mismo valor que usa auth-service
+    issuer: appointy-auth
+  internal:
+    api-key: ${INTERNAL_API_KEY}     # protege /internal/**; mismo valor en todos los servicios
+  catalog:
+    base-url: ${CATALOG_SERVICE_URL:http://localhost:8082}
+    connect-timeout-ms: ${CATALOG_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${CATALOG_READ_TIMEOUT_MS:5000}
+  appointment:
+    base-url: ${APPOINTMENT_SERVICE_URL:http://localhost:8083}
+    connect-timeout-ms: ${APPOINTMENT_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${APPOINTMENT_READ_TIMEOUT_MS:5000}
+    relaciones-ttl-segundos: ${RELACIONES_TTL_SEGUNDOS:60}   # cache de relaciones confirmadas (CU-27)
+
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"
+  level:
+    # PostgreSQL adjunta al error la fila rechazada ("Failing row contains ...") y con ella texto clinico (RNF-05).
+    # Los errores de base de datos ya los registra GlobalExceptionHandler sin mensaje ni traza.
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: "OFF"
 
 management:
   endpoints:

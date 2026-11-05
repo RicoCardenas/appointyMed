@@ -2,9 +2,9 @@
 
 Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-05.
 
-## Siguiente paso: Fase 4, clinical-history-service (CU-28 a CU-32)
+## Siguiente paso: Fase 5, notification-service (CU-33 a CU-35)
 
-Leer de `docs/especificacion.md` los CU-28 a CU-32 y el schema clinical. Para CU-27 (validar relación profesional-paciente) llamar a `GET /internal/relaciones?profesionalId=&pacienteId=` de appointment (ver "Fase 3"); el `profesionalId` es el de catalog, y se obtiene con `GET /internal/profesionales/por-usuario/{usuarioId}` de catalog. Cache Caffeine según la especificación. Copiar el estilo de appointment.
+Leer de `docs/especificacion.md` los CU-33 a CU-35 y el schema notification. El contrato de entrada ya está fijado en "Fase 3" (`POST /internal/notificaciones`, solo ids; el correo del destinatario se resuelve en auth por `/internal`, decisiones 7 y 8). Copiar el estilo de appointment y clinical.
 
 - Pendiente del equipo: `JWT_SECRET` e `INTERNAL_API_KEY` en `.env`.
 
@@ -16,7 +16,7 @@ Leer de `docs/especificacion.md` los CU-28 a CU-32 y el schema clinical. Para CU
 | 1 | auth-service: CU-01 a CU-07 | Hecha y verificada (ver abajo) |
 | 2 | catalog-service: CU-08 a CU-16 | Hecha y verificada con appointment simulado (ver abajo) |
 | 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Hecha (ver abajo) |
-| 4 | clinical-history-service: CU-28 a CU-32 | Pendiente |
+| 4 | clinical-history-service: CU-28 a CU-32 | Hecha (ver abajo) |
 | 5 | notification-service: CU-33 a CU-35 | Pendiente |
 | 6 | Cierre: OpenAPI, colección Postman, cobertura 70 %, correlación de logs | Pendiente |
 | 7 | Interfaz (proyecto aparte en `frontend/`) | Pendiente, por decidir stack |
@@ -136,6 +136,41 @@ Decisiones de esta fase:
 - 69 pruebas unitarias en appointment (reglas, casos de uso, clientes REST con servidor simulado, oyente posterior al commit, arquitectura).
 - Prueba de concurrencia contra PostgreSQL real (`ReservaConcurrenteTest`, se activa si `APPOINTMENT_DB_PASSWORD` está definida, p. ej. cargando `.env`): 12 hilos sobre una franja, 1 éxito y 11 conflictos; mismo paciente con dos franjas que se cruzan; reprogramaciones cruzadas sin deadlock; dos reprogramaciones a la misma franja libre; el índice parcial rechaza el duplicado.
 - `scripts/e2e/appointment.sh` (auth, catalog y appointment reales, notification simulado): 131 comprobaciones correctas, 0 fallidas. Cubre los 11 CU, el catalog→appointment real (franjas, idempotencia, bloqueo con 409 y rollback), 8 solicitudes HTTP simultáneas sobre una franja (1 éxito, 7 conflictos), notification caído (la cita se guarda), catalog caído (503), la API interna con y sin llave, y que no hay secretos ni datos personales en el log. Defecto de la propia prueba corregido: un `wait` sin argumentos la dejaba colgada.
+
+## Fase 4: clinical-history-service
+
+Puerto 8084, base `/api/v1`. El rol lo exige cada caso de uso (no `@PreAuthorize`) para que un rechazo por rol también quede en el log de acceso; sin token responde 401 (no hay usuario que registrar).
+
+| Método y ruta | Rol | CU |
+|---|---|---|
+| POST `/entradas` (citaId, motivo, diagnostico, notas?, indicaciones?) | PROFESIONAL de la cita | CU-28 |
+| GET `/pacientes/{pacienteId}/historia` | PROFESIONAL con relación (CU-27) | CU-29 |
+| GET `/historia/mia` | PACIENTE | CU-30 |
+| POST `/entradas/{id}/correcciones` (mismos textos) | PROFESIONAL autor | CU-31 |
+
+CU-32 es transversal: `log_acceso_clinico` (usuario, rol, paciente, acción, entrada, fecha, resultado) se escribe en cada lectura y escritura, también las rechazadas. La escritura clínica y su log van en la misma transacción; el rechazo se registra aparte. Si no se puede registrar una lectura permitida, no se entrega la historia.
+
+Dependencias: catalog `GET /internal/profesionales/por-usuario/{id}` (id de catalog del profesional) y appointment `GET /internal/relaciones` (CU-27) y `GET /internal/citas/{id}` (nuevo; solo `citaId, pacienteId, profesionalId, estado`). Timeouts 2 s y 5 s; todo fallo, timeout o 5xx es 503 (`CATALOG_NO_DISPONIBLE`, `APPOINTMENT_NO_DISPONIBLE`). Cache Caffeine de las relaciones confirmadas (60 s, `RELACIONES_TTL_SEGUNDOS`); las negativas y el estado de la cita no se cachean.
+
+Respuestas de error: 400 validación, 401, 403 (`SOLO_PROFESIONAL`, `SOLO_PACIENTE`, `NO_ES_TU_CITA`, `NO_ES_TU_ENTRADA`, `SIN_RELACION_CON_PACIENTE`), 404, 409 `ATENCION_YA_REGISTRADA`, 422 `CITA_NO_ATENDIBLE`, 503.
+
+Decisiones de esta fase (las tres primeras las confirmó el equipo al arrancar):
+- Appointment expone `GET /internal/citas/{id}` porque CU-28 exige comprobar el profesional y el estado de la cita concreta y CU-27 solo da la relación.
+- Solo el autor corrige una entrada (CU-31).
+- El profesional con relación ve todas las entradas del paciente, también las de otros profesionales (lectura literal de RF-27).
+- Registrar exige cita CONFIRMADA o COMPLETADA (RN-17) y que el profesional de catalog de la cuenta sea el de la cita; una sola entrada original por cita (índice único parcial de la especificación); las correcciones heredan paciente, cita y autor, y se puede corregir una corrección.
+- Motivo y diagnóstico obligatorios; notas e indicaciones opcionales; máximo 5000 caracteres por texto (la especificación no los distingue).
+- Append-only también en la base: un trigger rechaza UPDATE y DELETE en `entrada_clinica` y `log_acceso_clinico`. Para limpiar datos de prueba el propietario desactiva el trigger un instante (lo hace `clinical.sh`).
+- Sin datos clínicos en logs: ni el contenido ni la traza de las excepciones de base de datos (PostgreSQL puede incluir la fila rechazada); solo el nombre de la clase de la causa.
+- `paciente_id` y `entrada_id` del log son nulos cuando se rechaza antes de conocerlos (p. ej. cita inexistente). ADMINISTRATIVO no accede a historias.
+- No hay endpoint para consultar el log de acceso: la especificación solo pide registrarlo.
+
+## Validado en la Fase 4
+
+- 42 pruebas unitarias en clinical (reglas, casos de uso con el log de acceso en cada rechazo, clientes REST con servidor simulado incluida la cache, validador JWT, llave de API, arquitectura) y 2 nuevas en appointment (71). Reactor completo: auth 64, catalog 85, appointment 71, clinical 42, sin fallos.
+- `scripts/e2e/clinical.sh` (auth, catalog, appointment y clinical reales, notification simulado): 105 comprobaciones correctas, 0 fallidas. Cubre los 5 CU, cada rol y cada rechazo, el log de acceso (permitidos y denegados, atómico con la escritura), que la base rechaza UPDATE y DELETE, 6 registros simultáneos sobre una cita (1 éxito, 5 conflictos 409, sin 5xx), appointment caído (la relación ya confirmada sale de la cache; lo demás da 503), catalog caído, la API interna con y sin llave, y que no hay texto clínico, secretos ni datos personales en el log ni en los errores. Los datos de prueba se borraron.
+- Defecto real encontrado por la prueba y corregido: Hibernate registraba el mensaje SQL del driver al violar el índice único, y PostgreSQL puede adjuntar la fila rechazada (texto clínico); se silencia ese registrador y el manejador de errores solo anota la clase de la causa.
+- No probado: carga sostenida, expiración de la cache en tiempo real más allá de la prueba unitaria, y que el log de acceso resista millones de filas (hay índices por paciente y por usuario).
 
 ## Decisiones propias (tomadas por el equipo; no se consultan al docente)
 

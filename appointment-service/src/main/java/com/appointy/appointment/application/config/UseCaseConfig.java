@@ -11,6 +11,7 @@ import com.appointy.appointment.application.usecase.ConsultarMisCitasUseCaseImpl
 import com.appointy.appointment.application.usecase.GenerarFranjasUseCaseImpl;
 import com.appointy.appointment.application.usecase.MarcarCitaAtendidaTransaccion;
 import com.appointy.appointment.application.usecase.MarcarCitaAtendidaUseCaseImpl;
+import com.appointy.appointment.application.usecase.ObtenerCitaServicioUseCaseImpl;
 import com.appointy.appointment.application.usecase.RelojClinica;
 import com.appointy.appointment.application.usecase.ReprogramarCitaTransaccion;
 import com.appointy.appointment.application.usecase.ReprogramarCitaUseCaseImpl;
@@ -26,6 +27,7 @@ import com.appointy.appointment.domain.usecase.ConsultarHistorialCitaUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarMisCitasUseCase;
 import com.appointy.appointment.domain.usecase.GenerarFranjasUseCase;
 import com.appointy.appointment.domain.usecase.MarcarCitaAtendidaUseCase;
+import com.appointy.appointment.domain.usecase.ObtenerCitaServicioUseCase;
 import com.appointy.appointment.domain.usecase.ReprogramarCitaUseCase;
 import com.appointy.appointment.domain.usecase.ReservarCitaUseCase;
 import com.appointy.appointment.domain.usecase.ValidarRelacionUseCase;
@@ -131,5 +133,10 @@ public class UseCaseConfig {
     @Bean
     ValidarRelacionUseCase validarRelacion(CitaRepositoryGateway citas) {
         return new ValidarRelacionUseCaseImpl(citas);
+    }
+
+    @Bean
+    ObtenerCitaServicioUseCase obtenerCitaServicio(CitaRepositoryGateway citas) {
+        return new ObtenerCitaServicioUseCaseImpl(citas);
     }
 }
