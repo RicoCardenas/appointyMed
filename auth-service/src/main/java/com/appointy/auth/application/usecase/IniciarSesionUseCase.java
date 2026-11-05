@@ -8,7 +8,6 @@ import com.appointy.auth.domain.port.out.CodificadorClavePort;
 import com.appointy.auth.domain.port.out.EmisorTokenPort;
 import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
 import com.appointy.auth.domain.rule.NormalizadorCorreo;
-import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
 public class IniciarSesionUseCase implements IniciarSesionPort {
@@ -29,13 +28,12 @@ public class IniciarSesionUseCase implements IniciarSesionPort {
     @Override
     @Transactional(readOnly = true)
     public Resultado ejecutar(Comando comando) {
-        Optional<Usuario> encontrado = usuarios.buscarPorCorreo(NormalizadorCorreo.comparable(comando.correo()));
-        String hash = encontrado.map(Usuario::claveHash).orElse(hashSenuelo);
+        Usuario usuario = usuarios.buscarPorCorreo(NormalizadorCorreo.comparable(comando.correo()));
+        String hash = usuario != null ? usuario.claveHash() : hashSenuelo;
         boolean claveCorrecta = comando.clave() != null && codificador.coincide(comando.clave(), hash);
-        if (encontrado.isEmpty() || !claveCorrecta || !encontrado.get().activo()) {
+        if (usuario == null || !claveCorrecta || !usuario.activo()) {
             throw new CredencialesInvalidasException();
         }
-        Usuario usuario = encontrado.get();
         TokenEmitido token = emisor.emitir(usuario);
         return new Resultado(token.token(), token.expiraEn(), usuario.id(), usuario.rol());
     }

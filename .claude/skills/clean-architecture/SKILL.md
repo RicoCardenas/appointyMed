@@ -5,7 +5,7 @@ description: Provides implementation patterns for Clean Architecture, Hexagonal 
 
 # Clean Architecture, Hexagonal Architecture & DDD for Spring Boot
 
-> **Nota de Appointy Med:** la estructura de paquetes de este proyecto es la de `docs/especificacion.md` (seccion 3) y prevalece sobre el arbol de ejemplo de abajo: los puertos viven en `domain/port/in` y `domain/port/out`, los casos de uso en `application/usecase` y los controladores en `infrastructure/entry_points`. De esta skill se usan los patrones (dominio sin frameworks, mapeo dominio-entidad JPA, pruebas de arquitectura), no la ubicacion de carpetas.
+> **Nota de Appointy Med:** la estructura de paquetes de este proyecto es la de `docs/especificacion.md` (seccion 3) y prevalece sobre el arbol de ejemplo de abajo: los puertos viven en `domain/port/in` y `domain/port/out`, los casos de uso en `application/usecase` y los controladores en `infrastructure/entry_points`. De esta skill se usan los patrones (dominio sin frameworks, mapeo dominio-entidad JPA, pruebas de arquitectura), no la ubicacion de carpetas. Ademas, en este proyecto el dominio no tiene NINGUN import (ni Lombok, ni `java.util`, ni `java.time`): los ejemplos de la skill que usan `UUID`, `Instant`, `Optional`, `List`, Lombok o `Money` con `BigDecimal` dentro del dominio no se copian tal cual; ver los tipos permitidos en `CLAUDE.md`.
 
 ## Overview
 

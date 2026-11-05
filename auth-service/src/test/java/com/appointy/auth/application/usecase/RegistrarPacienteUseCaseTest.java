@@ -1,6 +1,7 @@
 package com.appointy.auth.application.usecase;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,9 +21,7 @@ import com.appointy.auth.domain.port.out.PacientePerfilRepositoryPort;
 import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,26 +44,28 @@ class RegistrarPacienteUseCaseTest {
         useCase = new RegistrarPacienteUseCase(usuarios, perfiles, codificador, reloj);
     }
 
-    private Comando comando(String clave, LocalDate nacimiento) {
+    private Comando comando(String clave, String nacimiento) {
         return new Comando("  Ana@Correo.COM ", clave, " 123456 ", " Ana ", " Perez ", nacimiento, "3001234567", "Calle 1", "Cali");
     }
 
     @Test
     void registraPacienteConCorreoNormalizadoYClaveCodificada() {
         when(usuarios.existePorCorreo("ana@correo.com")).thenReturn(false);
-        when(perfiles.buscarPorCedula("123456")).thenReturn(Optional.empty());
         when(codificador.codificar("Clave1234")).thenReturn("hash");
         when(usuarios.guardar(any())).thenAnswer(i -> i.getArgument(0));
         when(perfiles.guardar(any())).thenAnswer(i -> i.getArgument(0));
 
-        PacienteConCuenta r = useCase.ejecutar(comando("Clave1234", LocalDate.of(1990, 5, 1)));
+        PacienteConCuenta r = useCase.ejecutar(comando("Clave1234", "1990-05-01"));
 
         assertEquals("ana@correo.com", r.usuario().correo());
         assertEquals(Rol.PACIENTE, r.usuario().rol());
         assertEquals("hash", r.usuario().claveHash());
         assertTrue(r.usuario().activo());
+        assertEquals(reloj.millis(), r.usuario().creadoEn());
+        assertNotNull(UUID.fromString(r.usuario().id()));
         assertEquals("123456", r.perfil().cedula());
         assertEquals("Ana", r.perfil().nombres());
+        assertEquals("1990-05-01", r.perfil().fechaNacimiento());
         assertEquals(r.usuario().id(), r.perfil().usuarioId());
     }
 
@@ -72,8 +73,7 @@ class RegistrarPacienteUseCaseTest {
     void rechazaCorreoYaRegistrado() {
         when(usuarios.existePorCorreo("ana@correo.com")).thenReturn(true);
 
-        ConflictoException ex = assertThrows(ConflictoException.class,
-                () -> useCase.ejecutar(comando("Clave1234", LocalDate.of(1990, 5, 1))));
+        ConflictoException ex = assertThrows(ConflictoException.class, () -> useCase.ejecutar(comando("Clave1234", "1990-05-01")));
 
         assertEquals("CORREO_YA_REGISTRADO", ex.codigo());
         verify(usuarios, never()).guardar(any());
@@ -82,11 +82,10 @@ class RegistrarPacienteUseCaseTest {
     @Test
     void rechazaCedulaYaRegistrada() {
         when(usuarios.existePorCorreo("ana@correo.com")).thenReturn(false);
-        PacientePerfil existente = new PacientePerfil(UUID.randomUUID(), "123456", "X", "Y", LocalDate.of(1980, 1, 1), null, null, null);
-        when(perfiles.buscarPorCedula("123456")).thenReturn(Optional.of(existente));
+        when(perfiles.buscarPorCedula("123456"))
+                .thenReturn(new PacientePerfil("otro", "123456", "X", "Y", "1980-01-01", null, null, null));
 
-        ConflictoException ex = assertThrows(ConflictoException.class,
-                () -> useCase.ejecutar(comando("Clave1234", LocalDate.of(1990, 5, 1))));
+        ConflictoException ex = assertThrows(ConflictoException.class, () -> useCase.ejecutar(comando("Clave1234", "1990-05-01")));
 
         assertEquals("CEDULA_YA_REGISTRADA", ex.codigo());
         verify(usuarios, never()).guardar(any());
@@ -94,8 +93,7 @@ class RegistrarPacienteUseCaseTest {
 
     @Test
     void rechazaClaveDebilSinTocarLosRepositorios() {
-        ValidacionException ex = assertThrows(ValidacionException.class,
-                () -> useCase.ejecutar(comando("corta", LocalDate.of(1990, 5, 1))));
+        ValidacionException ex = assertThrows(ValidacionException.class, () -> useCase.ejecutar(comando("corta", "1990-05-01")));
 
         assertEquals("CLAVE_DEBIL", ex.codigo());
         verifyNoInteractions(usuarios, perfiles);
@@ -103,10 +101,17 @@ class RegistrarPacienteUseCaseTest {
 
     @Test
     void rechazaFechaDeNacimientoFutura() {
-        ValidacionException ex = assertThrows(ValidacionException.class,
-                () -> useCase.ejecutar(comando("Clave1234", LocalDate.of(2027, 1, 1))));
+        ValidacionException ex = assertThrows(ValidacionException.class, () -> useCase.ejecutar(comando("Clave1234", "2027-01-01")));
 
         assertEquals("FECHA_NACIMIENTO_INVALIDA", ex.codigo());
+        verifyNoInteractions(usuarios, perfiles);
+    }
+
+    @Test
+    void rechazaFechaConFormatoInvalido() {
+        ValidacionException ex = assertThrows(ValidacionException.class, () -> useCase.ejecutar(comando("Clave1234", "01/05/1990")));
+
+        assertEquals("FECHA_INVALIDA", ex.codigo());
         verifyNoInteractions(usuarios, perfiles);
     }
 }

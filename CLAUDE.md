@@ -12,11 +12,20 @@ Español, profesional y conciso. Sin emojis ni relleno. Responde primero; no rep
 Java 21, Spring Boot 3.5, Maven multimódulo, PostgreSQL local (base `appointy`, un schema y un usuario por servicio), Flyway con `ddl-auto: validate`, JUnit 5 y Mockito. Sin Docker ni broker. API en `/api/v1`; `/internal/**` con API key.
 
 Paquetes `com.appointy.<servicio>` (`auth`, `catalog`, `appointment`, `clinicalhistory`, `notification`):
-- `domain`: model, exception, port/in, port/out. Sin Spring ni JPA.
+- `domain`: model, exception, port/in, port/out. **Cero imports ajenos al dominio** (regla del docente): ni librerías, ni Spring, JPA o Lombok, ni siquiera del JDK (`java.util`, `java.time`, `java.nio`). Solo `java.lang` y clases del propio `domain`. Lo vigila `DependenciasEntreCapasTest`.
 - `application`: usecase, config.
 - `infrastructure`: entry_points, driven_adapters (jpa_repository, rest_client), mapper, security.
 
 Un caso de uso por clase, puertos pequeños, reglas de negocio componibles. Dominio en español; sufijos técnicos en inglés (`ReservarCitaUseCase`, `FranjaRepositoryPort`).
+
+## Tipos del dominio (sin imports)
+- Ids: `String` (texto de un UUID; lo genera el caso de uso con `UUID.randomUUID().toString()`).
+- Instantes: `long`, milisegundos desde 1970 en UTC. Fechas de calendario: `String` ISO `yyyy-MM-dd`. Hora del día: `int`, minutos desde medianoche. Duraciones: `int`, minutos.
+- Búsquedas que pueden no encontrar: el puerto devuelve `null` y lo documenta; el caso de uso lo revisa y lanza la excepción. Sin `Optional`.
+- Listas: arreglos (`Tipo[]`), sin `List`.
+- Enums, `record` y excepciones que extienden `RuntimeException` no necesitan imports y sí se usan. Sin Lombok: los `record` reemplazan getters, constructores, `equals` y `toString`.
+- Las conversiones (`UUID`, `Instant`, `LocalDate`, `Optional`, `List`) viven en `application` (casos de uso) e `infrastructure` (mappers, adaptadores, DTOs), que sí pueden usar el JDK y librerías.
+- Si una regla del dominio necesita comparar fechas, el caso de uso le pasa los valores ya calculados (por ejemplo `hoy` como texto ISO o `ahora` como `long`).
 
 ## Invariantes
 - Reservar, reprogramar y cancelar: un solo `@Transactional`, franja con `PESSIMISTIC_WRITE`, dos franjas en orden por id, índice único parcial como red de seguridad, conflicto = 409.

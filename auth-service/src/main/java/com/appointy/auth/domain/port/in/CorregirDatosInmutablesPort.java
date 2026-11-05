@@ -1,19 +1,17 @@
 package com.appointy.auth.domain.port.in;
 
 import com.appointy.auth.domain.model.PacienteConCuenta;
-import java.time.LocalDate;
-import java.util.UUID;
 
-/** CU-07: proceso administrativo. Un valor nulo significa "sin cambio". */
+/** CU-07: proceso administrativo. Un valor nulo significa "sin cambio". {@code fechaNacimiento}: texto ISO. */
 public interface CorregirDatosInmutablesPort {
 
     PacienteConCuenta ejecutar(Comando comando);
 
     record Comando(
-            UUID actorId,
-            UUID pacienteUsuarioId,
+            String actorId,
+            String pacienteUsuarioId,
             String cedula,
             String nombres,
             String apellidos,
-            LocalDate fechaNacimiento) {}
+            String fechaNacimiento) {}
 }

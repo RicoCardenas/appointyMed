@@ -1,9 +1,8 @@
 package com.appointy.auth.domain.port.in;
 
 import com.appointy.auth.domain.model.PacienteConCuenta;
-import java.time.LocalDate;
 
-/** CU-01. */
+/** CU-01. {@code fechaNacimiento}: texto ISO yyyy-MM-dd. */
 public interface RegistrarPacientePort {
 
     PacienteConCuenta ejecutar(Comando comando);
@@ -14,7 +13,7 @@ public interface RegistrarPacientePort {
             String cedula,
             String nombres,
             String apellidos,
-            LocalDate fechaNacimiento,
+            String fechaNacimiento,
             String telefono,
             String direccion,
             String ciudad) {}

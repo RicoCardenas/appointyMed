@@ -4,7 +4,6 @@ import com.appointy.auth.domain.model.PacientePerfil;
 import com.appointy.auth.domain.port.out.PacientePerfilRepositoryPort;
 import com.appointy.auth.infrastructure.driven_adapters.jpa_repository.repository.SpringDataPacientePerfilRepository;
 import com.appointy.auth.infrastructure.mapper.PacientePerfilEntityMapper;
-import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -25,12 +24,12 @@ public class PacientePerfilJpaAdapter implements PacientePerfilRepositoryPort {
     }
 
     @Override
-    public Optional<PacientePerfil> buscarPorUsuarioId(UUID usuarioId) {
-        return repositorio.findById(usuarioId).map(mapper::aDominio);
+    public PacientePerfil buscarPorUsuarioId(String usuarioId) {
+        return repositorio.findById(UUID.fromString(usuarioId)).map(mapper::aDominio).orElse(null);
     }
 
     @Override
-    public Optional<PacientePerfil> buscarPorCedula(String cedula) {
-        return repositorio.findByCedula(cedula).map(mapper::aDominio);
+    public PacientePerfil buscarPorCedula(String cedula) {
+        return repositorio.findByCedula(cedula).map(mapper::aDominio).orElse(null);
     }
 }

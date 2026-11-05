@@ -1,7 +1,6 @@
 package com.appointy.auth.application.usecase;
 
 import com.appointy.auth.domain.exception.ConflictoException;
-import com.appointy.auth.domain.exception.ValidacionException;
 import com.appointy.auth.domain.model.PacienteConCuenta;
 import com.appointy.auth.domain.model.PacientePerfil;
 import com.appointy.auth.domain.model.Rol;
@@ -40,24 +39,22 @@ public class RegistrarPacienteUseCase implements RegistrarPacientePort {
     public PacienteConCuenta ejecutar(Comando comando) {
         String correo = NormalizadorCorreo.normalizar(comando.correo());
         PoliticaClave.validar(comando.clave());
-        if (comando.fechaNacimiento() == null || comando.fechaNacimiento().isAfter(LocalDate.now(reloj))) {
-            throw new ValidacionException("FECHA_NACIMIENTO_INVALIDA", "La fecha de nacimiento no puede ser futura");
-        }
+        String nacimiento = Fechas.nacimientoValido(comando.fechaNacimiento(), LocalDate.now(reloj));
         String cedula = comando.cedula().trim();
         if (usuarios.existePorCorreo(correo)) {
             throw new ConflictoException("CORREO_YA_REGISTRADO", "El correo ya esta registrado");
         }
-        if (perfiles.buscarPorCedula(cedula).isPresent()) {
+        if (perfiles.buscarPorCedula(cedula) != null) {
             throw new ConflictoException("CEDULA_YA_REGISTRADA", "La cedula ya esta registrada");
         }
-        Usuario usuario = usuarios.guardar(
-                Usuario.nuevo(UUID.randomUUID(), correo, codificador.codificar(comando.clave()), Rol.PACIENTE, reloj.instant()));
+        Usuario usuario = usuarios.guardar(Usuario.nuevo(
+                UUID.randomUUID().toString(), correo, codificador.codificar(comando.clave()), Rol.PACIENTE, reloj.millis()));
         PacientePerfil perfil = perfiles.guardar(new PacientePerfil(
                 usuario.id(),
                 cedula,
                 comando.nombres().trim(),
                 comando.apellidos().trim(),
-                comando.fechaNacimiento(),
+                nacimiento,
                 comando.telefono(),
                 comando.direccion(),
                 comando.ciudad()));

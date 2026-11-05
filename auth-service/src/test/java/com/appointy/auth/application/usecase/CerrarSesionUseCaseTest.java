@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import com.appointy.auth.domain.model.TokenRevocado;
 import com.appointy.auth.domain.port.in.CerrarSesionPort.Comando;
 import com.appointy.auth.domain.port.out.TokenRevocadoRepositoryPort;
-import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,7 +20,7 @@ class CerrarSesionUseCaseTest {
     @Mock TokenRevocadoRepositoryPort revocados;
     @InjectMocks CerrarSesionUseCase useCase;
 
-    final Instant expira = Instant.parse("2026-06-01T10:15:00Z");
+    final long expira = 1_780_000_000_000L;
 
     @Test
     void revocaElTokenHastaSuVencimiento() {

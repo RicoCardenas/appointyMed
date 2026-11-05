@@ -51,7 +51,7 @@ class SembrarYLimpiarUseCaseTest {
     @Test
     void limpiezaEliminaLosVencidosAntesDelInstanteActual() {
         Instant ahora = Instant.parse("2026-06-01T10:00:00Z");
-        when(revocados.eliminarVencidosAntesDe(ahora)).thenReturn(3);
+        when(revocados.eliminarVencidosAntesDe(ahora.toEpochMilli())).thenReturn(3);
 
         int eliminados = new LimpiarTokensVencidosUseCase(revocados, Clock.fixed(ahora, ZoneOffset.UTC)).ejecutar();
 

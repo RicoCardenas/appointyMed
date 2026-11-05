@@ -5,7 +5,6 @@ import com.appointy.auth.domain.model.Usuario;
 import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
 import com.appointy.auth.infrastructure.driven_adapters.jpa_repository.repository.SpringDataUsuarioRepository;
 import com.appointy.auth.infrastructure.mapper.UsuarioEntityMapper;
-import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -26,13 +25,13 @@ public class UsuarioJpaAdapter implements UsuarioRepositoryPort {
     }
 
     @Override
-    public Optional<Usuario> buscarPorId(UUID id) {
-        return repositorio.findById(id).map(mapper::aDominio);
+    public Usuario buscarPorId(String id) {
+        return repositorio.findById(UUID.fromString(id)).map(mapper::aDominio).orElse(null);
     }
 
     @Override
-    public Optional<Usuario> buscarPorCorreo(String correo) {
-        return repositorio.findByCorreo(correo).map(mapper::aDominio);
+    public Usuario buscarPorCorreo(String correo) {
+        return repositorio.findByCorreo(correo).map(mapper::aDominio).orElse(null);
     }
 
     @Override

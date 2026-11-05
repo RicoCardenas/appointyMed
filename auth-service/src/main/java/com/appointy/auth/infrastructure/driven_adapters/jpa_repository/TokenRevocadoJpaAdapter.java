@@ -20,7 +20,7 @@ public class TokenRevocadoJpaAdapter implements TokenRevocadoRepositoryPort {
     public void guardar(TokenRevocado token) {
         TokenRevocadoEntity entidad = new TokenRevocadoEntity();
         entidad.setJti(token.jti());
-        entidad.setExpiraEn(token.expiraEn());
+        entidad.setExpiraEn(Instant.ofEpochMilli(token.expiraEn()));
         repositorio.save(entidad);
     }
 
@@ -30,7 +30,7 @@ public class TokenRevocadoJpaAdapter implements TokenRevocadoRepositoryPort {
     }
 
     @Override
-    public int eliminarVencidosAntesDe(Instant limite) {
-        return repositorio.eliminarVencidosAntesDe(limite);
+    public int eliminarVencidosAntesDe(long limiteEnMilisegundos) {
+        return repositorio.eliminarVencidosAntesDe(Instant.ofEpochMilli(limiteEnMilisegundos));
     }
 }

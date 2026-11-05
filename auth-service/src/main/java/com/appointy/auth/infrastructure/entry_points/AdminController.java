@@ -44,6 +44,6 @@ public class AdminController {
             @AuthenticationPrincipal UsuarioAutenticado actor,
             @PathVariable UUID usuarioId,
             @Valid @RequestBody CorregirIdentidadRequest solicitud) {
-        return PacienteResponse.de(corregirDatos.ejecutar(solicitud.aComando(actor.usuarioId(), usuarioId)));
+        return PacienteResponse.de(corregirDatos.ejecutar(solicitud.aComando(actor.usuarioId(), usuarioId.toString())));
     }
 }

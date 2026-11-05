@@ -50,7 +50,8 @@ Comportamiento a tener en cuenta:
 
 ## Validado en la Fase 1
 
-- `mvn -pl auth-service test`: 50 pruebas (JUnit 5 y Mockito) sin fallos. Cubren los 9 casos de uso, la política de claves, el normalizador de correo, el emisor JWT (vigencia, firma, emisor, secreto corto) y que el dominio no importe frameworks y la aplicación no importe infraestructura.
+- `mvn -pl auth-service test`: 64 pruebas (JUnit 5 y Mockito) sin fallos. Cubren los 9 casos de uso, la política de claves (incluido el conteo de bytes UTF-8 a mano), el normalizador de correo (solo ASCII), el emisor JWT (vigencia, firma, emisor, secreto corto) y la arquitectura: el dominio solo importa clases de su propio paquete, no usa tipos externos con nombre completo y la aplicación no importa infraestructura. Se comprobó que esa prueba falla al añadir un `import java.util.UUID` al dominio.
+- Dominio sin imports (regla del docente): ids `String`, instantes `long`, fechas `String` ISO, búsquedas con `null`; las conversiones están en los casos de uso, mappers, adaptadores y DTOs. Tras la conversión la API no cambió: se repitió la prueba de punta a punta con el mismo resultado.
 - Prueba de punta a punta con `curl` contra PostgreSQL 18.6 real: 51 comprobaciones correctas, 0 fallidas. Flyway aplicó `V1`, Hibernate validó contra las tablas, los 7 CU respondieron con los códigos esperados (incluidos 401, 403, 404 y 409), las claves quedan en BCrypt, ni la clave ni el token ni datos personales aparecen en el log. Los datos de prueba se borraron al terminar.
 - No probado: carga o concurrencia sobre el registro (la unicidad se apoya en las restricciones de BD), expiración real del job de limpieza (solo prueba unitaria), arranque con claves reales en `.env`.
 
@@ -68,6 +69,8 @@ Comportamiento a tener en cuenta:
 10. `HorarioAtencion` vive en catalog (la especificación lo lista también en appointment).
 11. auth: actualizar datos usa PATCH (valor nulo = sin cambio), y el administrador inicial sale de variables de entorno.
 12. auth: política de claves propia (8 a 72 bytes, letra y dígito) y expiración de 15 minutos; sin refresh token (no está en la especificación).
+13. Dominio con cero imports, también del JDK. Se infirió del ejemplo del docente (ids `String`, rol `String`, `Integer`, `long`); falta ver cómo resuelve él las búsquedas vacías, las listas y las fechas. Si lo hace distinto (por ejemplo con `Optional` o `List`), se ajusta el estilo.
+14. Correos solo ASCII (se guardan en minúsculas ASCII; no se admiten correos con tildes o ñ).
 
 ## Pedir al docente
 

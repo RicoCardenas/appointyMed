@@ -1,19 +1,17 @@
 package com.appointy.auth.domain.model;
 
-import java.time.LocalDate;
-import java.util.UUID;
-
 /**
- * Perfil del paciente (RF-04 a RF-06). Cedula, nombres, apellidos y fecha de nacimiento son
- * inmutables para el paciente: solo {@link #corregirIdentidad} los cambia y solo lo invoca el
- * proceso administrativo. El paciente unicamente puede usar {@link #actualizarContacto}.
+ * Perfil del paciente (RF-04 a RF-06). {@code fechaNacimiento} es texto ISO yyyy-MM-dd.
+ * Cedula, nombres, apellidos y fecha de nacimiento son inmutables para el paciente: solo
+ * {@link #corregirIdentidad} los cambia y solo lo invoca el proceso administrativo. El paciente
+ * unicamente puede usar {@link #actualizarContacto}.
  */
 public record PacientePerfil(
-        UUID usuarioId,
+        String usuarioId,
         String cedula,
         String nombres,
         String apellidos,
-        LocalDate fechaNacimiento,
+        String fechaNacimiento,
         String telefono,
         String direccion,
         String ciudad) {
@@ -33,7 +31,7 @@ public record PacientePerfil(
 
     /** Los valores nulos se interpretan como "sin cambio". */
     public PacientePerfil corregirIdentidad(
-            String nuevaCedula, String nuevosNombres, String nuevosApellidos, LocalDate nuevaFechaNacimiento) {
+            String nuevaCedula, String nuevosNombres, String nuevosApellidos, String nuevaFechaNacimiento) {
         return new PacientePerfil(
                 usuarioId,
                 nuevaCedula != null ? nuevaCedula : cedula,

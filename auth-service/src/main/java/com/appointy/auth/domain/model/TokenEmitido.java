@@ -1,5 +1,4 @@
 package com.appointy.auth.domain.model;
 
-import java.time.Instant;
-
-public record TokenEmitido(String token, String jti, Instant expiraEn) {}
+/** {@code expiraEn}: milisegundos desde 1970 en UTC. */
+public record TokenEmitido(String token, String jti, long expiraEn) {}

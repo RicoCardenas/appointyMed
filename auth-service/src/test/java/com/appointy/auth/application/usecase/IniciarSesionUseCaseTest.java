@@ -17,8 +17,6 @@ import com.appointy.auth.domain.port.out.CodificadorClavePort;
 import com.appointy.auth.domain.port.out.EmisorTokenPort;
 import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
 import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class IniciarSesionUseCaseTest {
 
-    static final Instant AHORA = Instant.parse("2026-06-01T10:00:00Z");
+    static final long AHORA = Instant.parse("2026-06-01T10:00:00Z").toEpochMilli();
 
     @Mock UsuarioRepositoryPort usuarios;
     @Mock CodificadorClavePort codificador;
@@ -43,27 +41,27 @@ class IniciarSesionUseCaseTest {
     }
 
     private Usuario usuario(boolean activo) {
-        return new Usuario(UUID.randomUUID(), "ana@correo.com", "hash", Rol.PACIENTE, activo, AHORA, AHORA, 0L);
+        return new Usuario("id-1", "ana@correo.com", "hash", Rol.PACIENTE, activo, AHORA, AHORA, 0L);
     }
 
     @Test
     void emiteTokenConCredencialesCorrectas() {
         Usuario u = usuario(true);
-        when(usuarios.buscarPorCorreo("ana@correo.com")).thenReturn(Optional.of(u));
+        when(usuarios.buscarPorCorreo("ana@correo.com")).thenReturn(u);
         when(codificador.coincide("Clave1234", "hash")).thenReturn(true);
-        when(emisor.emitir(u)).thenReturn(new TokenEmitido("jwt", "jti-1", AHORA.plusSeconds(900)));
+        when(emisor.emitir(u)).thenReturn(new TokenEmitido("jwt", "jti-1", AHORA + 900_000));
 
         Resultado r = useCase.ejecutar(new Comando("  ANA@correo.com ", "Clave1234"));
 
         assertEquals("jwt", r.token());
-        assertEquals(u.id(), r.usuarioId());
+        assertEquals("id-1", r.usuarioId());
         assertEquals(Rol.PACIENTE, r.rol());
-        assertEquals(AHORA.plusSeconds(900), r.expiraEn());
+        assertEquals(AHORA + 900_000, r.expiraEn());
     }
 
     @Test
     void rechazaClaveIncorrecta() {
-        when(usuarios.buscarPorCorreo("ana@correo.com")).thenReturn(Optional.of(usuario(true)));
+        when(usuarios.buscarPorCorreo("ana@correo.com")).thenReturn(usuario(true));
         when(codificador.coincide("mala", "hash")).thenReturn(false);
 
         assertThrows(CredencialesInvalidasException.class, () -> useCase.ejecutar(new Comando("ana@correo.com", "mala")));
@@ -72,7 +70,7 @@ class IniciarSesionUseCaseTest {
 
     @Test
     void conCorreoInexistenteComparaContraElSenueloYRechaza() {
-        when(usuarios.buscarPorCorreo("nadie@correo.com")).thenReturn(Optional.empty());
+        when(usuarios.buscarPorCorreo("nadie@correo.com")).thenReturn(null);
         when(codificador.coincide("Clave1234", "hash-senuelo")).thenReturn(false);
 
         assertThrows(CredencialesInvalidasException.class, () -> useCase.ejecutar(new Comando("nadie@correo.com", "Clave1234")));
@@ -82,7 +80,7 @@ class IniciarSesionUseCaseTest {
 
     @Test
     void rechazaCuentaInactivaAunqueLaClaveSeaCorrecta() {
-        when(usuarios.buscarPorCorreo("ana@correo.com")).thenReturn(Optional.of(usuario(false)));
+        when(usuarios.buscarPorCorreo("ana@correo.com")).thenReturn(usuario(false));
         when(codificador.coincide("Clave1234", "hash")).thenReturn(true);
 
         assertThrows(CredencialesInvalidasException.class, () -> useCase.ejecutar(new Comando("ana@correo.com", "Clave1234")));

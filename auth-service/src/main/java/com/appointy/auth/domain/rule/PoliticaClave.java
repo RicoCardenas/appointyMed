@@ -1,9 +1,8 @@
 package com.appointy.auth.domain.rule;
 
 import com.appointy.auth.domain.exception.ValidacionException;
-import java.nio.charset.StandardCharsets;
 
-/** Politica de claves: de 8 a 72 bytes (limite de BCrypt), con al menos una letra y un digito. */
+/** Politica de claves: de 8 a 72 bytes UTF-8 (limite de BCrypt), con al menos una letra y un digito. */
 public final class PoliticaClave {
 
     private static final int MINIMO = 8;
@@ -15,12 +14,41 @@ public final class PoliticaClave {
         if (clave == null || clave.length() < MINIMO) {
             throw debil("La clave debe tener al menos " + MINIMO + " caracteres");
         }
-        if (clave.getBytes(StandardCharsets.UTF_8).length > MAXIMO_BYTES) {
+        if (bytesUtf8(clave) > MAXIMO_BYTES) {
             throw debil("La clave no puede superar " + MAXIMO_BYTES + " bytes");
         }
-        if (clave.chars().noneMatch(Character::isLetter) || clave.chars().noneMatch(Character::isDigit)) {
+        boolean hayLetra = false;
+        boolean hayDigito = false;
+        for (int i = 0; i < clave.length(); i++) {
+            char c = clave.charAt(i);
+            if (Character.isLetter(c)) {
+                hayLetra = true;
+            } else if (Character.isDigit(c)) {
+                hayDigito = true;
+            }
+        }
+        if (!hayLetra || !hayDigito) {
             throw debil("La clave debe incluir al menos una letra y un digito");
         }
+    }
+
+    /** Tamano UTF-8 calculado a mano para no depender de java.nio en el dominio. */
+    static int bytesUtf8(String texto) {
+        int bytes = 0;
+        for (int i = 0; i < texto.length(); i++) {
+            char c = texto.charAt(i);
+            if (c < 0x80) {
+                bytes += 1;
+            } else if (c < 0x800) {
+                bytes += 2;
+            } else if (Character.isHighSurrogate(c)) {
+                bytes += 4;
+                i++;
+            } else {
+                bytes += 3;
+            }
+        }
+        return bytes;
     }
 
     private static ValidacionException debil(String mensaje) {

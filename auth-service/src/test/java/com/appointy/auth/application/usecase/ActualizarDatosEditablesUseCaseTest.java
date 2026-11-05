@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.appointy.auth.domain.exception.ConflictoException;
+import com.appointy.auth.domain.exception.NoEncontradoException;
 import com.appointy.auth.domain.exception.ValidacionException;
 import com.appointy.auth.domain.model.PacienteConCuenta;
 import com.appointy.auth.domain.model.PacientePerfil;
@@ -19,10 +20,7 @@ import com.appointy.auth.domain.port.out.PacientePerfilRepositoryPort;
 import com.appointy.auth.domain.port.out.UsuarioRepositoryPort;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.Optional;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,9 +34,9 @@ class ActualizarDatosEditablesUseCaseTest {
     @Mock PacientePerfilRepositoryPort perfiles;
 
     final Clock reloj = Clock.fixed(Instant.parse("2026-06-01T10:00:00Z"), ZoneOffset.UTC);
-    final UUID id = UUID.randomUUID();
-    final Usuario usuario = new Usuario(id, "ana@correo.com", "hash", Rol.PACIENTE, true, reloj.instant(), reloj.instant(), 0L);
-    final PacientePerfil perfil = new PacientePerfil(id, "123456", "Ana", "Perez", LocalDate.of(1990, 5, 1), "3000000000", "Calle 1", "Cali");
+    final String id = "id-1";
+    final Usuario usuario = new Usuario(id, "ana@correo.com", "hash", Rol.PACIENTE, true, reloj.millis(), reloj.millis(), 0L);
+    final PacientePerfil perfil = new PacientePerfil(id, "123456", "Ana", "Perez", "1990-05-01", "3000000000", "Calle 1", "Cali");
     ActualizarDatosEditablesUseCase useCase;
 
     @BeforeEach
@@ -47,8 +45,8 @@ class ActualizarDatosEditablesUseCaseTest {
     }
 
     private void existeElPaciente() {
-        when(usuarios.buscarPorId(id)).thenReturn(Optional.of(usuario));
-        when(perfiles.buscarPorUsuarioId(id)).thenReturn(Optional.of(perfil));
+        when(usuarios.buscarPorId(id)).thenReturn(usuario);
+        when(perfiles.buscarPorUsuarioId(id)).thenReturn(perfil);
     }
 
     @Test
@@ -75,7 +73,7 @@ class ActualizarDatosEditablesUseCaseTest {
         assertEquals("Bogota", r.perfil().ciudad());
         assertEquals("123456", r.perfil().cedula());
         assertEquals("Perez", r.perfil().apellidos());
-        assertEquals(LocalDate.of(1990, 5, 1), r.perfil().fechaNacimiento());
+        assertEquals("1990-05-01", r.perfil().fechaNacimiento());
     }
 
     @Test
@@ -100,5 +98,12 @@ class ActualizarDatosEditablesUseCaseTest {
 
         verify(usuarios, never()).existePorCorreo(any());
         verify(usuarios, never()).guardar(any());
+    }
+
+    @Test
+    void fallaSiElUsuarioNoExiste() {
+        when(usuarios.buscarPorId(id)).thenReturn(null);
+
+        assertThrows(NoEncontradoException.class, () -> useCase.ejecutar(new Comando(id, null, "3111111111", null, null)));
     }
 }

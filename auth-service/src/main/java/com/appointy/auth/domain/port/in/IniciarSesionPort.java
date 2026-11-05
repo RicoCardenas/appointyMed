@@ -1,15 +1,13 @@
 package com.appointy.auth.domain.port.in;
 
 import com.appointy.auth.domain.model.Rol;
-import java.time.Instant;
-import java.util.UUID;
 
-/** CU-02. */
+/** CU-02. {@code expiraEn}: milisegundos desde 1970 en UTC. */
 public interface IniciarSesionPort {
 
     Resultado ejecutar(Comando comando);
 
     record Comando(String correo, String clave) {}
 
-    record Resultado(String token, Instant expiraEn, UUID usuarioId, Rol rol) {}
+    record Resultado(String token, long expiraEn, String usuarioId, Rol rol) {}
 }

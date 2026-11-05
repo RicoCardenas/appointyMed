@@ -2,8 +2,9 @@ package com.appointy.auth.infrastructure.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.appointy.auth.domain.model.ClaimsToken;
 import com.appointy.auth.domain.model.Rol;
@@ -13,7 +14,6 @@ import com.appointy.auth.infrastructure.config.JwtProperties;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +22,7 @@ class JwtEmisorTokenAdapterTest {
     static final String SECRETO = "secreto-de-prueba-de-al-menos-32-caracteres";
     static final Instant T0 = Instant.parse("2026-06-01T10:00:00Z");
 
-    final Usuario usuario = new Usuario(UUID.randomUUID(), "ana@correo.com", "hash", Rol.PROFESIONAL, true, T0, T0, 0L);
+    final Usuario usuario = new Usuario(UUID.randomUUID().toString(), "ana@correo.com", "hash", Rol.PROFESIONAL, true, T0.toEpochMilli(), T0.toEpochMilli(), 0L);
 
     private static JwtEmisorTokenAdapter adaptador(String secreto, String emisor, Instant ahora) {
         return new JwtEmisorTokenAdapter(new JwtProperties(secreto, 15, emisor), Clock.fixed(ahora, ZoneOffset.UTC));
@@ -32,13 +32,14 @@ class JwtEmisorTokenAdapterTest {
     void elTokenEmitidoSeValidaConSusDatos() {
         TokenEmitido emitido = adaptador(SECRETO, "appointy-auth", T0).emitir(usuario);
 
-        Optional<ClaimsToken> claims = adaptador(SECRETO, "appointy-auth", T0.plusSeconds(60)).validar(emitido.token());
+        ClaimsToken claims = adaptador(SECRETO, "appointy-auth", T0.plusSeconds(60)).validar(emitido.token());
 
-        assertTrue(claims.isPresent());
-        assertEquals(usuario.id(), claims.get().usuarioId());
-        assertEquals(Rol.PROFESIONAL, claims.get().rol());
-        assertEquals(emitido.jti(), claims.get().jti());
-        assertEquals(T0.plusSeconds(900), emitido.expiraEn());
+        assertNotNull(claims);
+        assertEquals(usuario.id(), claims.usuarioId());
+        assertEquals(Rol.PROFESIONAL, claims.rol());
+        assertEquals(emitido.jti(), claims.jti());
+        assertEquals(T0.plusSeconds(900).toEpochMilli(), emitido.expiraEn());
+        assertEquals(emitido.expiraEn(), claims.expiraEn());
     }
 
     @Test
@@ -51,28 +52,28 @@ class JwtEmisorTokenAdapterTest {
     void rechazaUnTokenVencido() {
         String token = adaptador(SECRETO, "appointy-auth", T0).emitir(usuario).token();
 
-        assertTrue(adaptador(SECRETO, "appointy-auth", T0.plusSeconds(15 * 60 + 1)).validar(token).isEmpty());
+        assertNull(adaptador(SECRETO, "appointy-auth", T0.plusSeconds(15 * 60 + 1)).validar(token));
     }
 
     @Test
     void rechazaUnTokenFirmadoConOtroSecreto() {
         String token = adaptador("otro-secreto-distinto-de-32-caracteres-o-mas", "appointy-auth", T0).emitir(usuario).token();
 
-        assertTrue(adaptador(SECRETO, "appointy-auth", T0).validar(token).isEmpty());
+        assertNull(adaptador(SECRETO, "appointy-auth", T0).validar(token));
     }
 
     @Test
     void rechazaUnTokenDeOtroEmisor() {
         String token = adaptador(SECRETO, "otro-emisor", T0).emitir(usuario).token();
 
-        assertTrue(adaptador(SECRETO, "appointy-auth", T0).validar(token).isEmpty());
+        assertNull(adaptador(SECRETO, "appointy-auth", T0).validar(token));
     }
 
     @Test
     void rechazaTextoQueNoEsUnToken() {
         JwtEmisorTokenAdapter a = adaptador(SECRETO, "appointy-auth", T0);
-        assertTrue(a.validar("basura").isEmpty());
-        assertTrue(a.validar("").isEmpty());
+        assertNull(a.validar("basura"));
+        assertNull(a.validar(""));
     }
 
     @Test

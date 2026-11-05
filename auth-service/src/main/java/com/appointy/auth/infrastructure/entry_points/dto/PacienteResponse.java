@@ -1,16 +1,14 @@
 package com.appointy.auth.infrastructure.entry_points.dto;
 
 import com.appointy.auth.domain.model.PacienteConCuenta;
-import java.time.LocalDate;
-import java.util.UUID;
 
 public record PacienteResponse(
-        UUID usuarioId,
+        String usuarioId,
         String correo,
         String cedula,
         String nombres,
         String apellidos,
-        LocalDate fechaNacimiento,
+        String fechaNacimiento,
         String telefono,
         String direccion,
         String ciudad) {

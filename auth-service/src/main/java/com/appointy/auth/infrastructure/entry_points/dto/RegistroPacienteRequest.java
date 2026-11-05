@@ -22,6 +22,6 @@ public record RegistroPacienteRequest(
 
     public RegistrarPacientePort.Comando aComando() {
         return new RegistrarPacientePort.Comando(
-                correo, clave, cedula, nombres, apellidos, fechaNacimiento, telefono, direccion, ciudad);
+                correo, clave, cedula, nombres, apellidos, fechaNacimiento.toString(), telefono, direccion, ciudad);
     }
 }

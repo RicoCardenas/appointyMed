@@ -1,6 +1,4 @@
 package com.appointy.auth.domain.model;
 
-import java.time.Instant;
-import java.util.UUID;
-
-public record ClaimsToken(UUID usuarioId, Rol rol, String jti, Instant expiraEn) {}
+/** {@code expiraEn}: milisegundos desde 1970 en UTC. */
+public record ClaimsToken(String usuarioId, Rol rol, String jti, long expiraEn) {}

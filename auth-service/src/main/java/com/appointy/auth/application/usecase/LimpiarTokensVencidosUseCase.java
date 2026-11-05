@@ -18,6 +18,6 @@ public class LimpiarTokensVencidosUseCase implements LimpiarTokensVencidosPort {
     @Override
     @Transactional
     public int ejecutar() {
-        return revocados.eliminarVencidosAntesDe(reloj.instant());
+        return revocados.eliminarVencidosAntesDe(reloj.millis());
     }
 }

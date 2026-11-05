@@ -16,8 +16,8 @@ class NormalizadorCorreoTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "sin-arroba", "@dominio.com", "usuario@", "a@@b.com"})
-    void rechazaCorreosMalFormados(String correo) {
+    @ValueSource(strings = {"", "sin-arroba", "@dominio.com", "usuario@", "a@@b.com", "con espacio@b.com", "ána@b.com", "ana@bñ.com"})
+    void rechazaCorreosMalFormadosONoAscii(String correo) {
         assertThrows(ValidacionException.class, () -> NormalizadorCorreo.normalizar(correo));
     }
 
@@ -25,5 +25,10 @@ class NormalizadorCorreoTest {
     void comparableNuncaLanzaYAceptaNulo() {
         assertEquals("", NormalizadorCorreo.comparable(null));
         assertEquals("x", NormalizadorCorreo.comparable(" X "));
+    }
+
+    @Test
+    void laMinusculaNoDependeDeLaConfiguracionRegional() {
+        assertEquals("info@correo.com", NormalizadorCorreo.comparable("INFO@CORREO.COM")); // la I de INFO no se vuelve i sin punto
     }
 }

@@ -1,8 +1,6 @@
 package com.appointy.auth.infrastructure.security;
 
 import com.appointy.auth.domain.model.Rol;
-import java.time.Instant;
-import java.util.UUID;
 
-/** Principal de Spring Security tras validar el JWT. */
-public record UsuarioAutenticado(UUID usuarioId, Rol rol, String jti, Instant expiraEn) {}
+/** Principal de Spring Security tras validar el JWT. {@code expiraEn}: milisegundos desde 1970 en UTC. */
+public record UsuarioAutenticado(String usuarioId, Rol rol, String jti, long expiraEn) {}

@@ -31,18 +31,21 @@ public class ActualizarDatosEditablesUseCase implements ActualizarDatosEditables
         if (c.correo() == null && c.telefono() == null && c.direccion() == null && c.ciudad() == null) {
             throw new ValidacionException("SIN_CAMBIOS", "Indica al menos un dato a actualizar");
         }
-        Usuario usuario = usuarios.buscarPorId(c.usuarioId())
-                .orElseThrow(() -> new NoEncontradoException("USUARIO_NO_ENCONTRADO", "El usuario no existe"));
-        PacientePerfil perfil = perfiles.buscarPorUsuarioId(c.usuarioId())
-                .orElseThrow(() -> new NoEncontradoException("PERFIL_NO_ENCONTRADO", "El usuario no tiene perfil de paciente"));
-
+        Usuario usuario = usuarios.buscarPorId(c.usuarioId());
+        if (usuario == null) {
+            throw new NoEncontradoException("USUARIO_NO_ENCONTRADO", "El usuario no existe");
+        }
+        PacientePerfil perfil = perfiles.buscarPorUsuarioId(c.usuarioId());
+        if (perfil == null) {
+            throw new NoEncontradoException("PERFIL_NO_ENCONTRADO", "El usuario no tiene perfil de paciente");
+        }
         if (c.correo() != null) {
             String nuevoCorreo = NormalizadorCorreo.normalizar(c.correo());
             if (!nuevoCorreo.equals(usuario.correo())) {
                 if (usuarios.existePorCorreo(nuevoCorreo)) {
                     throw new ConflictoException("CORREO_YA_REGISTRADO", "El correo ya esta registrado");
                 }
-                usuario = usuarios.guardar(usuario.conCorreo(nuevoCorreo, reloj.instant()));
+                usuario = usuarios.guardar(usuario.conCorreo(nuevoCorreo, reloj.millis()));
             }
         }
         perfil = perfiles.guardar(perfil.actualizarContacto(c.telefono(), c.direccion(), c.ciudad()));

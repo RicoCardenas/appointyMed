@@ -36,7 +36,7 @@ public class CrearCuentaStaffUseCase implements CrearCuentaStaffPort {
         if (usuarios.existePorCorreo(correo)) {
             throw new ConflictoException("CORREO_YA_REGISTRADO", "El correo ya esta registrado");
         }
-        return usuarios.guardar(
-                Usuario.nuevo(UUID.randomUUID(), correo, codificador.codificar(comando.clave()), comando.rol(), reloj.instant()));
+        return usuarios.guardar(Usuario.nuevo(
+                UUID.randomUUID().toString(), correo, codificador.codificar(comando.clave()), comando.rol(), reloj.millis()));
     }
 }

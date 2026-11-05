@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -34,9 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String cabecera = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (cabecera != null && cabecera.startsWith(PREFIJO)) {
-            Optional<ClaimsToken> claims = emisor.validar(cabecera.substring(PREFIJO.length()).trim());
-            if (claims.isPresent() && !revocados.existePorJti(claims.get().jti())) {
-                ClaimsToken c = claims.get();
+            ClaimsToken c = emisor.validar(cabecera.substring(PREFIJO.length()).trim());
+            if (c != null && !revocados.existePorJti(c.jti())) {
                 var principal = new UsuarioAutenticado(c.usuarioId(), c.rol(), c.jti(), c.expiraEn());
                 var autenticacion = new UsernamePasswordAuthenticationToken(
                         principal, null, List.of(new SimpleGrantedAuthority("ROLE_" + c.rol().name())));

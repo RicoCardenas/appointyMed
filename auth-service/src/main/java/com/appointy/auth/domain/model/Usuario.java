@@ -1,24 +1,24 @@
 package com.appointy.auth.domain.model;
 
-import java.time.Instant;
-import java.util.UUID;
-
-/** Cuenta de acceso. {@code version} es nula mientras la cuenta no se ha guardado. */
+/**
+ * Cuenta de acceso. Los instantes son milisegundos desde 1970 en UTC y {@code id} es el texto de un UUID.
+ * {@code version} es nula mientras la cuenta no se ha guardado.
+ */
 public record Usuario(
-        UUID id,
+        String id,
         String correo,
         String claveHash,
         Rol rol,
         boolean activo,
-        Instant creadoEn,
-        Instant actualizadoEn,
+        long creadoEn,
+        long actualizadoEn,
         Long version) {
 
-    public static Usuario nuevo(UUID id, String correo, String claveHash, Rol rol, Instant ahora) {
+    public static Usuario nuevo(String id, String correo, String claveHash, Rol rol, long ahora) {
         return new Usuario(id, correo, claveHash, rol, true, ahora, ahora, null);
     }
 
-    public Usuario conCorreo(String nuevoCorreo, Instant ahora) {
+    public Usuario conCorreo(String nuevoCorreo, long ahora) {
         return new Usuario(id, nuevoCorreo, claveHash, rol, activo, creadoEn, ahora, version);
     }
 }

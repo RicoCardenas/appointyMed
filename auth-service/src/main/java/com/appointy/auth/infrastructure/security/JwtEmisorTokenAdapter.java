@@ -15,7 +15,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.Optional;
 import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.stereotype.Component;
@@ -49,17 +48,17 @@ public class JwtEmisorTokenAdapter implements EmisorTokenPort {
         String token = Jwts.builder()
                 .id(jti)
                 .issuer(propiedades.issuer())
-                .subject(usuario.id().toString())
+                .subject(usuario.id())
                 .claim(CLAIM_ROL, usuario.rol().name())
                 .issuedAt(Date.from(ahora))
                 .expiration(Date.from(expira))
                 .signWith(clave)
                 .compact();
-        return new TokenEmitido(token, jti, expira);
+        return new TokenEmitido(token, jti, expira.toEpochMilli());
     }
 
     @Override
-    public Optional<ClaimsToken> validar(String token) {
+    public ClaimsToken validar(String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(clave)
@@ -68,13 +67,15 @@ public class JwtEmisorTokenAdapter implements EmisorTokenPort {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return Optional.of(new ClaimsToken(
-                    UUID.fromString(claims.getSubject()),
+            String sujeto = claims.getSubject();
+            UUID.fromString(sujeto); // el sujeto debe ser un UUID valido
+            return new ClaimsToken(
+                    sujeto,
                     Rol.valueOf(claims.get(CLAIM_ROL, String.class)),
                     claims.getId(),
-                    claims.getExpiration().toInstant()));
+                    claims.getExpiration().getTime());
         } catch (JwtException | IllegalArgumentException | NullPointerException e) {
-            return Optional.empty();
+            return null;
         }
     }
 }
