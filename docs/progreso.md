@@ -6,7 +6,7 @@ Rama `main`. El código anterior está en el historial hasta el commit `efb6897`
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 0 | Base: rama, especificación, POM de 5 módulos, schemas, skills, documentación | Hecha salvo la verificación con JDK 21 y Flyway (ver abajo) |
+| 0 | Base: especificación, POM de 5 módulos, schemas, skills, documentación | Hecha y verificada (ver abajo) |
 | 1 | auth-service: CU-01 a CU-07 | Pendiente |
 | 2 | catalog-service: CU-08 a CU-16 | Pendiente |
 | 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Pendiente |
@@ -18,12 +18,11 @@ Rama `main`. El código anterior está en el historial hasta el commit `efb6897`
 
 ## Validado en la Fase 0
 
-- `mvn -DskipTests compile` de los 5 módulos con JDK 21.0.12 y Maven 3.9.12: exitoso.
-- No verificado: arranque de los servicios y Flyway contra PostgreSQL 18. Las cinco variables `*_DB_PASSWORD` están vacías en `.env`, así que no hay forma de conectar todavía.
-
-## Pendiente del equipo
-
-1. Completar en `.env` las cinco `*_DB_PASSWORD` con las mismas claves usadas en `db/init.sql` (si `init.sql` aún no se ejecutó, ejecutarlo primero).
+- `mvn clean package -DskipTests` de los 5 módulos con JDK 21.0.12 y Maven 3.9.12: exitoso.
+- `db/init.sql` aplicado en PostgreSQL 18.6: los 5 usuarios conectan, cada uno con su schema por defecto y viendo solo ese schema (RNF-15).
+- Los 5 servicios arrancan y `/actuator/health` responde UP en 8081 a 8085; Flyway crea `flyway_schema_history` en el schema de cada servicio. Todavía no hay migraciones (0 validadas).
+- Flyway 11.7.2 (BOM de Spring Boot) avisa que no soporta PostgreSQL 18; el POM padre fija `flyway.version` en 11.20.3 y el aviso desaparece (comprobado en auth y clinical-history).
+- No probado aún: tablas reales ni validación de Hibernate contra entidades (no existen entidades).
 
 ## Decisiones propias a validar con el docente
 
