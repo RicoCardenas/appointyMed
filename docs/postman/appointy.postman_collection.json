@@ -1,0 +1,2217 @@
+{
+  "info": {
+    "name": "Appointy Med",
+    "description": "Generada desde OpenAPI. Haz login en auth-service (guarda {{token}}) y usa las demas carpetas.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.request.headers.upsert({key: 'X-Correlation-Id', value: pm.variables.replaceIn('{{$guid}}')});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "Administración de cuentas",
+          "item": [
+            {
+              "name": "Corregir cédula, nombres o nacimiento de un paciente",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/admin/pacientes/:usuarioId/identidad",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "pacientes",
+                    ":usuarioId",
+                    "identidad"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "usuarioId",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Corregir cédula, nombres o nacimiento de un paciente",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"apellidos\": \"texto\",\n  \"cedula\": \"texto\",\n  \"fechaNacimiento\": \"2026-12-01\",\n  \"nombres\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Listar cuentas, paginado y con filtros por rol y estado",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/admin/usuarios",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "usuarios"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0",
+                      "disabled": true
+                    },
+                    {
+                      "key": "size",
+                      "value": "20",
+                      "disabled": true
+                    },
+                    {
+                      "key": "rol",
+                      "value": "PACIENTE",
+                      "disabled": true
+                    },
+                    {
+                      "key": "activo",
+                      "value": "true",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Listar cuentas, paginado y con filtros por rol y estado"
+              },
+              "response": []
+            },
+            {
+              "name": "Crear una cuenta de PROFESIONAL o ADMINISTRATIVO",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/admin/usuarios",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "usuarios"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Crear una cuenta de PROFESIONAL o ADMINISTRATIVO",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"clave\": \"texto\",\n  \"correo\": \"persona@correo.co\",\n  \"rol\": \"PACIENTE\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Conteo de cuentas por rol y estado",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/admin/usuarios/estadisticas",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "usuarios",
+                    "estadisticas"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Conteo de cuentas por rol y estado"
+              },
+              "response": []
+            },
+            {
+              "name": "Activar una cuenta (idempotente)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/admin/usuarios/:usuarioId/activar",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "usuarios",
+                    ":usuarioId",
+                    "activar"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "usuarioId",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Activar una cuenta (idempotente)"
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar una cuenta (idempotente; no la propia)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/admin/usuarios/:usuarioId/desactivar",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "admin",
+                    "usuarios",
+                    ":usuarioId",
+                    "desactivar"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "usuarioId",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Desactivar una cuenta (idempotente; no la propia)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Autenticación",
+          "item": [
+            {
+              "name": "Cambiar la clave propia",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/auth/cambiar-clave",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "cambiar-clave"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Cambiar la clave propia",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"claveActual\": \"texto\",\n  \"claveNueva\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Iniciar sesión y obtener el JWT",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/auth/login",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "login"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Iniciar sesión y obtener el JWT",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"clave\": \"texto\",\n  \"correo\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code === 200) { pm.collectionVariables.set(\"token\", pm.response.json().accessToken); }"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Cerrar sesión y revocar el token actual",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/auth/logout",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "logout"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Cerrar sesión y revocar el token actual"
+              },
+              "response": []
+            },
+            {
+              "name": "Registrar un paciente",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/auth/register",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "auth",
+                    "register"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Registrar un paciente",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"apellidos\": \"texto\",\n  \"cedula\": \"texto\",\n  \"ciudad\": \"texto\",\n  \"clave\": \"texto\",\n  \"correo\": \"persona@correo.co\",\n  \"direccion\": \"texto\",\n  \"fechaNacimiento\": \"2026-12-01\",\n  \"nombres\": \"texto\",\n  \"telefono\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Perfil del paciente",
+          "item": [
+            {
+              "name": "Consultar el perfil propio",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/pacientes/me",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "pacientes",
+                    "me"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Consultar el perfil propio"
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar correo, teléfono, dirección o ciudad",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{auth_url}}/api/v1/pacientes/me",
+                  "host": [
+                    "{{auth_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "pacientes",
+                    "me"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Actualizar correo, teléfono, dirección o ciudad",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ciudad\": \"texto\",\n  \"correo\": \"persona@correo.co\",\n  \"direccion\": \"texto\",\n  \"telefono\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "catalog",
+      "item": [
+        {
+          "name": "Bloqueos",
+          "item": [
+            {
+              "name": "Bloquear un rango de fechas de un profesional (409 si hay citas confirmadas)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/bloqueos",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "bloqueos"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Bloquear un rango de fechas de un profesional (409 si hay citas confirmadas)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"centroId\": \"00000000-0000-0000-0000-000000000001\",\n  \"fechaFin\": \"2026-12-01\",\n  \"fechaInicio\": \"2026-12-01\",\n  \"motivo\": \"texto\",\n  \"profesionalId\": \"00000000-0000-0000-0000-000000000001\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Centros",
+          "item": [
+            {
+              "name": "Crear un centro",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/centros",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "centros"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Crear un centro",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ciudad\": \"texto\",\n  \"direccion\": \"texto\",\n  \"nombre\": \"texto\",\n  \"telefono\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar un centro (borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/centros/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "centros",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Desactivar un centro (borrado lógico)"
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar un centro",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/centros/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "centros",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Actualizar un centro",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ciudad\": \"texto\",\n  \"direccion\": \"texto\",\n  \"nombre\": \"texto\",\n  \"telefono\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Especialidades",
+          "item": [
+            {
+              "name": "Listar especialidades",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/especialidades",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "especialidades"
+                  ],
+                  "query": [
+                    {
+                      "key": "incluirInactivas",
+                      "value": "false",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Listar especialidades"
+              },
+              "response": []
+            },
+            {
+              "name": "Crear una especialidad",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/especialidades",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "especialidades"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Crear una especialidad",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"descripcion\": \"texto\",\n  \"nombre\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar una especialidad (borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/especialidades/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "especialidades",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Desactivar una especialidad (borrado lógico)"
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar una especialidad",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/especialidades/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "especialidades",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Actualizar una especialidad",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"descripcion\": \"texto\",\n  \"nombre\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Profesionales activos de una especialidad",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/especialidades/:id/profesionales",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "especialidades",
+                    ":id",
+                    "profesionales"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Profesionales activos de una especialidad"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Festivos (API externa)",
+          "item": [
+            {
+              "name": "Festivos del año según la API externa Nager.Date (503 si no responde)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/festivos",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "festivos"
+                  ],
+                  "query": [
+                    {
+                      "key": "anio",
+                      "value": "1",
+                      "disabled": false
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Festivos del año según la API externa Nager.Date (503 si no responde)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Horarios",
+          "item": [
+            {
+              "name": "Modificar un horario y regenerar sus franjas",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/horarios/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "horarios",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Modificar un horario y regenerar sus franjas",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"activo\": true,\n  \"centroId\": \"00000000-0000-0000-0000-000000000001\",\n  \"diaSemana\": 1,\n  \"duracionFranjaMin\": 5,\n  \"horaFin\": \"08:00\",\n  \"horaInicio\": \"08:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reintentar la generación de franjas de un horario (idempotente)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/horarios/:id/franjas",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "horarios",
+                    ":id",
+                    "franjas"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Reintentar la generación de franjas de un horario (idempotente)"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Parámetros",
+          "item": [
+            {
+              "name": "Consultar los parámetros del servicio",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/parametros",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "parametros"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Consultar los parámetros del servicio"
+              },
+              "response": []
+            },
+            {
+              "name": "Configurar parámetros del servicio",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/parametros",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "parametros"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Configurar parámetros del servicio",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"parametros\": {\n    \"clave\": \"texto\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Profesionales",
+          "item": [
+            {
+              "name": "Listar profesionales, paginado, con búsqueda por texto",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0",
+                      "disabled": true
+                    },
+                    {
+                      "key": "size",
+                      "value": "20",
+                      "disabled": true
+                    },
+                    {
+                      "key": "texto",
+                      "value": "texto",
+                      "disabled": true
+                    },
+                    {
+                      "key": "activo",
+                      "value": "true",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Listar profesionales, paginado, con búsqueda por texto"
+              },
+              "response": []
+            },
+            {
+              "name": "Crear un profesional",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Crear un profesional",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"apellidos\": \"texto\",\n  \"nombres\": \"texto\",\n  \"registroMedico\": \"texto\",\n  \"usuarioId\": \"00000000-0000-0000-0000-000000000001\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Desactivar un profesional (borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Desactivar un profesional (borrado lógico)"
+              },
+              "response": []
+            },
+            {
+              "name": "Consultar un profesional con sus especialidades y centros",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Consultar un profesional con sus especialidades y centros"
+              },
+              "response": []
+            },
+            {
+              "name": "Actualizar un profesional",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Actualizar un profesional",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"apellidos\": \"texto\",\n  \"nombres\": \"texto\",\n  \"registroMedico\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Centros activos donde atiende un profesional",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id/centros",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id",
+                    "centros"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Centros activos donde atiende un profesional"
+              },
+              "response": []
+            },
+            {
+              "name": "Reemplazar los centros de un profesional",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id/centros",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id",
+                    "centros"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Reemplazar los centros de un profesional",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"00000000-0000-0000-0000-000000000001\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Reemplazar las especialidades de un profesional",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id/especialidades",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id",
+                    "especialidades"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Reemplazar las especialidades de un profesional",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"00000000-0000-0000-0000-000000000001\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Horarios de un profesional",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id/horarios",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id",
+                    "horarios"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Horarios de un profesional"
+              },
+              "response": []
+            },
+            {
+              "name": "Definir un horario semanal y generar sus franjas",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/profesionales/:id/horarios",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "profesionales",
+                    ":id",
+                    "horarios"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Definir un horario semanal y generar sus franjas",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"centroId\": \"00000000-0000-0000-0000-000000000001\",\n  \"diaSemana\": 1,\n  \"duracionFranjaMin\": 5,\n  \"horaFin\": \"08:00\",\n  \"horaInicio\": \"08:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "appointment",
+      "item": [
+        {
+          "name": "Citas",
+          "item": [
+            {
+              "name": "Listar todas las citas, paginado y con filtros (ADMINISTRATIVO)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0",
+                      "disabled": true
+                    },
+                    {
+                      "key": "size",
+                      "value": "20",
+                      "disabled": true
+                    },
+                    {
+                      "key": "estado",
+                      "value": "CONFIRMADA",
+                      "disabled": true
+                    },
+                    {
+                      "key": "profesionalId",
+                      "value": "00000000-0000-0000-0000-000000000001",
+                      "disabled": true
+                    },
+                    {
+                      "key": "pacienteId",
+                      "value": "00000000-0000-0000-0000-000000000001",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Listar todas las citas, paginado y con filtros (ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Reservar una cita en una franja disponible (PACIENTE)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Reservar una cita en una franja disponible (PACIENTE)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"centroId\": \"00000000-0000-0000-0000-000000000001\",\n  \"especialidadId\": \"00000000-0000-0000-0000-000000000001\",\n  \"franjaId\": \"00000000-0000-0000-0000-000000000001\",\n  \"profesionalId\": \"00000000-0000-0000-0000-000000000001\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Agenda confirmada del profesional, de una fecha o de hoy en adelante (PROFESIONAL)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/agenda",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    "agenda"
+                  ],
+                  "query": [
+                    {
+                      "key": "fecha",
+                      "value": "2026-12-01",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Agenda confirmada del profesional, de una fecha o de hoy en adelante (PROFESIONAL)"
+              },
+              "response": []
+            },
+            {
+              "name": "Conteo de citas por estado (ADMINISTRATIVO)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/estadisticas",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    "estadisticas"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Conteo de citas por estado (ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Mis citas, próximas o pasadas (PACIENTE)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/mias",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    "mias"
+                  ],
+                  "query": [
+                    {
+                      "key": "periodo",
+                      "value": "texto",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Mis citas, próximas o pasadas (PACIENTE)"
+              },
+              "response": []
+            },
+            {
+              "name": "Consultar una cita (paciente, profesional de la cita o ADMINISTRATIVO)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/:id",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    ":id"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Consultar una cita (paciente, profesional de la cita o ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Cancelar una cita con motivo opcional (PACIENTE dueño o ADMINISTRATIVO)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/:id/cancelar",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    ":id",
+                    "cancelar"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Cancelar una cita con motivo opcional (PACIENTE dueño o ADMINISTRATIVO)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Marcar la cita como COMPLETADA o NO_ASISTIDA (PROFESIONAL de la cita)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/:id/estado",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    ":id",
+                    "estado"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Marcar la cita como COMPLETADA o NO_ASISTIDA (PROFESIONAL de la cita)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"estado\": \"CONFIRMADA\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Historial de cambios de estado de una cita",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/:id/historial",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    ":id",
+                    "historial"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Historial de cambios de estado de una cita"
+              },
+              "response": []
+            },
+            {
+              "name": "Reprogramar una cita a otra franja (PACIENTE dueño)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/citas/:id/reprogramar",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "citas",
+                    ":id",
+                    "reprogramar"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Reprogramar una cita a otra franja (PACIENTE dueño)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"franjaId\": \"00000000-0000-0000-0000-000000000001\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Disponibilidad",
+          "item": [
+            {
+              "name": "Franjas disponibles de un profesional en un centro y fecha",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{appointment_url}}/api/v1/disponibilidad",
+                  "host": [
+                    "{{appointment_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "disponibilidad"
+                  ],
+                  "query": [
+                    {
+                      "key": "profesionalId",
+                      "value": "00000000-0000-0000-0000-000000000001",
+                      "disabled": false
+                    },
+                    {
+                      "key": "centroId",
+                      "value": "00000000-0000-0000-0000-000000000001",
+                      "disabled": false
+                    },
+                    {
+                      "key": "fecha",
+                      "value": "2026-12-01",
+                      "disabled": false
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Franjas disponibles de un profesional en un centro y fecha"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "clinical-history",
+      "item": [
+        {
+          "name": "Historia clínica",
+          "item": [
+            {
+              "name": "Entradas que escribí, paginado (PROFESIONAL)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/atenciones",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "atenciones"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0",
+                      "disabled": true
+                    },
+                    {
+                      "key": "size",
+                      "value": "20",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Entradas que escribí, paginado (PROFESIONAL)"
+              },
+              "response": []
+            },
+            {
+              "name": "Buscar diagnósticos CIE-10 en la API externa NLM (PROFESIONAL)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/diagnosticos",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "diagnosticos"
+                  ],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "texto",
+                      "disabled": false
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Buscar diagnósticos CIE-10 en la API externa NLM (PROFESIONAL)"
+              },
+              "response": []
+            },
+            {
+              "name": "Registrar la atención de una cita (PROFESIONAL de la cita)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/entradas",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "entradas"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Registrar la atención de una cita (PROFESIONAL de la cita)",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"citaId\": \"00000000-0000-0000-0000-000000000001\",\n  \"diagnostico\": \"texto\",\n  \"indicaciones\": \"texto\",\n  \"motivo\": \"texto\",\n  \"notas\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Corregir una entrada: crea una nueva que apunta a la anterior",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/entradas/:id/correcciones",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "entradas",
+                    ":id",
+                    "correcciones"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Corregir una entrada: crea una nueva que apunta a la anterior",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"diagnostico\": \"texto\",\n  \"indicaciones\": \"texto\",\n  \"motivo\": \"texto\",\n  \"notas\": \"texto\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "La entrada original de una atención y sus correcciones",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/entradas/:id/versiones",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "entradas",
+                    ":id",
+                    "versiones"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "La entrada original de una atención y sus correcciones"
+              },
+              "response": []
+            },
+            {
+              "name": "Mi historia clínica (PACIENTE)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/historia/mia",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "historia",
+                    "mia"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Mi historia clínica (PACIENTE)"
+              },
+              "response": []
+            },
+            {
+              "name": "Resumen de mi historia (PACIENTE)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/historia/mia/resumen",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "historia",
+                    "mia",
+                    "resumen"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Resumen de mi historia (PACIENTE)"
+              },
+              "response": []
+            },
+            {
+              "name": "Historia completa de un paciente (PROFESIONAL con relación)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/pacientes/:pacienteId/historia",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "pacientes",
+                    ":pacienteId",
+                    "historia"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "pacienteId",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Historia completa de un paciente (PROFESIONAL con relación)"
+              },
+              "response": []
+            },
+            {
+              "name": "Resumen de la historia de un paciente (PROFESIONAL con relación)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{clinical_history_url}}/api/v1/pacientes/:pacienteId/resumen",
+                  "host": [
+                    "{{clinical_history_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "pacientes",
+                    ":pacienteId",
+                    "resumen"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "pacienteId",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Resumen de la historia de un paciente (PROFESIONAL con relación)"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "notification",
+      "item": [
+        {
+          "name": "Notificaciones",
+          "item": [
+            {
+              "name": "Listar notificaciones, paginado y con filtros (ADMINISTRATIVO)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{notification_url}}/api/v1/notificaciones",
+                  "host": [
+                    "{{notification_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "notificaciones"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0",
+                      "disabled": true
+                    },
+                    {
+                      "key": "size",
+                      "value": "20",
+                      "disabled": true
+                    },
+                    {
+                      "key": "estado",
+                      "value": "PENDIENTE",
+                      "disabled": true
+                    },
+                    {
+                      "key": "tipo",
+                      "value": "CONFIRMACION",
+                      "disabled": true
+                    },
+                    {
+                      "key": "citaId",
+                      "value": "00000000-0000-0000-0000-000000000001",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Listar notificaciones, paginado y con filtros (ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Notificaciones de una cita (ADMINISTRATIVO)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{notification_url}}/api/v1/notificaciones/cita/:citaId",
+                  "host": [
+                    "{{notification_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "notificaciones",
+                    "cita",
+                    ":citaId"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "citaId",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Notificaciones de una cita (ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Conteo por estado y tipo (ADMINISTRATIVO)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{notification_url}}/api/v1/notificaciones/estadisticas",
+                  "host": [
+                    "{{notification_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "notificaciones",
+                    "estadisticas"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Conteo por estado y tipo (ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Ejecutar ahora el envío de recordatorios vencidos (ADMINISTRATIVO)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{notification_url}}/api/v1/notificaciones/recordatorios/ejecutar",
+                  "host": [
+                    "{{notification_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "notificaciones",
+                    "recordatorios",
+                    "ejecutar"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Ejecutar ahora el envío de recordatorios vencidos (ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Ejecutar ahora el reintento de fallidas (ADMINISTRATIVO)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{notification_url}}/api/v1/notificaciones/reintentos/ejecutar",
+                  "host": [
+                    "{{notification_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "notificaciones",
+                    "reintentos",
+                    "ejecutar"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "description": "Ejecutar ahora el reintento de fallidas (ADMINISTRATIVO)"
+              },
+              "response": []
+            },
+            {
+              "name": "Reenviar una notificación pendiente o fallida (ADMINISTRATIVO)",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{notification_url}}/api/v1/notificaciones/:id/reenviar",
+                  "host": [
+                    "{{notification_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "notificaciones",
+                    ":id",
+                    "reenviar"
+                  ],
+                  "query": [],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "00000000-0000-0000-0000-000000000001"
+                    }
+                  ]
+                },
+                "description": "Reenviar una notificación pendiente o fallida (ADMINISTRATIVO)"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

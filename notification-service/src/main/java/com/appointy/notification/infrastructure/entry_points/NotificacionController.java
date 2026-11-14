@@ -1,5 +1,7 @@
 package com.appointy.notification.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.notification.domain.model.EstadoNotificacion;
 import com.appointy.notification.domain.model.Estadisticas;
 import com.appointy.notification.domain.model.FiltroNotificaciones;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Gestion de notificaciones por el personal administrativo. */
+@Tag(name = "Notificaciones")
 @RestController
 @RequestMapping("/api/v1/notificaciones")
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
@@ -49,6 +52,7 @@ public class NotificacionController {
     }
 
     /** GET all paginado (RA-04). */
+    @Operation(summary = "Listar notificaciones, paginado y con filtros (ADMINISTRATIVO)")
     @GetMapping
     public PaginaResponse listar(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) EstadoNotificacion estado, @RequestParam(required = false) TipoNotificacion tipo,
@@ -57,26 +61,31 @@ public class NotificacionController {
         return PaginaResponse.de(listar.ejecutar(filtro, page, size));
     }
 
+    @Operation(summary = "Conteo por estado y tipo (ADMINISTRATIVO)")
     @GetMapping("/estadisticas")
     public Estadisticas estadisticas() {
         return estadisticas.ejecutar();
     }
 
+    @Operation(summary = "Notificaciones de una cita (ADMINISTRATIVO)")
     @GetMapping("/cita/{citaId}")
     public List<NotificacionResponse> deCita(@PathVariable UUID citaId) {
         return Arrays.stream(deCita.ejecutar(citaId.toString())).map(NotificacionResponse::de).toList();
     }
 
+    @Operation(summary = "Reenviar una notificación pendiente o fallida (ADMINISTRATIVO)")
     @PostMapping("/{id}/reenviar")
     public NotificacionResponse reenviar(@PathVariable UUID id) {
         return NotificacionResponse.de(reenviar.ejecutar(id.toString()));
     }
 
+    @Operation(summary = "Ejecutar ahora el envío de recordatorios vencidos (ADMINISTRATIVO)")
     @PostMapping("/recordatorios/ejecutar")
     public ResultadoLote ejecutarRecordatorios() {
         return recordatorios.ejecutar();
     }
 
+    @Operation(summary = "Ejecutar ahora el reintento de fallidas (ADMINISTRATIVO)")
     @PostMapping("/reintentos/ejecutar")
     public ResultadoLote ejecutarReintentos() {
         return reintentos.ejecutar();

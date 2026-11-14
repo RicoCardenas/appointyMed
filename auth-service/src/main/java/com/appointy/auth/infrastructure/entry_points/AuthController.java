@@ -1,5 +1,8 @@
 package com.appointy.auth.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.auth.domain.usecase.CambiarClaveUseCase;
 import com.appointy.auth.domain.usecase.CerrarSesionUseCase;
 import com.appointy.auth.infrastructure.entry_points.dto.CambiarClaveRequest;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Autenticación")
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
@@ -36,23 +40,29 @@ public class AuthController {
         this.cambiarClave = cambiarClave;
     }
 
+    @Operation(summary = "Registrar un paciente")
+    @SecurityRequirements
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public PacienteResponse registrar(@Valid @RequestBody RegistroPacienteRequest solicitud) {
         return PacienteResponse.de(registrarPaciente.ejecutar(solicitud.aComando()));
     }
 
+    @Operation(summary = "Iniciar sesión y obtener el JWT")
+    @SecurityRequirements
     @PostMapping("/login")
     public LoginResponse iniciarSesion(@Valid @RequestBody LoginRequest solicitud) {
         return LoginResponse.de(iniciarSesion.ejecutar(solicitud.aComando()));
     }
 
+    @Operation(summary = "Cerrar sesión y revocar el token actual")
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cerrarSesion(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         cerrarSesion.ejecutar(new CerrarSesionUseCase.Comando(usuario.jti(), usuario.expiraEn()));
     }
 
+    @Operation(summary = "Cambiar la clave propia")
     @PostMapping("/cambiar-clave")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cambiarClave(@AuthenticationPrincipal UsuarioAutenticado usuario, @Valid @RequestBody CambiarClaveRequest solicitud) {

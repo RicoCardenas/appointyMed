@@ -139,6 +139,8 @@ H2=$(curl -s -m 5 -D - -o /dev/null -H 'X-Correlation-Id: x;DROP' "$BASE/pacient
 [ -n "$H2" ] && [ "$H2" != "x;DROP" ] && { PASS=$((PASS+1)); echo "PASS un correlation id inseguro se reemplaza"; } || { FAIL=$((FAIL+1)); echo "FAIL id inseguro: $H2"; }
 grep -q "$(echo abc12345-corr)" "$LOG" && echo "   (el id aparece en los logs)" || echo "   (aviso: el id no aparece en los logs)"
 
+igual() { if [ "$2" = "$3" ]; then PASS=$((PASS+1)); printf 'PASS %-62s %s\n' "$1" "$2"; else FAIL=$((FAIL+1)); printf 'FAIL %-62s esperado=%s real=%s\n' "$1" "$3" "$2"; fi; }
+
 echo "== RA-03 y RA-04: administracion de cuentas (GET all paginado, estadisticas, activar, desactivar, cambiar clave, contacto interno)"
 req GET "/admin/usuarios?size=2" "$ADMIN"; chk "GET all paginado" 200 pagina=0 tamano=2
 req GET "/admin/usuarios?rol=PACIENTE&activo=true" "$ADMIN"; chk "filtro por rol y estado" 200 contenido.0.rol=PACIENTE
@@ -172,6 +174,13 @@ igual "sin llave" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$INT/usuarios/
 igual "un JWT de usuario no abre /internal" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$INT/usuarios/$PACIENTE_ID/contacto" -H "Authorization: Bearer $ADMIN")" 401
 igual "la llave no abre la API de usuarios" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$BASE/admin/usuarios" -H "X-Api-Key: $INTERNAL_API_KEY")" 401
 igual "usuario inexistente en /internal" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$INT/usuarios/$(cat /proc/sys/kernel/random/uuid)/contacto" -H "X-Api-Key: $INTERNAL_API_KEY")" 404
+
+echo "== OpenAPI (RNF-11)"
+igual "la especificacion es publica" "$(curl -s -m 10 -o /tmp/e2e-auth-api -w '%{http_code}' http://localhost:8081/v3/api-docs)" 200
+igual "documenta /api/v1 y no /internal" "$(python3 -I -c "import json; p=json.load(open('/tmp/e2e-auth-api'))['paths']; print(any(k.startswith('/api/v1') for k in p) and not any(k.startswith('/internal') for k in p))")" True
+igual "declara el esquema bearer JWT" "$(python3 -I -c "import json; print(json.load(open('/tmp/e2e-auth-api'))['components']['securitySchemes']['bearer']['bearerFormat'])")" JWT
+igual "swagger-ui responde" "$(curl -s -m 10 -o /dev/null -w '%{http_code}' -L http://localhost:8081/swagger-ui/index.html)" 200
+igual "publicar la especificacion no abre la API" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://localhost:8081/api/v1/admin/usuarios)" 401
 
 echo "== Estado en BD (RNF-14, RNF-05)"
 [ "$(SQL "select count(*) from usuario where password_hash like '\$2%'")" = "$(SQL 'select count(*) from usuario')" ] && { PASS=$((PASS+1)); echo "PASS todas las claves son hashes BCrypt"; } || { FAIL=$((FAIL+1)); echo "FAIL hay claves sin BCrypt"; }

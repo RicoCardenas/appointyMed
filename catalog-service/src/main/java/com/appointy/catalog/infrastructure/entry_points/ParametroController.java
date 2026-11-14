@@ -1,5 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.catalog.domain.usecase.ConfigurarParametrosUseCase;
 import com.appointy.catalog.domain.usecase.ConsultarParametrosUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.ParametroResponse;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /** CU-15. */
+@Tag(name = "Parámetros")
 @RestController
 @RequestMapping("/api/v1/parametros")
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
@@ -28,11 +31,13 @@ public class ParametroController {
         this.configurar = configurar;
     }
 
+    @Operation(summary = "Consultar los parámetros del servicio")
     @GetMapping
     public List<ParametroResponse> consultar() {
         return Arrays.stream(consultar.ejecutar()).map(ParametroResponse::de).toList();
     }
 
+    @Operation(summary = "Configurar parámetros del servicio")
     @PutMapping
     public List<ParametroResponse> configurar(@Valid @RequestBody ParametrosRequest s) {
         return Arrays.stream(configurar.ejecutar(new ConfigurarParametrosUseCase.Comando(s.comoParametros()))).map(ParametroResponse::de).toList();

@@ -1,5 +1,7 @@
 package com.appointy.appointment.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.appointment.domain.model.Actor;
 import com.appointy.appointment.domain.usecase.CancelarCitaUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarAgendaUseCase;
@@ -41,6 +43,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /** CU-18 a CU-24. El rol se exige por endpoint; la propiedad de cada cita la verifica el caso de uso. */
+@Tag(name = "Citas")
 @RestController
 @RequestMapping("/api/v1/citas")
 public class CitaController {
@@ -71,6 +74,7 @@ public class CitaController {
         this.estadisticas = estadisticas;
     }
 
+    @Operation(summary = "Reservar una cita en una franja disponible (PACIENTE)")
     @PostMapping
     @PreAuthorize("hasRole('PACIENTE')")
     @ResponseStatus(HttpStatus.CREATED)
@@ -79,12 +83,14 @@ public class CitaController {
                 actor(u), s.especialidadId().toString(), s.profesionalId().toString(), s.centroId().toString(), s.franjaId().toString())));
     }
 
+    @Operation(summary = "Reprogramar una cita a otra franja (PACIENTE dueño)")
     @PostMapping("/{id}/reprogramar")
     @PreAuthorize("hasRole('PACIENTE')")
     public CitaResponse reprogramar(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id, @Valid @RequestBody ReprogramarCitaRequest s) {
         return CitaResponse.de(reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(actor(u), id.toString(), s.franjaId().toString())));
     }
 
+    @Operation(summary = "Cancelar una cita con motivo opcional (PACIENTE dueño o ADMINISTRATIVO)")
     @PostMapping("/{id}/cancelar")
     @PreAuthorize("hasAnyRole('PACIENTE', 'ADMINISTRATIVO')")
     public CitaResponse cancelar(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id,
@@ -93,6 +99,7 @@ public class CitaController {
     }
 
     /** GET all paginado (RA-04). El listado completo es solo para el personal administrativo. */
+    @Operation(summary = "Listar todas las citas, paginado y con filtros (ADMINISTRATIVO)")
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public PaginaCitasResponse listar(@AuthenticationPrincipal UsuarioAutenticado u, @RequestParam(defaultValue = "0") int page,
@@ -102,35 +109,41 @@ public class CitaController {
         return PaginaCitasResponse.de(listar.ejecutar(actor(u), filtro, page, size));
     }
 
+    @Operation(summary = "Conteo de citas por estado (ADMINISTRATIVO)")
     @GetMapping("/estadisticas")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public EstadisticasCitas estadisticas(@AuthenticationPrincipal UsuarioAutenticado u) {
         return estadisticas.ejecutar(actor(u));
     }
 
+    @Operation(summary = "Mis citas, próximas o pasadas (PACIENTE)")
     @GetMapping("/mias")
     @PreAuthorize("hasRole('PACIENTE')")
     public List<CitaResponse> mias(@AuthenticationPrincipal UsuarioAutenticado u, @RequestParam(required = false) String periodo) {
         return Arrays.stream(misCitas.ejecutar(u.usuarioId(), periodo)).map(CitaResponse::de).toList();
     }
 
+    @Operation(summary = "Agenda confirmada del profesional, de una fecha o de hoy en adelante (PROFESIONAL)")
     @GetMapping("/agenda")
     @PreAuthorize("hasRole('PROFESIONAL')")
     public List<CitaResponse> agenda(@AuthenticationPrincipal UsuarioAutenticado u, @RequestParam(required = false) LocalDate fecha) {
         return Arrays.stream(agenda.ejecutar(u.usuarioId(), fecha == null ? null : fecha.toString())).map(CitaResponse::de).toList();
     }
 
+    @Operation(summary = "Consultar una cita (paciente, profesional de la cita o ADMINISTRATIVO)")
     @GetMapping("/{id}")
     public CitaResponse obtener(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id) {
         return CitaResponse.de(consultar.ejecutar(actor(u), id.toString()));
     }
 
+    @Operation(summary = "Marcar la cita como COMPLETADA o NO_ASISTIDA (PROFESIONAL de la cita)")
     @PatchMapping("/{id}/estado")
     @PreAuthorize("hasRole('PROFESIONAL')")
     public CitaResponse marcar(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id, @Valid @RequestBody MarcarCitaRequest s) {
         return CitaResponse.de(marcar.ejecutar(actor(u), id.toString(), s.estado()));
     }
 
+    @Operation(summary = "Historial de cambios de estado de una cita")
     @GetMapping("/{id}/historial")
     public List<HistorialCitaResponse> historial(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id) {
         return Arrays.stream(historial.ejecutar(actor(u), id.toString())).map(HistorialCitaResponse::de).toList();

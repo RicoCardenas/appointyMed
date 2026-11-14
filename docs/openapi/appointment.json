@@ -1,0 +1,687 @@
+{
+  "components": {
+    "schemas": {
+      "CancelarCitaRequest": {
+        "properties": {
+          "motivo": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CitaResponse": {
+        "properties": {
+          "centroId": {
+            "type": "string"
+          },
+          "creadoEn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "especialidadId": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string"
+          },
+          "franjaId": {
+            "type": "string"
+          },
+          "horaFin": {
+            "type": "string"
+          },
+          "horaInicio": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "modificadoEn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "pacienteId": {
+            "type": "string"
+          },
+          "profesionalId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "EstadisticasCitas": {
+        "properties": {
+          "canceladas": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "completadas": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "confirmadas": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "noAsistidas": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "FranjaResponse": {
+        "properties": {
+          "centroId": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string"
+          },
+          "fecha": {
+            "type": "string"
+          },
+          "horaFin": {
+            "type": "string"
+          },
+          "horaInicio": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "profesionalId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "HistorialCitaResponse": {
+        "properties": {
+          "detalle": {
+            "type": "string"
+          },
+          "estadoAnterior": {
+            "type": "string"
+          },
+          "estadoNuevo": {
+            "type": "string"
+          },
+          "fecha": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "franjaAnteriorId": {
+            "type": "string"
+          },
+          "franjaNuevaId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "rolUsuario": {
+            "type": "string"
+          },
+          "usuarioId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "MarcarCitaRequest": {
+        "properties": {
+          "estado": {
+            "enum": [
+              "CONFIRMADA",
+              "CANCELADA",
+              "COMPLETADA",
+              "NO_ASISTIDA"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "estado"
+        ],
+        "type": "object"
+      },
+      "PaginaCitasResponse": {
+        "properties": {
+          "contenido": {
+            "items": {
+              "$ref": "#/components/schemas/CitaResponse"
+            },
+            "type": "array"
+          },
+          "pagina": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tamano": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "totalElementos": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPaginas": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ReprogramarCitaRequest": {
+        "properties": {
+          "franjaId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "franjaId"
+        ],
+        "type": "object"
+      },
+      "ReservarCitaRequest": {
+        "properties": {
+          "centroId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "especialidadId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "franjaId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "profesionalId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "centroId",
+          "especialidadId",
+          "franjaId",
+          "profesionalId"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Franjas, citas y agenda. Errores con estructura uniforme: codigo, mensaje, detalle y timestamp.",
+    "title": "Appointy Med: appointment-service",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/citas": {
+      "get": {
+        "operationId": "listar",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "required": false,
+            "schema": {
+              "enum": [
+                "CONFIRMADA",
+                "CANCELADA",
+                "COMPLETADA",
+                "NO_ASISTIDA"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "profesionalId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pacienteId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaCitasResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Listar todas las citas, paginado y con filtros (ADMINISTRATIVO)",
+        "tags": [
+          "Citas"
+        ]
+      },
+      "post": {
+        "operationId": "reservar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservarCitaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Reservar una cita en una franja disponible (PACIENTE)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/agenda": {
+      "get": {
+        "operationId": "agenda",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "fecha",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CitaResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Agenda confirmada del profesional, de una fecha o de hoy en adelante (PROFESIONAL)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/estadisticas": {
+      "get": {
+        "operationId": "estadisticas",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstadisticasCitas"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Conteo de citas por estado (ADMINISTRATIVO)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/mias": {
+      "get": {
+        "operationId": "mias",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "periodo",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CitaResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Mis citas, próximas o pasadas (PACIENTE)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/{id}": {
+      "get": {
+        "operationId": "obtener",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Consultar una cita (paciente, profesional de la cita o ADMINISTRATIVO)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/{id}/cancelar": {
+      "post": {
+        "operationId": "cancelar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelarCitaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Cancelar una cita con motivo opcional (PACIENTE dueño o ADMINISTRATIVO)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/{id}/estado": {
+      "patch": {
+        "operationId": "marcar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarcarCitaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Marcar la cita como COMPLETADA o NO_ASISTIDA (PROFESIONAL de la cita)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/{id}/historial": {
+      "get": {
+        "operationId": "historial",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HistorialCitaResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Historial de cambios de estado de una cita",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/citas/{id}/reprogramar": {
+      "post": {
+        "operationId": "reprogramar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprogramarCitaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CitaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Reprogramar una cita a otra franja (PACIENTE dueño)",
+        "tags": [
+          "Citas"
+        ]
+      }
+    },
+    "/api/v1/disponibilidad": {
+      "get": {
+        "operationId": "disponibilidad",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "profesionalId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "centroId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "fecha",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FranjaResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Franjas disponibles de un profesional en un centro y fecha",
+        "tags": [
+          "Disponibilidad"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Generated server url",
+      "url": "http://localhost:8083"
+    }
+  ]
+}

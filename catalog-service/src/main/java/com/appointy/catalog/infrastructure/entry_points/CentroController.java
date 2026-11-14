@@ -1,5 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.catalog.domain.usecase.ActualizarCentroUseCase;
 import com.appointy.catalog.domain.usecase.CrearCentroUseCase;
 import com.appointy.catalog.domain.usecase.DesactivarCentroUseCase;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /** CU-11 para centros: todo es del administrativo; el listado para pacientes (CU-10) cuelga del profesional. */
+@Tag(name = "Centros")
 @RestController
 @RequestMapping("/api/v1/centros")
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
@@ -34,18 +37,21 @@ public class CentroController {
         this.desactivar = desactivar;
     }
 
+    @Operation(summary = "Crear un centro")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CentroResponse crear(@Valid @RequestBody CentroRequest s) {
         return CentroResponse.de(crear.ejecutar(new CrearCentroUseCase.Comando(s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
     }
 
+    @Operation(summary = "Actualizar un centro")
     @PutMapping("/{id}")
     public CentroResponse actualizar(@PathVariable UUID id, @Valid @RequestBody CentroRequest s) {
         return CentroResponse.de(actualizar.ejecutar(new ActualizarCentroUseCase.Comando(id.toString(), s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
     }
 
     /** Borrado logico: el centro queda inactivo, no se elimina. */
+    @Operation(summary = "Desactivar un centro (borrado lógico)")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void desactivar(@PathVariable UUID id) {

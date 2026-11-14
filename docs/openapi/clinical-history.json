@@ -1,0 +1,486 @@
+{
+  "components": {
+    "schemas": {
+      "CorregirEntradaRequest": {
+        "properties": {
+          "diagnostico": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "indicaciones": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "motivo": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "notas": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "diagnostico",
+          "motivo"
+        ],
+        "type": "object"
+      },
+      "DiagnosticoResponse": {
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "EntradaClinicaResponse": {
+        "properties": {
+          "citaId": {
+            "type": "string"
+          },
+          "corrigeAId": {
+            "type": "string"
+          },
+          "creadoEn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "diagnostico": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "indicaciones": {
+            "type": "string"
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "notas": {
+            "type": "string"
+          },
+          "pacienteId": {
+            "type": "string"
+          },
+          "profesionalId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PaginaEntradasResponse": {
+        "properties": {
+          "contenido": {
+            "items": {
+              "$ref": "#/components/schemas/EntradaClinicaResponse"
+            },
+            "type": "array"
+          },
+          "pagina": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tamano": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "totalElementos": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPaginas": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "RegistrarAtencionRequest": {
+        "properties": {
+          "citaId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "diagnostico": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "indicaciones": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "motivo": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          },
+          "notas": {
+            "maxLength": 5000,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "citaId",
+          "diagnostico",
+          "motivo"
+        ],
+        "type": "object"
+      },
+      "ResumenHistoriaResponse": {
+        "properties": {
+          "atenciones": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "correcciones": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "ultimaAtencionEn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "ultimoDiagnostico": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Historia clínica y búsqueda CIE-10. Errores con estructura uniforme: codigo, mensaje, detalle y timestamp.",
+    "title": "Appointy Med: clinical-history-service",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/atenciones": {
+      "get": {
+        "operationId": "atenciones",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaEntradasResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Entradas que escribí, paginado (PROFESIONAL)",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/diagnosticos": {
+      "get": {
+        "operationId": "diagnosticos",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DiagnosticoResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Buscar diagnósticos CIE-10 en la API externa NLM (PROFESIONAL)",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/entradas": {
+      "post": {
+        "operationId": "registrar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarAtencionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntradaClinicaResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Registrar la atención de una cita (PROFESIONAL de la cita)",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/entradas/{id}/correcciones": {
+      "post": {
+        "operationId": "corregir",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorregirEntradaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntradaClinicaResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Corregir una entrada: crea una nueva que apunta a la anterior",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/entradas/{id}/versiones": {
+      "get": {
+        "operationId": "versiones",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EntradaClinicaResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "La entrada original de una atención y sus correcciones",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/historia/mia": {
+      "get": {
+        "operationId": "miHistoria",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EntradaClinicaResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Mi historia clínica (PACIENTE)",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/historia/mia/resumen": {
+      "get": {
+        "operationId": "miResumen",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenHistoriaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Resumen de mi historia (PACIENTE)",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/pacientes/{pacienteId}/historia": {
+      "get": {
+        "operationId": "historiaDePaciente",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EntradaClinicaResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Historia completa de un paciente (PROFESIONAL con relación)",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    },
+    "/api/v1/pacientes/{pacienteId}/resumen": {
+      "get": {
+        "operationId": "resumenDePaciente",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pacienteId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumenHistoriaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Resumen de la historia de un paciente (PROFESIONAL con relación)",
+        "tags": [
+          "Historia clínica"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Generated server url",
+      "url": "http://localhost:8084"
+    }
+  ]
+}

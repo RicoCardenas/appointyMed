@@ -1,0 +1,377 @@
+{
+  "components": {
+    "schemas": {
+      "Estadisticas": {
+        "properties": {
+          "cancelaciones": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "canceladas": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "confirmaciones": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "enviadas": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "fallidas": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "pendientes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "recordatorios": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reprogramaciones": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "NotificacionResponse": {
+        "properties": {
+          "asunto": {
+            "type": "string"
+          },
+          "citaId": {
+            "type": "string"
+          },
+          "creadoEn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "destinatario": {
+            "type": "string"
+          },
+          "enviadaEn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "estado": {
+            "enum": [
+              "PENDIENTE",
+              "ENVIADA",
+              "FALLIDA",
+              "CANCELADA"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "intentos": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "programadaPara": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "tipo": {
+            "enum": [
+              "CONFIRMACION",
+              "REPROGRAMACION",
+              "CANCELACION",
+              "RECORDATORIO"
+            ],
+            "type": "string"
+          },
+          "ultimoError": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "PaginaResponse": {
+        "properties": {
+          "contenido": {
+            "items": {
+              "$ref": "#/components/schemas/NotificacionResponse"
+            },
+            "type": "array"
+          },
+          "pagina": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tamano": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "totalElementos": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPaginas": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ResultadoLote": {
+        "properties": {
+          "enviadas": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "fallidas": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "procesadas": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Correos de citas, recordatorios y reintentos. Errores con estructura uniforme: codigo, mensaje, detalle y timestamp.",
+    "title": "Appointy Med: notification-service",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/notificaciones": {
+      "get": {
+        "operationId": "listar",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "estado",
+            "required": false,
+            "schema": {
+              "enum": [
+                "PENDIENTE",
+                "ENVIADA",
+                "FALLIDA",
+                "CANCELADA"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tipo",
+            "required": false,
+            "schema": {
+              "enum": [
+                "CONFIRMACION",
+                "REPROGRAMACION",
+                "CANCELACION",
+                "RECORDATORIO"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "citaId",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Listar notificaciones, paginado y con filtros (ADMINISTRATIVO)",
+        "tags": [
+          "Notificaciones"
+        ]
+      }
+    },
+    "/api/v1/notificaciones/cita/{citaId}": {
+      "get": {
+        "operationId": "deCita",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "citaId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NotificacionResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Notificaciones de una cita (ADMINISTRATIVO)",
+        "tags": [
+          "Notificaciones"
+        ]
+      }
+    },
+    "/api/v1/notificaciones/estadisticas": {
+      "get": {
+        "operationId": "estadisticas",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Estadisticas"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Conteo por estado y tipo (ADMINISTRATIVO)",
+        "tags": [
+          "Notificaciones"
+        ]
+      }
+    },
+    "/api/v1/notificaciones/recordatorios/ejecutar": {
+      "post": {
+        "operationId": "ejecutarRecordatorios",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoLote"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Ejecutar ahora el envío de recordatorios vencidos (ADMINISTRATIVO)",
+        "tags": [
+          "Notificaciones"
+        ]
+      }
+    },
+    "/api/v1/notificaciones/reintentos/ejecutar": {
+      "post": {
+        "operationId": "ejecutarReintentos",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoLote"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Ejecutar ahora el reintento de fallidas (ADMINISTRATIVO)",
+        "tags": [
+          "Notificaciones"
+        ]
+      }
+    },
+    "/api/v1/notificaciones/{id}/reenviar": {
+      "post": {
+        "operationId": "reenviar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificacionResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Reenviar una notificación pendiente o fallida (ADMINISTRATIVO)",
+        "tags": [
+          "Notificaciones"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Generated server url",
+      "url": "http://localhost:8085"
+    }
+  ]
+}

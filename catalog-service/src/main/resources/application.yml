@@ -43,6 +43,13 @@ app:
     read-timeout-ms: ${FESTIVOS_READ_TIMEOUT_MS:3000}
     ttl-horas: ${FESTIVOS_TTL_HORAS:24}
 
+springdoc:
+  api-docs:
+    enabled: ${OPENAPI_ENABLED:true}
+  swagger-ui:
+    enabled: ${OPENAPI_ENABLED:true}
+  paths-to-match: /api/**
+
 logging:
   pattern:
     level: "%5p [%X{correlationId:-}]"

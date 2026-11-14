@@ -1,5 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.catalog.domain.usecase.BloquearFranjasUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.BloqueoRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.BloqueoResponse;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /** CU-16: 409 con la lista de citas afectadas si hay citas confirmadas; 503 si appointment no responde (no se guarda nada). */
+@Tag(name = "Bloqueos")
 @RestController
 @RequestMapping("/api/v1/bloqueos")
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
@@ -26,6 +29,7 @@ public class BloqueoController {
         this.bloquear = bloquear;
     }
 
+    @Operation(summary = "Bloquear un rango de fechas de un profesional (409 si hay citas confirmadas)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BloqueoResponse bloquear(@AuthenticationPrincipal UsuarioAutenticado actor, @Valid @RequestBody BloqueoRequest s) {

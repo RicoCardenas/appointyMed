@@ -1,5 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.catalog.domain.usecase.ConsultarFestivosUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.FestivoResponse;
 import java.util.Arrays;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Festivos del pais segun la API externa (RA-06). Cualquier usuario autenticado. */
+@Tag(name = "Festivos (API externa)")
 @RestController
 @RequestMapping("/api/v1/festivos")
 public class FestivoController {
@@ -20,6 +23,7 @@ public class FestivoController {
         this.consultar = consultar;
     }
 
+    @Operation(summary = "Festivos del año según la API externa Nager.Date (503 si no responde)")
     @GetMapping
     public List<FestivoResponse> festivos(@RequestParam int anio) {
         return Arrays.stream(consultar.ejecutar(anio)).map(FestivoResponse::de).toList();

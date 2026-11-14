@@ -1,5 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.catalog.domain.exception.NoEncontradoException;
 import com.appointy.catalog.domain.model.ParametroServicio;
 import com.appointy.catalog.domain.model.Profesional;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Consultas de servicio a servicio, protegidas con la llave de API (RNF-04): no las usan los usuarios finales. */
+@Tag(name = "Interno (servicio a servicio)")
 @RestController
 @RequestMapping("/internal")
 public class InternalController {
@@ -33,12 +36,14 @@ public class InternalController {
         this.buscarPorUsuario = buscarPorUsuario;
     }
 
+    @Operation(summary = "Validar asociación profesional-especialidad-centro (appointment)")
     @GetMapping("/profesionales/{id}/asociacion")
     public AsociacionResponse asociacion(@PathVariable UUID id, @RequestParam UUID especialidadId, @RequestParam UUID centroId) {
         return AsociacionResponse.de(validarAsociacion.ejecutar(id.toString(), especialidadId.toString(), centroId.toString()));
     }
 
     /** 404 si la cuenta no tiene perfil de profesional. */
+    @Operation(summary = "Profesional de una cuenta (appointment, clinical)")
     @GetMapping("/profesionales/por-usuario/{usuarioId}")
     public ProfesionalInternoResponse porUsuario(@PathVariable UUID usuarioId) {
         Profesional p = buscarPorUsuario.ejecutar(usuarioId.toString());
@@ -48,6 +53,7 @@ public class InternalController {
         return ProfesionalInternoResponse.de(p);
     }
 
+    @Operation(summary = "Parámetros del servicio (appointment)")
     @GetMapping("/parametros")
     public Map<String, String> parametros() {
         Map<String, String> valores = new LinkedHashMap<>();

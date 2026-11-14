@@ -1,5 +1,7 @@
 package com.appointy.catalog.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.catalog.domain.usecase.ActualizarEspecialidadUseCase;
 import com.appointy.catalog.domain.usecase.CrearEspecialidadUseCase;
 import com.appointy.catalog.domain.usecase.DesactivarEspecialidadUseCase;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Especialidades")
 @RestController
 @RequestMapping("/api/v1/especialidades")
 public class EspecialidadController {
@@ -52,6 +55,7 @@ public class EspecialidadController {
     }
 
     /** CU-08. Solo un administrativo puede pedir tambien las inactivas. */
+    @Operation(summary = "Listar especialidades")
     @GetMapping
     public List<EspecialidadResponse> listar(
             @AuthenticationPrincipal UsuarioAutenticado usuario, @RequestParam(defaultValue = "false") boolean incluirInactivas) {
@@ -62,11 +66,13 @@ public class EspecialidadController {
     }
 
     /** CU-09. */
+    @Operation(summary = "Profesionales activos de una especialidad")
     @GetMapping("/{id}/profesionales")
     public List<ProfesionalResponse> profesionales(@PathVariable UUID id) {
         return Arrays.stream(listarProfesionales.ejecutar(id.toString())).map(ProfesionalResponse::de).toList();
     }
 
+    @Operation(summary = "Crear una especialidad")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
@@ -74,6 +80,7 @@ public class EspecialidadController {
         return EspecialidadResponse.de(crear.ejecutar(new CrearEspecialidadUseCase.Comando(solicitud.nombre(), solicitud.descripcion())));
     }
 
+    @Operation(summary = "Actualizar una especialidad")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public EspecialidadResponse actualizar(@PathVariable UUID id, @Valid @RequestBody EspecialidadRequest solicitud) {
@@ -82,6 +89,7 @@ public class EspecialidadController {
     }
 
     /** Borrado logico: la especialidad queda inactiva, no se elimina. */
+    @Operation(summary = "Desactivar una especialidad (borrado lógico)")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMINISTRATIVO')")

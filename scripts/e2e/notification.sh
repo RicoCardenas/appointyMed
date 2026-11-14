@@ -132,6 +132,12 @@ req $NOT POST /notificaciones/reintentos/ejecutar "$ADMIN"; chk "con 3 intentos 
 ID2=$(SQLN "select id from notificacion where cita_id='$CITA2' and tipo='CONFIRMACION'")
 req $NOT POST "/notificaciones/$ID2/reenviar" "$ADMIN"; chk "el administrativo la reenvia a mano" 200 estado=ENVIADA
 
+echo "== Correlacion (RNF-17)"
+CORR=e2e-corr-0005
+CODE=$(curl -s -m 20 -o /dev/null -w '%{http_code}' -X POST $INT/notificaciones -H 'Content-Type: application/json' -H "$K" -H "X-Correlation-Id: $CORR" -d "$(SOL CANCELADA $CITA2 $F1 10:00)"); igual "notificar con un id de correlacion" "$CODE" 201
+igual "el id aparece en el log de notification" "$([ "$(grep -c "\[$CORR\]" "$LOGN")" -ge 1 ] && echo si || echo no)" si
+igual "la respuesta devuelve el mismo id" "$(curl -s -m 5 -D - -o /dev/null -H "X-Correlation-Id: $CORR" $NOT/notificaciones | tr -d '\r' | grep -ci "x-correlation-id: $CORR")" 1
+
 echo "== Privacidad (RNF-05)"
 igual "el log no contiene correos" "$(grep -c 'e2e-pac@test.local' "$LOGN")" 0
 igual "el log no contiene el cuerpo" "$(grep -c 'Codigo de la cita' "$LOGN")" 0

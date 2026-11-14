@@ -1,5 +1,7 @@
 package com.appointy.appointment.infrastructure.entry_points;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.appointment.domain.usecase.ConsultarDisponibilidadUseCase;
 import com.appointy.appointment.infrastructure.entry_points.dto.FranjaResponse;
 import java.time.LocalDate;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /** CU-17: cualquier usuario autenticado consulta las franjas DISPONIBLES y futuras. */
+@Tag(name = "Disponibilidad")
 @RestController
 @RequestMapping("/api/v1/disponibilidad")
 public class DisponibilidadController {
@@ -22,6 +25,7 @@ public class DisponibilidadController {
         this.consultar = consultar;
     }
 
+    @Operation(summary = "Franjas disponibles de un profesional en un centro y fecha")
     @GetMapping
     public List<FranjaResponse> disponibilidad(@RequestParam UUID profesionalId, @RequestParam UUID centroId, @RequestParam LocalDate fecha) {
         return Arrays.stream(consultar.ejecutar(profesionalId.toString(), centroId.toString(), fecha.toString())).map(FranjaResponse::de).toList();

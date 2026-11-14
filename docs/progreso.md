@@ -2,9 +2,9 @@
 
 Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-14.
 
-## Siguiente paso: Fase 6, cierre (OpenAPI, Postman, correlación) y luego Fase 7 (interfaz)
+## Siguiente paso: Fase 7, interfaz (`frontend/`)
 
-Fase 6: documentar con OpenAPI/Swagger (`springdoc`, skill `spring-boot-openapi-documentation`), colección de Postman con las rutas de `/api/v1`, y comprobar que `X-Correlation-Id` viaja entre servicios (RNF-17). Después la Fase 7: stack del front por decidir (propuesta: React + Vite + TypeScript) y `/impeccable init` para crear `PRODUCT.md` y `DESIGN.md`. Los endpoints nuevos de la 6b ya traen la paginación que el front necesita.
+Decidir el stack (propuesta: React + Vite + TypeScript, un único origen o proxy hacia los 5 puertos), correr `/impeccable init` para crear `PRODUCT.md` y `DESIGN.md`, y usar `apple-design` para movimiento y tipografía. Las rutas y los esquemas están en `docs/openapi/*.json` (se puede generar el cliente tipado desde ahí) y la colección en `docs/postman/`. Antes habría que resolver CORS o el proxy: hoy ningún servicio habilita CORS.
 
 - Pendiente del equipo: `JWT_SECRET`, `INTERNAL_API_KEY` y `NOTIFICATION_DB_PASSWORD` en `.env`; opcional `MAIL_ENABLED=true` con `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` para correo real.
 - Si Maven falla con "Unresolved compilation problems" o "cannot access ...": la extensión Java de VS Code compila en `target/` a la vez. Correr Maven sobre una copia (ver `CLAUDE.md`, "Comandos").
@@ -19,7 +19,7 @@ Fase 6: documentar con OpenAPI/Swagger (`springdoc`, skill `spring-boot-openapi-
 | 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Hecha (ver abajo) |
 | 4 | clinical-history-service: CU-28 a CU-32 | Hecha (ver abajo) |
 | 5 | notification-service: CU-33 a CU-35 | Hecha y verificada (ver abajo) |
-| 6 | Cierre: OpenAPI, colección Postman, correlación de logs | Pendiente |
+| 6 | Cierre: OpenAPI, colección Postman, correlación de logs | Hecha y verificada (ver abajo) |
 | 6b | Requisitos RA-03 a RA-06: 5 APIs no CRUD y GET all paginado por servicio, 2 APIs externas, cobertura 90 % | Hecha y verificada (ver abajo) |
 | 7 | Interfaz (proyecto aparte en `frontend/`), con las skills `impeccable` y `apple-design` | Pendiente, por decidir stack |
 | 8 | Despliegue en AWS | Pendiente, por decidir alcance y presupuesto |
@@ -60,6 +60,19 @@ APIs por servicio (las que no son CRUD; hay más de 5 en cada uno):
 - Defectos reales encontrados y corregidos: el CIE-10 devolvía 0 resultados sin `sf=code,name` (lo vio la prueba con la API real); el historial por cita salía en orden inestable; un test de ruta esperaba 405 donde ahora el administrativo tiene `GET /admin/usuarios`.
 - Las pruebas de catalog y appointment fijan `FESTIVOS_API_URL` a un puerto cerrado para que los conteos de franjas no dependan del calendario real; con la API real los festivos recortan franjas (se vio: 36 esperadas, 28 reales).
 - No probado: carga, dos instancias a la vez, SMTP real.
+
+## Fase 6: cierre
+
+- OpenAPI (RNF-11): `springdoc` en los 5 servicios. `/v3/api-docs` y `/swagger-ui/index.html` públicos (la especificación no abre la API: las rutas siguen pidiendo JWT); solo se documenta `/api/v1`, no `/internal`. Esquema `bearer` JWT global; `register` y `login` sin candado. Cada controlador tiene `@Tag` y cada ruta `@Operation(summary)` con su rol. `OPENAPI_ENABLED=false` lo apaga (por ejemplo en producción).
+- Especificaciones en `docs/openapi/<servicio>.json` y colección en `docs/postman/` (62 peticiones, una carpeta por servicio y por etiqueta, entorno con los 5 puertos, `{{token}}` que guarda la petición de login y un `X-Correlation-Id` nuevo en cada llamada). Se regeneran con `bash scripts/postman/generar.sh` (levanta los servicios, descarga las especificaciones y corre `generar_coleccion.py`); no siembra el administrador de `.env`.
+- Correlación (RNF-17): el id del cliente (o uno generado) va en la respuesta y en cada línea de log; los clientes REST entre servicios lo reenvían en `X-Correlation-Id` (probado con servidores simulados en cada adaptador). Real: `notification.sh` comprueba el id en el log y en la respuesta.
+
+## Validado en la Fase 6
+
+- `mvn verify`: BUILD SUCCESS, 0 fallos y cobertura sobre 90 % en los 5 módulos (la configuración de OpenAPI está excluida como el resto de `infrastructure/config`).
+- `auth.sh` 84 comprobaciones correctas (incluye OpenAPI público, sin `/internal`, esquema bearer, Swagger UI, y que publicar la especificación no abre la API) y `notification.sh` 49, ambas contra PostgreSQL.
+- Incidente corregido: la primera versión de `generar.sh` arrancó auth con `ADMIN_EMAIL` de `.env` y sembró ese administrador en la base real; se borró y el script ya lo anula.
+- No probado: importar la colección en Postman (se comprobó su estructura, no la aplicación), la correlación de punta a punta a través de los 3 saltos con servicios reales, y CORS.
 
 ## Validado en la Fase 0
 

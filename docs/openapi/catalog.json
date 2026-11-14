@@ -1,0 +1,1320 @@
+{
+  "components": {
+    "schemas": {
+      "ActualizarProfesionalRequest": {
+        "properties": {
+          "apellidos": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nombres": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "registroMedico": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9-]{3,30}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "apellidos",
+          "nombres",
+          "registroMedico"
+        ],
+        "type": "object"
+      },
+      "BloqueoRequest": {
+        "properties": {
+          "centroId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "fechaFin": {
+            "format": "date",
+            "type": "string"
+          },
+          "fechaInicio": {
+            "format": "date",
+            "type": "string"
+          },
+          "motivo": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          },
+          "profesionalId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "centroId",
+          "fechaFin",
+          "fechaInicio",
+          "motivo",
+          "profesionalId"
+        ],
+        "type": "object"
+      },
+      "BloqueoResponse": {
+        "properties": {
+          "centroId": {
+            "type": "string"
+          },
+          "creadoEn": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "creadoPor": {
+            "type": "string"
+          },
+          "fechaFin": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "motivo": {
+            "type": "string"
+          },
+          "profesionalId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CentroRequest": {
+        "properties": {
+          "ciudad": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "direccion": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nombre": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "telefono": {
+            "pattern": "^[0-9+() -]{7,20}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ciudad",
+          "direccion",
+          "nombre"
+        ],
+        "type": "object"
+      },
+      "CentroResponse": {
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          },
+          "ciudad": {
+            "type": "string"
+          },
+          "direccion": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "CrearProfesionalRequest": {
+        "properties": {
+          "apellidos": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nombres": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          },
+          "registroMedico": {
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9-]{3,30}$",
+            "type": "string"
+          },
+          "usuarioId": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "apellidos",
+          "nombres",
+          "registroMedico",
+          "usuarioId"
+        ],
+        "type": "object"
+      },
+      "DefinirHorarioRequest": {
+        "properties": {
+          "centroId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "diaSemana": {
+            "format": "int32",
+            "maximum": 7,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "duracionFranjaMin": {
+            "format": "int32",
+            "maximum": 240,
+            "minimum": 5,
+            "type": "integer"
+          },
+          "horaFin": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "type": "string"
+          },
+          "horaInicio": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "centroId",
+          "horaFin",
+          "horaInicio"
+        ],
+        "type": "object"
+      },
+      "DetalleProfesionalResponse": {
+        "properties": {
+          "centroIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "especialidadIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "profesional": {
+            "$ref": "#/components/schemas/ProfesionalResponse"
+          }
+        },
+        "type": "object"
+      },
+      "EspecialidadRequest": {
+        "properties": {
+          "descripcion": {
+            "maxLength": 300,
+            "minLength": 0,
+            "type": "string"
+          },
+          "nombre": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string"
+          }
+        },
+        "required": [
+          "nombre"
+        ],
+        "type": "object"
+      },
+      "EspecialidadResponse": {
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "FestivoResponse": {
+        "properties": {
+          "fecha": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "HorarioResponse": {
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          },
+          "centroId": {
+            "type": "string"
+          },
+          "diaSemana": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "duracionFranjaMin": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "horaFin": {
+            "type": "string"
+          },
+          "horaInicio": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "profesionalId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "IdsRequest": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 0,
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "type": "object"
+      },
+      "ModificarHorarioRequest": {
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          },
+          "centroId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "diaSemana": {
+            "format": "int32",
+            "maximum": 7,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "duracionFranjaMin": {
+            "format": "int32",
+            "maximum": 240,
+            "minimum": 5,
+            "type": "integer"
+          },
+          "horaFin": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "type": "string"
+          },
+          "horaInicio": {
+            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "activo",
+          "centroId",
+          "horaFin",
+          "horaInicio"
+        ],
+        "type": "object"
+      },
+      "PaginaProfesionalesResponse": {
+        "properties": {
+          "contenido": {
+            "items": {
+              "$ref": "#/components/schemas/ProfesionalResponse"
+            },
+            "type": "array"
+          },
+          "pagina": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "tamano": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "totalElementos": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totalPaginas": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "ParametroResponse": {
+        "properties": {
+          "clave": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "valor": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ParametrosRequest": {
+        "properties": {
+          "parametros": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "minProperties": 1,
+            "type": "object"
+          }
+        },
+        "required": [
+          "parametros"
+        ],
+        "type": "object"
+      },
+      "ProfesionalResponse": {
+        "properties": {
+          "activo": {
+            "type": "boolean"
+          },
+          "apellidos": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "nombres": {
+            "type": "string"
+          },
+          "registroMedico": {
+            "type": "string"
+          },
+          "usuarioId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ResultadoHorarioResponse": {
+        "properties": {
+          "franjasCreadas": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "franjasExistentes": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "franjasGeneradas": {
+            "type": "boolean"
+          },
+          "horario": {
+            "$ref": "#/components/schemas/HorarioResponse"
+          },
+          "mensaje": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Profesionales, especialidades, centros, horarios, parámetros y festivos. Errores con estructura uniforme: codigo, mensaje, detalle y timestamp.",
+    "title": "Appointy Med: catalog-service",
+    "version": "v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/bloqueos": {
+      "post": {
+        "operationId": "bloquear",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BloqueoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BloqueoResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Bloquear un rango de fechas de un profesional (409 si hay citas confirmadas)",
+        "tags": [
+          "Bloqueos"
+        ]
+      }
+    },
+    "/api/v1/centros": {
+      "post": {
+        "operationId": "crear_2",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CentroRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CentroResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Crear un centro",
+        "tags": [
+          "Centros"
+        ]
+      }
+    },
+    "/api/v1/centros/{id}": {
+      "delete": {
+        "operationId": "desactivar_2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "summary": "Desactivar un centro (borrado lógico)",
+        "tags": [
+          "Centros"
+        ]
+      },
+      "put": {
+        "operationId": "actualizar_2",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CentroRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CentroResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Actualizar un centro",
+        "tags": [
+          "Centros"
+        ]
+      }
+    },
+    "/api/v1/especialidades": {
+      "get": {
+        "operationId": "listar_1",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "incluirInactivas",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EspecialidadResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Listar especialidades",
+        "tags": [
+          "Especialidades"
+        ]
+      },
+      "post": {
+        "operationId": "crear_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspecialidadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspecialidadResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Crear una especialidad",
+        "tags": [
+          "Especialidades"
+        ]
+      }
+    },
+    "/api/v1/especialidades/{id}": {
+      "delete": {
+        "operationId": "desactivar_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "summary": "Desactivar una especialidad (borrado lógico)",
+        "tags": [
+          "Especialidades"
+        ]
+      },
+      "put": {
+        "operationId": "actualizar_1",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EspecialidadRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EspecialidadResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Actualizar una especialidad",
+        "tags": [
+          "Especialidades"
+        ]
+      }
+    },
+    "/api/v1/especialidades/{id}/profesionales": {
+      "get": {
+        "operationId": "profesionales",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProfesionalResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Profesionales activos de una especialidad",
+        "tags": [
+          "Especialidades"
+        ]
+      }
+    },
+    "/api/v1/festivos": {
+      "get": {
+        "operationId": "festivos",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "anio",
+            "required": true,
+            "schema": {
+              "format": "int32",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FestivoResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Festivos del año según la API externa Nager.Date (503 si no responde)",
+        "tags": [
+          "Festivos (API externa)"
+        ]
+      }
+    },
+    "/api/v1/horarios/{id}": {
+      "put": {
+        "operationId": "modificar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModificarHorarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoHorarioResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Modificar un horario y regenerar sus franjas",
+        "tags": [
+          "Horarios"
+        ]
+      }
+    },
+    "/api/v1/horarios/{id}/franjas": {
+      "post": {
+        "operationId": "generarFranjas",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoHorarioResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Reintentar la generación de franjas de un horario (idempotente)",
+        "tags": [
+          "Horarios"
+        ]
+      }
+    },
+    "/api/v1/parametros": {
+      "get": {
+        "operationId": "consultar_1",
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ParametroResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Consultar los parámetros del servicio",
+        "tags": [
+          "Parámetros"
+        ]
+      },
+      "put": {
+        "operationId": "configurar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParametrosRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ParametroResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Configurar parámetros del servicio",
+        "tags": [
+          "Parámetros"
+        ]
+      }
+    },
+    "/api/v1/profesionales": {
+      "get": {
+        "operationId": "listar",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "texto",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "activo",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginaProfesionalesResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Listar profesionales, paginado, con búsqueda por texto",
+        "tags": [
+          "Profesionales"
+        ]
+      },
+      "post": {
+        "operationId": "crear",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearProfesionalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfesionalResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Crear un profesional",
+        "tags": [
+          "Profesionales"
+        ]
+      }
+    },
+    "/api/v1/profesionales/{id}": {
+      "delete": {
+        "operationId": "desactivar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "summary": "Desactivar un profesional (borrado lógico)",
+        "tags": [
+          "Profesionales"
+        ]
+      },
+      "get": {
+        "operationId": "consultar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleProfesionalResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Consultar un profesional con sus especialidades y centros",
+        "tags": [
+          "Profesionales"
+        ]
+      },
+      "put": {
+        "operationId": "actualizar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarProfesionalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfesionalResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Actualizar un profesional",
+        "tags": [
+          "Profesionales"
+        ]
+      }
+    },
+    "/api/v1/profesionales/{id}/centros": {
+      "get": {
+        "operationId": "centros",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CentroResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Centros activos donde atiende un profesional",
+        "tags": [
+          "Profesionales"
+        ]
+      },
+      "put": {
+        "operationId": "asociarCentros",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleProfesionalResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Reemplazar los centros de un profesional",
+        "tags": [
+          "Profesionales"
+        ]
+      }
+    },
+    "/api/v1/profesionales/{id}/especialidades": {
+      "put": {
+        "operationId": "asociarEspecialidades",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetalleProfesionalResponse"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Reemplazar las especialidades de un profesional",
+        "tags": [
+          "Profesionales"
+        ]
+      }
+    },
+    "/api/v1/profesionales/{id}/horarios": {
+      "get": {
+        "operationId": "horarios",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HorarioResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Horarios de un profesional",
+        "tags": [
+          "Profesionales"
+        ]
+      },
+      "post": {
+        "operationId": "definirHorario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DefinirHorarioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultadoHorarioResponse"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "summary": "Definir un horario semanal y generar sus franjas",
+        "tags": [
+          "Profesionales"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "Generated server url",
+      "url": "http://localhost:8082"
+    }
+  ]
+}
