@@ -276,3 +276,17 @@ usuario 1:1 paciente_perfil; profesional N:M especialidad; profesional N:M centr
 2. Borrado lógico: `activo` en catálogo y usuarios.
 3. Dato desnormalizado opcional: profesional_nombre en cita.
 4. MODIFICADA: tratarla como cambio de franja y no como estado; se elimina del CHECK y queda solo en historial_cita (recomendado por el docente).
+
+## 11. Requisitos adicionales del docente (segunda entrega, 2026-11-14)
+
+Prevalecen sobre el RNF-09 y sobre las partes anteriores que los contradigan.
+
+| Código | Requisito |
+|---|---|
+| RA-01 | Mínimo 3 microservicios. El de notificaciones cuenta dentro de ese mínimo. El proyecto tiene 5. |
+| RA-02 | Una sola base de datos para todo el proyecto (la instancia `appointy` con un schema por servicio ya lo cumple). |
+| RA-03 | Cada microservicio expone al menos 5 APIs distintas de un CRUD (operaciones de negocio, consultas o reportes). |
+| RA-04 | Cada microservicio expone al menos un "GET all" con paginación. |
+| RA-05 | Pruebas unitarias con cobertura mínima del 90 % (reemplaza el 70 % del RNF-09). |
+| RA-06 | Mínimo 2 APIs externas, relacionadas con el dominio del proyecto. Notificaciones (correo) no cuenta. El docente descartó la del valor del dólar. |
+| RA-07 | Se debe construir el front de la aplicación. |

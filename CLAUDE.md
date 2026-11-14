@@ -45,9 +45,12 @@ Un caso de uso por clase, gateways pequeños, reglas de negocio componibles. Dom
 - Informe de cada tarea, máximo 5 líneas: cambio, prueba y resultado, riesgo.
 - Se trabaja directamente en `main`. Un commit al cerrar cada fase (autorizado por el usuario); `push` solo si se pide. Sin secretos en archivos. No leas ni copies `.env` ni `.aws`.
 
+## Requisitos adicionales del docente
+Ver `docs/especificacion.md` sección 11: 5 APIs no CRUD y un GET all paginado por servicio, cobertura mínima 90 %, 2 APIs externas de dominio (no notificaciones ni dólar), una sola base de datos y front de la aplicación. Plan en `docs/progreso.md`.
+
 ## Skills (`.claude/skills/`, se añaden por fase; léelas solo cuando la tarea las toque)
 - Fases 0 a 6: clean-architecture (la estructura de la especificación prevalece), spring-boot-security-jwt, spring-boot-event-driven-patterns, spring-boot-test-patterns, spring-boot-rest-api-standards, spring-data-jpa, unit-test-service-layer, reserva-concurrente, flyway-schemas.
-- Fase 6: spring-boot-openapi-documentation. Fase 7 (interfaz): impeccable, emil-design-eng, break-ui, review-animations. Fase 8 (AWS): skills de AWS; no ejecutes acciones sobre la cuenta sin confirmación expresa y con costo estimado.
+- Fase 6: spring-boot-openapi-documentation. Fase 7 (interfaz, ya instaladas): impeccable, apple-design (más emil-design-eng, break-ui y review-animations si se agregan). Fase 8 (AWS): skills de AWS; no ejecutes acciones sobre la cuenta sin confirmación expresa y con costo estimado.
 - Los hooks de terceros permanecen desactivados. Origen y licencias en `.claude/skills/NOTICE.md`.
 
 ## Comandos
