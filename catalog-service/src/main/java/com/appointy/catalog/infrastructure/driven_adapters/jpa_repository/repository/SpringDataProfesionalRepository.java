@@ -4,11 +4,12 @@ import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.entity
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface SpringDataProfesionalRepository extends JpaRepository<ProfesionalEntity, UUID> {
+public interface SpringDataProfesionalRepository extends JpaRepository<ProfesionalEntity, UUID>, JpaSpecificationExecutor<ProfesionalEntity> {
 
     ProfesionalEntity findByUsuarioId(UUID usuarioId);
 

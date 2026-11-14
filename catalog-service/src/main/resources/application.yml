@@ -36,6 +36,13 @@ app:
     connect-timeout-ms: ${APPOINTMENT_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${APPOINTMENT_READ_TIMEOUT_MS:5000}
 
+  festivos:                          # API externa de dias festivos (Nager.Date, sin llave); opcional: si falla se generan todas las franjas
+    base-url: ${FESTIVOS_API_URL:https://date.nager.at}
+    pais: ${FESTIVOS_PAIS:CO}
+    connect-timeout-ms: ${FESTIVOS_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${FESTIVOS_READ_TIMEOUT_MS:3000}
+    ttl-horas: ${FESTIVOS_TTL_HORAS:24}
+
 logging:
   pattern:
     level: "%5p [%X{correlationId:-}]"

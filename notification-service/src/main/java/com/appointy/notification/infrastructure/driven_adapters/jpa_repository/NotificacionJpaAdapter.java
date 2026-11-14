@@ -93,7 +93,7 @@ public class NotificacionJpaAdapter implements NotificacionRepositoryGateway {
     @Override
     @Transactional(readOnly = true)
     public Notificacion[] listarPorCita(String citaId) {
-        return aArreglo(repositorio.findByCitaIdOrderByCreadoEnAscIdAsc(UUID.fromString(citaId)));
+        return aArreglo(repositorio.findByCitaIdOrderByCreadoEnAscTipoAscIdAsc(UUID.fromString(citaId)));
     }
 
     @Override

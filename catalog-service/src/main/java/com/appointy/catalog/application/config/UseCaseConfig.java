@@ -23,7 +23,12 @@ import com.appointy.catalog.application.usecase.ListarEspecialidadesUseCaseImpl;
 import com.appointy.catalog.application.usecase.ListarHorariosUseCaseImpl;
 import com.appointy.catalog.application.usecase.ListarProfesionalesPorEspecialidadUseCaseImpl;
 import com.appointy.catalog.application.usecase.ModificarHorarioUseCaseImpl;
+import com.appointy.catalog.application.usecase.ConsultarFestivosUseCaseImpl;
+import com.appointy.catalog.application.usecase.ListarProfesionalesUseCaseImpl;
 import com.appointy.catalog.application.usecase.PublicadorDeFranjas;
+import com.appointy.catalog.domain.gateway.FestivosClientGateway;
+import com.appointy.catalog.domain.usecase.ConsultarFestivosUseCase;
+import com.appointy.catalog.domain.usecase.ListarProfesionalesUseCase;
 import com.appointy.catalog.application.usecase.ValidarAsociacionUseCaseImpl;
 import com.appointy.catalog.domain.usecase.ActualizarCentroUseCase;
 import com.appointy.catalog.domain.usecase.ActualizarEspecialidadUseCase;
@@ -142,8 +147,8 @@ public class UseCaseConfig {
     }
 
     @Bean
-    PublicadorDeFranjas publicadorDeFranjas(ParametroRepositoryGateway parametros, AppointmentClientGateway appointment, Clock reloj) {
-        return new PublicadorDeFranjas(parametros, appointment, reloj);
+    PublicadorDeFranjas publicadorDeFranjas(ParametroRepositoryGateway parametros, AppointmentClientGateway appointment, FestivosClientGateway festivos, Clock reloj) {
+        return new PublicadorDeFranjas(parametros, appointment, festivos, reloj);
     }
 
     @Bean
@@ -204,5 +209,15 @@ public class UseCaseConfig {
     @Bean
     BuscarProfesionalPorUsuarioUseCase buscarProfesionalPorUsuario(ProfesionalRepositoryGateway profesionales) {
         return new BuscarProfesionalPorUsuarioUseCaseImpl(profesionales);
+    }
+
+    @Bean
+    ListarProfesionalesUseCase listarProfesionales(ProfesionalRepositoryGateway profesionales) {
+        return new ListarProfesionalesUseCaseImpl(profesionales);
+    }
+
+    @Bean
+    ConsultarFestivosUseCase consultarFestivos(FestivosClientGateway festivos) {
+        return new ConsultarFestivosUseCaseImpl(festivos);
     }
 }

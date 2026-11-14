@@ -112,7 +112,7 @@ req $NOT GET "/notificaciones?estado=RARA" "$ADMIN"; chk "estado desconocido" 40
 req $NOT GET "/notificaciones?citaId=xx" "$ADMIN"; chk "citaId con formato invalido" 400 codigo=PARAMETRO_INVALIDO
 igual "el correo sale enmascarado" "$(echo "$BODY" >/dev/null; curl -s -m 5 "$NOT/notificaciones?size=1" -H "Authorization: Bearer $ADMIN" | json contenido.0.destinatario)" "e***@test.local"
 req $NOT GET /notificaciones/estadisticas "$ADMIN"; chk "estadisticas" 200 enviadas=3 canceladas=2 pendientes=0 recordatorios=2
-req $NOT GET "/notificaciones/cita/$CITA" "$ADMIN"; chk "historial por cita" 200 0.tipo=CONFIRMACION
+req $NOT GET "/notificaciones/cita/$CITA" "$ADMIN"; chk "historial por cita" 200 0.tipo=CONFIRMACION 1.tipo=RECORDATORIO
 req $NOT POST "/notificaciones/$ID1/reenviar" "$ADMIN"; chk "reenviar una ya enviada" 409 codigo=YA_ENVIADA
 req $NOT POST "/notificaciones/00000000-0000-0000-0000-000000000000/reenviar" "$ADMIN"; chk "reenviar inexistente" 404
 

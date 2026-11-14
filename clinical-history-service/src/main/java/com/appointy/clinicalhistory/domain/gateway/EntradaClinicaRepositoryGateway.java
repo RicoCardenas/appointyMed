@@ -1,6 +1,7 @@
 package com.appointy.clinicalhistory.domain.gateway;
 
 import com.appointy.clinicalhistory.domain.model.EntradaClinica;
+import com.appointy.clinicalhistory.domain.model.PaginaEntradas;
 
 /** Solo inserta y lee: no hay actualizacion ni borrado (RF-29). */
 public interface EntradaClinicaRepositoryGateway {
@@ -15,4 +16,7 @@ public interface EntradaClinicaRepositoryGateway {
 
     /** Hay una entrada original (no correccion) para esa cita. */
     boolean existeOriginalDeCita(String citaId);
+
+    /** Entradas escritas por el profesional, de la mas reciente a la mas antigua. {@code pagina} empieza en 0. */
+    PaginaEntradas listarDeProfesional(String profesionalId, int pagina, int tamano);
 }

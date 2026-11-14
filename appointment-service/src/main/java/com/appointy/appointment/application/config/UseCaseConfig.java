@@ -7,7 +7,9 @@ import com.appointy.appointment.application.usecase.ConsultarAgendaUseCaseImpl;
 import com.appointy.appointment.application.usecase.ConsultarCitaUseCaseImpl;
 import com.appointy.appointment.application.usecase.ConsultarDisponibilidadUseCaseImpl;
 import com.appointy.appointment.application.usecase.ConsultarHistorialCitaUseCaseImpl;
+import com.appointy.appointment.application.usecase.ConsultarEstadisticasCitasUseCaseImpl;
 import com.appointy.appointment.application.usecase.ConsultarMisCitasUseCaseImpl;
+import com.appointy.appointment.application.usecase.ListarCitasUseCaseImpl;
 import com.appointy.appointment.application.usecase.GenerarFranjasUseCaseImpl;
 import com.appointy.appointment.application.usecase.MarcarCitaAtendidaTransaccion;
 import com.appointy.appointment.application.usecase.MarcarCitaAtendidaUseCaseImpl;
@@ -24,7 +26,9 @@ import com.appointy.appointment.domain.usecase.ConsultarAgendaUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarCitaUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarDisponibilidadUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarHistorialCitaUseCase;
+import com.appointy.appointment.domain.usecase.ConsultarEstadisticasCitasUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarMisCitasUseCase;
+import com.appointy.appointment.domain.usecase.ListarCitasUseCase;
 import com.appointy.appointment.domain.usecase.GenerarFranjasUseCase;
 import com.appointy.appointment.domain.usecase.MarcarCitaAtendidaUseCase;
 import com.appointy.appointment.domain.usecase.ObtenerCitaServicioUseCase;
@@ -138,5 +142,15 @@ public class UseCaseConfig {
     @Bean
     ObtenerCitaServicioUseCase obtenerCitaServicio(CitaRepositoryGateway citas) {
         return new ObtenerCitaServicioUseCaseImpl(citas);
+    }
+
+    @Bean
+    ListarCitasUseCase listarCitas(CitaRepositoryGateway citas, FranjaRepositoryGateway franjas) {
+        return new ListarCitasUseCaseImpl(citas, franjas);
+    }
+
+    @Bean
+    ConsultarEstadisticasCitasUseCase consultarEstadisticasCitas(CitaRepositoryGateway citas) {
+        return new ConsultarEstadisticasCitasUseCaseImpl(citas);
     }
 }

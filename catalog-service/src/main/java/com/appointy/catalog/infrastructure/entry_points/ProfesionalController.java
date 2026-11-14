@@ -8,7 +8,10 @@ import com.appointy.catalog.domain.usecase.CrearProfesionalUseCase;
 import com.appointy.catalog.domain.usecase.DefinirHorarioUseCase;
 import com.appointy.catalog.domain.usecase.DesactivarProfesionalUseCase;
 import com.appointy.catalog.domain.usecase.ListarCentrosDeProfesionalUseCase;
+import com.appointy.catalog.domain.model.FiltroProfesionales;
 import com.appointy.catalog.domain.usecase.ListarHorariosUseCase;
+import com.appointy.catalog.domain.usecase.ListarProfesionalesUseCase;
+import com.appointy.catalog.infrastructure.entry_points.dto.PaginaProfesionalesResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.ActualizarProfesionalRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.CrearProfesionalRequest;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -47,6 +51,7 @@ public class ProfesionalController {
     private final AsociarCentrosUseCase asociarCentros;
     private final DefinirHorarioUseCase definirHorario;
     private final ListarHorariosUseCase listarHorarios;
+    private final ListarProfesionalesUseCase listar;
 
     public ProfesionalController(
             CrearProfesionalUseCase crear,
@@ -57,7 +62,8 @@ public class ProfesionalController {
             AsociarEspecialidadesUseCase asociarEspecialidades,
             AsociarCentrosUseCase asociarCentros,
             DefinirHorarioUseCase definirHorario,
-            ListarHorariosUseCase listarHorarios) {
+            ListarHorariosUseCase listarHorarios,
+            ListarProfesionalesUseCase listar) {
         this.crear = crear;
         this.actualizar = actualizar;
         this.desactivar = desactivar;
@@ -67,6 +73,14 @@ public class ProfesionalController {
         this.asociarCentros = asociarCentros;
         this.definirHorario = definirHorario;
         this.listarHorarios = listarHorarios;
+        this.listar = listar;
+    }
+
+    /** GET all paginado (RA-04): `texto` busca en nombres, apellidos y registro medico. */
+    @GetMapping
+    public PaginaProfesionalesResponse listar(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String texto, @RequestParam(required = false) Boolean activo) {
+        return PaginaProfesionalesResponse.de(listar.ejecutar(new FiltroProfesionales(texto, activo), page, size));
     }
 
     @PostMapping

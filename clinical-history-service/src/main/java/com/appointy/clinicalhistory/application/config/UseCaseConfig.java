@@ -1,6 +1,17 @@
 package com.appointy.clinicalhistory.application.config;
 
 import com.appointy.clinicalhistory.application.usecase.Auditoria;
+import com.appointy.clinicalhistory.application.usecase.BuscarDiagnosticosUseCaseImpl;
+import com.appointy.clinicalhistory.application.usecase.ConsultarMiResumenUseCaseImpl;
+import com.appointy.clinicalhistory.application.usecase.ConsultarResumenPacienteUseCaseImpl;
+import com.appointy.clinicalhistory.application.usecase.ListarAtencionesUseCaseImpl;
+import com.appointy.clinicalhistory.application.usecase.ListarVersionesEntradaUseCaseImpl;
+import com.appointy.clinicalhistory.domain.gateway.Cie10ClientGateway;
+import com.appointy.clinicalhistory.domain.usecase.BuscarDiagnosticosUseCase;
+import com.appointy.clinicalhistory.domain.usecase.ConsultarMiResumenUseCase;
+import com.appointy.clinicalhistory.domain.usecase.ConsultarResumenPacienteUseCase;
+import com.appointy.clinicalhistory.domain.usecase.ListarAtencionesUseCase;
+import com.appointy.clinicalhistory.domain.usecase.ListarVersionesEntradaUseCase;
 import com.appointy.clinicalhistory.application.usecase.ConsultarHistoriaPacienteUseCaseImpl;
 import com.appointy.clinicalhistory.application.usecase.ConsultarMiHistoriaUseCaseImpl;
 import com.appointy.clinicalhistory.application.usecase.CorregirEntradaUseCaseImpl;
@@ -53,5 +64,30 @@ public class UseCaseConfig {
     CorregirEntradaUseCase corregirEntrada(CatalogClientGateway catalog, EntradaClinicaRepositoryGateway entradas, GuardarEntradaTransaccion transaccion,
             Auditoria auditoria, Clock reloj) {
         return new CorregirEntradaUseCaseImpl(catalog, entradas, transaccion, auditoria, reloj);
+    }
+
+    @Bean
+    BuscarDiagnosticosUseCase buscarDiagnosticos(Cie10ClientGateway cie10) {
+        return new BuscarDiagnosticosUseCaseImpl(cie10);
+    }
+
+    @Bean
+    ConsultarResumenPacienteUseCase consultarResumenPaciente(ConsultarHistoriaPacienteUseCase historia) {
+        return new ConsultarResumenPacienteUseCaseImpl(historia);
+    }
+
+    @Bean
+    ConsultarMiResumenUseCase consultarMiResumen(ConsultarMiHistoriaUseCase historia) {
+        return new ConsultarMiResumenUseCaseImpl(historia);
+    }
+
+    @Bean
+    ListarVersionesEntradaUseCase listarVersionesEntrada(EntradaClinicaRepositoryGateway entradas, ConsultarHistoriaPacienteUseCase historia, Auditoria auditoria) {
+        return new ListarVersionesEntradaUseCaseImpl(entradas, historia, auditoria);
+    }
+
+    @Bean
+    ListarAtencionesUseCase listarAtenciones(CatalogClientGateway catalog, EntradaClinicaRepositoryGateway entradas, Auditoria auditoria) {
+        return new ListarAtencionesUseCaseImpl(catalog, entradas, auditoria);
     }
 }

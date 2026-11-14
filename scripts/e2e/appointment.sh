@@ -9,6 +9,7 @@ S=/tmp/appointy-e2e; mkdir -p $S
 set -a; source .env; set +a
 export JWT_SECRET="$(openssl rand -hex 32)"
 export INTERNAL_API_KEY="$(openssl rand -hex 16)"
+export FESTIVOS_API_URL=http://127.0.0.1:9   # catalog sin API de festivos: los conteos de franjas no dependen del calendario real
 export ADMIN_EMAIL="e2e-admin@test.local"
 export ADMIN_PASSWORD="Aa1$(openssl rand -hex 8)"
 CLAVE="Aa1$(openssl rand -hex 6)"
@@ -282,6 +283,17 @@ igual "no se guardo nada" "$(SQLP "select count(*) from cita where franja_id='$X
 req $APP GET "/citas/agenda" "$DOC1"; chk "la agenda tampoco puede resolver al profesional" 503
 req $APP GET "/citas/mias" "$PAC2"; chk "lo que no depende de catalog sigue funcionando" 200
 req $APP GET "$DISP" "$PAC1"; chk "la disponibilidad sigue funcionando" 200
+
+echo "== RA-04 listado paginado y estadisticas (solo administrativo)"
+req $APP GET "/citas?size=2" "$ADMIN"; chk "GET all paginado de citas" 200 pagina=0 tamano=2
+req $APP GET "/citas?estado=CONFIRMADA" "$ADMIN"; chk "filtro por estado" 200
+req $APP GET "/citas?estado=RARA" "$ADMIN"; chk "estado desconocido" 400
+req $APP GET "/citas?size=101" "$ADMIN"; chk "tamano invalido" 400 codigo=TAMANO_INVALIDO
+req $APP GET "/citas?page=-1" "$ADMIN"; chk "pagina negativa" 400 codigo=PAGINA_INVALIDA
+req $APP GET "/citas" "$PAC1"; chk "un paciente no lista todas las citas" 403
+req $APP GET "/citas" ""; chk "sin token" 401
+req $APP GET /citas/estadisticas "$ADMIN"; chk "estadisticas por estado" 200
+req $APP GET /citas/estadisticas "$PAC1"; chk "un paciente no ve las estadisticas" 403
 
 echo "== Errores uniformes, privacidad y logs"
 req $APP GET /ruta-que-no-existe "$ADMIN"; chk "ruta inexistente" 404

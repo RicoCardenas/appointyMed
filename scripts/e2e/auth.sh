@@ -7,6 +7,7 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR/../.."
 set -a; source .env; set +a
 export JWT_SECRET="$(openssl rand -hex 32)"
+export INTERNAL_API_KEY="$(openssl rand -hex 16)"
 export ADMIN_EMAIL="e2e-admin@test.local"
 export ADMIN_PASSWORD="Aa1$(openssl rand -hex 8)"
 PACIENTE_CLAVE="Aa1$(openssl rand -hex 6)"
@@ -83,7 +84,7 @@ echo "   rol=$(echo "$BODY" | json rol) token_longitud=${#TOKEN}"
 echo "== Proteccion de rutas (RF-02)"
 req GET /pacientes/me;                       chk "sin token" 401 codigo=NO_AUTENTICADO
 req GET /pacientes/me "token.basura.invalido"; chk "token invalido" 401 codigo=NO_AUTENTICADO
-req GET /admin/usuarios "$TOKEN";            chk "paciente no entra a admin (GET sin ruta)" 405
+req GET /admin/usuarios "$TOKEN";            chk "paciente no lista cuentas (GET all es solo del administrativo)" 403
 req POST /admin/usuarios "$TOKEN" '{"correo":"a@b.com","clave":"Clave1234","rol":"PROFESIONAL"}'; chk "paciente no crea cuentas" 403 codigo=ACCESO_DENEGADO
 
 echo "== CU-04 consultar perfil"
@@ -137,6 +138,40 @@ H=$(curl -s -m 5 -D - -o /dev/null -H 'X-Correlation-Id: abc12345-corr' "$BASE/p
 H2=$(curl -s -m 5 -D - -o /dev/null -H 'X-Correlation-Id: x;DROP' "$BASE/pacientes/me" | tr -d '\r' | grep -i '^x-correlation-id' | cut -d' ' -f2)
 [ -n "$H2" ] && [ "$H2" != "x;DROP" ] && { PASS=$((PASS+1)); echo "PASS un correlation id inseguro se reemplaza"; } || { FAIL=$((FAIL+1)); echo "FAIL id inseguro: $H2"; }
 grep -q "$(echo abc12345-corr)" "$LOG" && echo "   (el id aparece en los logs)" || echo "   (aviso: el id no aparece en los logs)"
+
+echo "== RA-03 y RA-04: administracion de cuentas (GET all paginado, estadisticas, activar, desactivar, cambiar clave, contacto interno)"
+req GET "/admin/usuarios?size=2" "$ADMIN"; chk "GET all paginado" 200 pagina=0 tamano=2
+req GET "/admin/usuarios?rol=PACIENTE&activo=true" "$ADMIN"; chk "filtro por rol y estado" 200 contenido.0.rol=PACIENTE
+req GET "/admin/usuarios?size=0" "$ADMIN"; chk "tamano invalido" 400 codigo=TAMANO_INVALIDO
+req GET "/admin/usuarios?page=-1" "$ADMIN"; chk "pagina negativa" 400 codigo=PAGINA_INVALIDA
+req GET "/admin/usuarios?rol=RARO" "$ADMIN"; chk "rol desconocido" 400
+req POST /auth/login "" "{\"correo\":\"e2e-nueva@test.local\",\"clave\":\"$PACIENTE_CLAVE\"}"; PT=$(echo "$BODY" | json accessToken)
+req GET /admin/usuarios/estadisticas "$ADMIN"; chk "estadisticas por rol y estado" 200 inactivos=0
+req GET /admin/usuarios/estadisticas "$PT"; chk "paciente no ve estadisticas" 403
+req POST /auth/login "" "{\"correo\":\"$ADMIN_EMAIL\",\"clave\":\"$ADMIN_PASSWORD\"}"; ADMIN_ID=$(echo "$BODY" | json usuarioId)
+req POST "/admin/usuarios/$ADMIN_ID/desactivar" "$ADMIN"; chk "un administrativo no se desactiva a si mismo" 409 codigo=NO_AUTODESACTIVAR
+req POST "/admin/usuarios/$PACIENTE_ID/desactivar" "$ADMIN"; chk "desactivar una cuenta" 200 activo=False
+req POST "/admin/usuarios/$PACIENTE_ID/desactivar" "$ADMIN"; chk "repetirlo es idempotente" 200 activo=False
+req POST /auth/login "" "{\"correo\":\"e2e-nueva@test.local\",\"clave\":\"$PACIENTE_CLAVE\"}"; chk "una cuenta inactiva no inicia sesion" 401 codigo=CREDENCIALES_INVALIDAS
+req POST "/admin/usuarios/$PACIENTE_ID/activar" "$ADMIN"; chk "reactivar la cuenta" 200 activo=True
+req POST "/admin/usuarios/$(cat /proc/sys/kernel/random/uuid)/activar" "$ADMIN"; chk "cuenta inexistente" 404 codigo=USUARIO_NO_ENCONTRADO
+req POST "/admin/usuarios/$PACIENTE_ID/activar" "$PT"; chk "paciente no activa cuentas" 403
+req POST /auth/login "" "{\"correo\":\"e2e-nueva@test.local\",\"clave\":\"$PACIENTE_CLAVE\"}"; chk "tras reactivar vuelve a entrar" 200
+NT=$(echo "$BODY" | json accessToken)
+req POST /auth/cambiar-clave "$NT" "{\"claveActual\":\"Equivocada1\",\"claveNueva\":\"Otra12345\"}"; chk "clave actual incorrecta" 400 codigo=CLAVE_ACTUAL_INCORRECTA
+req POST /auth/cambiar-clave "$NT" "{\"claveActual\":\"$PACIENTE_CLAVE\",\"claveNueva\":\"corta\"}"; chk "clave nueva debil" 400 codigo=CLAVE_DEBIL
+req POST /auth/cambiar-clave "$NT" "{\"claveActual\":\"$PACIENTE_CLAVE\",\"claveNueva\":\"$PACIENTE_CLAVE\"}"; chk "clave nueva igual a la actual" 400 codigo=CLAVE_IGUAL
+req POST /auth/cambiar-clave "" "{\"claveActual\":\"x\",\"claveNueva\":\"y\"}"; chk "cambiar clave sin token" 401
+req POST /auth/cambiar-clave "$NT" "{\"claveActual\":\"$PACIENTE_CLAVE\",\"claveNueva\":\"Nueva$PACIENTE_CLAVE\"}"; chk "cambio de clave correcto" 204
+req POST /auth/login "" "{\"correo\":\"e2e-nueva@test.local\",\"clave\":\"$PACIENTE_CLAVE\"}"; chk "la clave anterior ya no sirve" 401
+req POST /auth/login "" "{\"correo\":\"e2e-nueva@test.local\",\"clave\":\"Nueva$PACIENTE_CLAVE\"}"; chk "la clave nueva si" 200
+INT=http://localhost:8081/internal
+CODE=$(curl -s -m 5 -o /tmp/e2e-auth-int -w '%{http_code}' "$INT/usuarios/$PACIENTE_ID/contacto" -H "X-Api-Key: $INTERNAL_API_KEY"); igual "contacto interno con llave de servicio" "$CODE" 200
+igual "devuelve solo el correo" "$(python3 -I -c "import json; print(sorted(json.load(open('/tmp/e2e-auth-int')).keys()))")" "['correo']"
+igual "sin llave" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$INT/usuarios/$PACIENTE_ID/contacto")" 401
+igual "un JWT de usuario no abre /internal" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$INT/usuarios/$PACIENTE_ID/contacto" -H "Authorization: Bearer $ADMIN")" 401
+igual "la llave no abre la API de usuarios" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$BASE/admin/usuarios" -H "X-Api-Key: $INTERNAL_API_KEY")" 401
+igual "usuario inexistente en /internal" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$INT/usuarios/$(cat /proc/sys/kernel/random/uuid)/contacto" -H "X-Api-Key: $INTERNAL_API_KEY")" 404
 
 echo "== Estado en BD (RNF-14, RNF-05)"
 [ "$(SQL "select count(*) from usuario where password_hash like '\$2%'")" = "$(SQL 'select count(*) from usuario')" ] && { PASS=$((PASS+1)); echo "PASS todas las claves son hashes BCrypt"; } || { FAIL=$((FAIL+1)); echo "FAIL hay claves sin BCrypt"; }

@@ -1,6 +1,9 @@
 package com.appointy.appointment.domain.gateway;
 
 import com.appointy.appointment.domain.model.Cita;
+import com.appointy.appointment.domain.model.EstadisticasCitas;
+import com.appointy.appointment.domain.model.FiltroCitas;
+import com.appointy.appointment.domain.model.PaginaCitas;
 
 public interface CitaRepositoryGateway {
 
@@ -24,4 +27,9 @@ public interface CitaRepositoryGateway {
 
     /** Hay alguna cita CONFIRMADA, COMPLETADA o NO_ASISTIDA entre ese profesional y ese paciente. */
     boolean existeRelacion(String profesionalId, String pacienteId);
+
+    /** Listado paginado de la mas reciente a la mas antigua. {@code pagina} empieza en 0. */
+    PaginaCitas listar(FiltroCitas filtro, int pagina, int tamano);
+
+    EstadisticasCitas estadisticas();
 }

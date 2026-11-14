@@ -38,6 +38,11 @@ app:
     connect-timeout-ms: ${APPOINTMENT_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${APPOINTMENT_READ_TIMEOUT_MS:5000}
     relaciones-ttl-segundos: ${RELACIONES_TTL_SEGUNDOS:60}   # cache de relaciones confirmadas (CU-27)
+  cie10:                             # API externa CIE-10 (NLM Clinical Tables, sin llave); solo se envia el termino buscado
+    base-url: ${CIE10_API_URL:https://clinicaltables.nlm.nih.gov}
+    connect-timeout-ms: ${CIE10_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${CIE10_READ_TIMEOUT_MS:4000}
+    ttl-horas: ${CIE10_TTL_HORAS:24}
 
 logging:
   pattern:

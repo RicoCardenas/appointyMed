@@ -1,5 +1,16 @@
 package com.appointy.appointment.infrastructure.driven_adapters.jpa_repository;
 
+import com.appointy.appointment.domain.model.EstadisticasCitas;
+import com.appointy.appointment.domain.model.FiltroCitas;
+import com.appointy.appointment.domain.model.PaginaCitas;
+import com.appointy.appointment.infrastructure.driven_adapters.jpa_repository.entity.CitaEntity;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+
 import com.appointy.appointment.domain.model.Cita;
 import com.appointy.appointment.domain.model.EstadoCita;
 import com.appointy.appointment.domain.gateway.CitaRepositoryGateway;
@@ -61,5 +72,25 @@ public class CitaJpaAdapter implements CitaRepositoryGateway {
     public boolean existeRelacion(String profesionalId, String pacienteId) {
         List<EstadoCita> estados = List.of(EstadoCita.CONFIRMADA, EstadoCita.COMPLETADA, EstadoCita.NO_ASISTIDA);
         return repositorio.existsByProfesionalIdAndPacienteIdAndEstadoIn(UUID.fromString(profesionalId), UUID.fromString(pacienteId), estados);
+    }
+
+    @Override
+    public PaginaCitas listar(FiltroCitas filtro, int pagina, int tamano) {
+        Specification<CitaEntity> spec = (raiz, consulta, cb) -> {
+            List<Predicate> condiciones = new ArrayList<>();
+            if (filtro != null && filtro.estado() != null) condiciones.add(cb.equal(raiz.get("estado"), filtro.estado()));
+            if (filtro != null && filtro.profesionalId() != null) condiciones.add(cb.equal(raiz.get("profesionalId"), UUID.fromString(filtro.profesionalId())));
+            if (filtro != null && filtro.pacienteId() != null) condiciones.add(cb.equal(raiz.get("pacienteId"), UUID.fromString(filtro.pacienteId())));
+            return cb.and(condiciones.toArray(new Predicate[0]));
+        };
+        Page<CitaEntity> resultado = repositorio.findAll(spec, PageRequest.of(pagina, tamano, Sort.by(Sort.Order.desc("creadoEn"), Sort.Order.asc("id"))));
+        return new PaginaCitas(resultado.getContent().stream().map(mapper::aDominio).toArray(Cita[]::new), pagina, tamano,
+                resultado.getTotalElements(), resultado.getTotalPages());
+    }
+
+    @Override
+    public EstadisticasCitas estadisticas() {
+        return new EstadisticasCitas(repositorio.countByEstado(EstadoCita.CONFIRMADA), repositorio.countByEstado(EstadoCita.CANCELADA),
+                repositorio.countByEstado(EstadoCita.COMPLETADA), repositorio.countByEstado(EstadoCita.NO_ASISTIDA));
     }
 }

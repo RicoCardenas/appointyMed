@@ -31,6 +31,12 @@ class PublicadorDeFranjasTest {
 
     @Mock ParametroRepositoryGateway parametros;
     @Mock AppointmentClientGateway appointment;
+    @Mock com.appointy.catalog.domain.gateway.FestivosClientGateway festivos;
+
+    @org.junit.jupiter.api.BeforeEach
+    void sinFestivosPorDefecto() {
+        org.mockito.Mockito.lenient().when(festivos.festivos(org.mockito.ArgumentMatchers.anyInt())).thenReturn(new com.appointy.catalog.domain.model.Festivo[0]);
+    }
 
     /** 2026-06-02T03:00Z es el 2026-06-01 a las 22:00 en Bogota: "hoy" para la clinica es el lunes 1. */
     final Clock reloj = Clock.fixed(Instant.parse("2026-06-02T03:00:00Z"), ZoneId.of("America/Bogota"));
@@ -44,7 +50,7 @@ class PublicadorDeFranjasTest {
         when(parametros.buscarPorClave("horizonte_max_dias")).thenReturn(new ParametroServicio("horizonte_max_dias", "7", null));
         when(appointment.generarFranjas(eq("p1"), eq("c1"), any())).thenReturn(new ResultadoGeneracion(4, 0));
 
-        ResultadoHorario r = new PublicadorDeFranjas(parametros, appointment, reloj).publicar(lunes(true));
+        ResultadoHorario r = new PublicadorDeFranjas(parametros, appointment, festivos, reloj).publicar(lunes(true));
 
         ArgumentCaptor<FranjaSolicitada[]> franjas = ArgumentCaptor.forClass(FranjaSolicitada[].class);
         verify(appointment).generarFranjas(eq("p1"), eq("c1"), franjas.capture());
@@ -59,7 +65,7 @@ class PublicadorDeFranjasTest {
         when(parametros.buscarPorClave("horizonte_max_dias")).thenReturn(new ParametroServicio("horizonte_max_dias", "7", null));
         when(appointment.generarFranjas(any(), any(), any())).thenThrow(new ServicioNoDisponibleException("APPOINTMENT_NO_DISPONIBLE", "caido"));
 
-        ResultadoHorario r = new PublicadorDeFranjas(parametros, appointment, reloj).publicar(lunes(true));
+        ResultadoHorario r = new PublicadorDeFranjas(parametros, appointment, festivos, reloj).publicar(lunes(true));
 
         assertFalse(r.franjasGeneradas());
         assertTrue(r.mensaje().contains("se guardo"));
@@ -67,9 +73,39 @@ class PublicadorDeFranjasTest {
 
     @Test
     void unHorarioInactivoNoGeneraFranjas() {
-        ResultadoHorario r = new PublicadorDeFranjas(parametros, appointment, reloj).publicar(lunes(false));
+        ResultadoHorario r = new PublicadorDeFranjas(parametros, appointment, festivos, reloj).publicar(lunes(false));
 
         assertFalse(r.franjasGeneradas());
         verifyNoInteractions(appointment, parametros);
+    }
+
+    @Test
+    void noGeneraFranjasEnDiasFestivos() {
+        when(parametros.buscarPorClave("horizonte_max_dias")).thenReturn(new ParametroServicio("horizonte_max_dias", "7", null));
+        when(festivos.festivos(2026)).thenReturn(new com.appointy.catalog.domain.model.Festivo[] {new com.appointy.catalog.domain.model.Festivo("2026-06-08", "Festivo")});
+        when(appointment.generarFranjas(eq("p1"), eq("c1"), any())).thenReturn(new ResultadoGeneracion(2, 0));
+
+        new PublicadorDeFranjas(parametros, appointment, festivos, reloj).publicar(lunes(true));
+
+        ArgumentCaptor<FranjaSolicitada[]> franjas = ArgumentCaptor.forClass(FranjaSolicitada[].class);
+        verify(appointment).generarFranjas(eq("p1"), eq("c1"), franjas.capture());
+        assertEquals(2, franjas.getValue().length);
+        assertEquals("2026-06-01", franjas.getValue()[0].fecha());
+    }
+
+    @Test
+    void sinLaApiDeFestivosGeneraTodasLasFranjasYLoAvisa() {
+        when(parametros.buscarPorClave("horizonte_max_dias")).thenReturn(new ParametroServicio("horizonte_max_dias", "7", null));
+        when(festivos.festivos(org.mockito.ArgumentMatchers.anyInt()))
+                .thenThrow(new com.appointy.catalog.domain.exception.ServicioNoDisponibleException("FESTIVOS_NO_DISPONIBLES", "x"));
+        when(appointment.generarFranjas(eq("p1"), eq("c1"), any())).thenReturn(new ResultadoGeneracion(4, 0));
+
+        ResultadoHorario r = new PublicadorDeFranjas(parametros, appointment, festivos, reloj).publicar(lunes(true));
+
+        ArgumentCaptor<FranjaSolicitada[]> franjas = ArgumentCaptor.forClass(FranjaSolicitada[].class);
+        verify(appointment).generarFranjas(eq("p1"), eq("c1"), franjas.capture());
+        assertEquals(4, franjas.getValue().length);
+        assertEquals(true, r.franjasGeneradas());
+        assertEquals(true, r.mensaje().contains("sin filtrar festivos"));
     }
 }

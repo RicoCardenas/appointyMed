@@ -1,6 +1,8 @@
 package com.appointy.auth.infrastructure.entry_points;
 
+import com.appointy.auth.domain.usecase.CambiarClaveUseCase;
 import com.appointy.auth.domain.usecase.CerrarSesionUseCase;
+import com.appointy.auth.infrastructure.entry_points.dto.CambiarClaveRequest;
 import com.appointy.auth.domain.usecase.IniciarSesionUseCase;
 import com.appointy.auth.domain.usecase.RegistrarPacienteUseCase;
 import com.appointy.auth.infrastructure.entry_points.dto.LoginRequest;
@@ -24,11 +26,14 @@ public class AuthController {
     private final RegistrarPacienteUseCase registrarPaciente;
     private final IniciarSesionUseCase iniciarSesion;
     private final CerrarSesionUseCase cerrarSesion;
+    private final CambiarClaveUseCase cambiarClave;
 
-    public AuthController(RegistrarPacienteUseCase registrarPaciente, IniciarSesionUseCase iniciarSesion, CerrarSesionUseCase cerrarSesion) {
+    public AuthController(RegistrarPacienteUseCase registrarPaciente, IniciarSesionUseCase iniciarSesion, CerrarSesionUseCase cerrarSesion,
+            CambiarClaveUseCase cambiarClave) {
         this.registrarPaciente = registrarPaciente;
         this.iniciarSesion = iniciarSesion;
         this.cerrarSesion = cerrarSesion;
+        this.cambiarClave = cambiarClave;
     }
 
     @PostMapping("/register")
@@ -46,5 +51,11 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cerrarSesion(@AuthenticationPrincipal UsuarioAutenticado usuario) {
         cerrarSesion.ejecutar(new CerrarSesionUseCase.Comando(usuario.jti(), usuario.expiraEn()));
+    }
+
+    @PostMapping("/cambiar-clave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cambiarClave(@AuthenticationPrincipal UsuarioAutenticado usuario, @Valid @RequestBody CambiarClaveRequest solicitud) {
+        cambiarClave.ejecutar(new CambiarClaveUseCase.Comando(usuario.usuarioId(), solicitud.claveActual(), solicitud.claveNueva()));
     }
 }

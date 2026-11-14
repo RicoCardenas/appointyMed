@@ -2,11 +2,12 @@
 
 Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-14.
 
-## Siguiente paso: Fase 6b, requisitos adicionales (RA-03 a RA-06)
+## Siguiente paso: Fase 6, cierre (OpenAPI, Postman, correlación) y luego Fase 7 (interfaz)
 
-Ver "Requisitos adicionales" más abajo. Orden sugerido: (1) JaCoCo al 90 % por módulo y medir lo que hay hoy; (2) completar 5 APIs no CRUD y el GET all paginado en auth, catalog, appointment y clinical (notification ya los cumple); (3) las 2 APIs externas (feriados en catalog, CIE-10 en clinical); (4) luego la Fase 6 (OpenAPI, Postman) y la 7 (front).
+Fase 6: documentar con OpenAPI/Swagger (`springdoc`, skill `spring-boot-openapi-documentation`), colección de Postman con las rutas de `/api/v1`, y comprobar que `X-Correlation-Id` viaja entre servicios (RNF-17). Después la Fase 7: stack del front por decidir (propuesta: React + Vite + TypeScript) y `/impeccable init` para crear `PRODUCT.md` y `DESIGN.md`. Los endpoints nuevos de la 6b ya traen la paginación que el front necesita.
 
 - Pendiente del equipo: `JWT_SECRET`, `INTERNAL_API_KEY` y `NOTIFICATION_DB_PASSWORD` en `.env`; opcional `MAIL_ENABLED=true` con `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` para correo real.
+- Si Maven falla con "Unresolved compilation problems" o "cannot access ...": la extensión Java de VS Code compila en `target/` a la vez. Correr Maven sobre una copia (ver `CLAUDE.md`, "Comandos").
 
 ## Fases
 
@@ -18,20 +19,47 @@ Ver "Requisitos adicionales" más abajo. Orden sugerido: (1) JaCoCo al 90 % por 
 | 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Hecha (ver abajo) |
 | 4 | clinical-history-service: CU-28 a CU-32 | Hecha (ver abajo) |
 | 5 | notification-service: CU-33 a CU-35 | Hecha y verificada (ver abajo) |
-| 6 | Cierre: OpenAPI, colección Postman, cobertura 90 % (JaCoCo), correlación de logs | Pendiente |
-| 6b | Requisitos RA-03, RA-04 y RA-06: 5 APIs no CRUD y GET all paginado por servicio, 2 APIs externas | Pendiente (ver "Requisitos adicionales") |
+| 6 | Cierre: OpenAPI, colección Postman, correlación de logs | Pendiente |
+| 6b | Requisitos RA-03 a RA-06: 5 APIs no CRUD y GET all paginado por servicio, 2 APIs externas, cobertura 90 % | Hecha y verificada (ver abajo) |
 | 7 | Interfaz (proyecto aparte en `frontend/`), con las skills `impeccable` y `apple-design` | Pendiente, por decidir stack |
 | 8 | Despliegue en AWS | Pendiente, por decidir alcance y presupuesto |
 
 ## Requisitos adicionales (RA-01 a RA-07, ver especificación sección 11)
 
-Estado frente a cada requisito:
-- RA-01, RA-02: cumplidos (5 servicios, una base `appointy`).
-- RA-03: inventario por servicio y brecha hasta 5 APIs no CRUD. Hacer al abrir la Fase 6b: contar lo que ya existe (casi todo son casos de uso de negocio) y completar con consultas/reportes. Propuesta de relleno: auth (estadísticas de usuarios por rol, buscar pacientes), catalog (disponibilidad por especialidad, profesionales por centro, festivos del mes), appointment (agenda por rango, próximas citas, resumen de estados), clinical (resumen del paciente, búsqueda de diagnósticos con CIE-10), notification (reenviar, estadísticas de envío, historial por cita).
-- RA-04: un GET all paginado (`page`, `size`, `sort`, respuesta con `contenido`, `pagina`, `tamano`, `totalElementos`, `totalPaginas`) por servicio: auth `/admin/usuarios`, catalog `/profesionales`, appointment `/citas`, clinical `/atenciones`, notification `/notificaciones`. Hay que revisar cuáles de los listados actuales ya paginan.
-- RA-05: añadir JaCoCo al POM padre con `check` en 0,90 de líneas por módulo (excluir `*Application`, config y DTOs sin lógica). Hoy no se mide cobertura.
-- RA-06 (propuesta, decisión 23): (1) feriados de Colombia con Nager.Date (`https://date.nager.at/api/v3/PublicHolidays/{año}/CO`, sin llave) consumida por catalog al generar franjas, para no ofrecer citas en festivos; (2) catálogo CIE-10 de NLM Clinical Tables (`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=...`, sin llave) consumido por clinical-history para buscar y validar diagnósticos. Ambas con timeout, caché Caffeine y degradación: si fallan, catalog genera sin filtrar festivos y clinical acepta el diagnóstico en texto libre; nunca tumban la operación.
-- RA-07: Fase 7, carpeta `frontend/`, stack por decidir (propuesta: React + Vite + TypeScript consumiendo la API por un único origen). Skills de diseño ya instaladas: `impeccable` (al empezar el front correr `/impeccable init` para crear `PRODUCT.md` y `DESIGN.md`) y `apple-design`.
+| Requisito | Estado |
+|---|---|
+| RA-01, RA-02 (3 o más servicios, una base) | Cumplidos: 5 servicios, base `appointy`. |
+| RA-03 (5 APIs que no son CRUD por servicio) | Cumplido, ver tabla. |
+| RA-04 (GET all paginado por servicio) | Cumplido: `page` (desde 0), `size` (1 a 100, por defecto 20) y filtros; respuesta `contenido`, `pagina`, `tamano`, `totalElementos`, `totalPaginas`. |
+| RA-05 (cobertura 90 %) | Cumplido y exigido por Maven: JaCoCo `check` en `verify`, 90 % de líneas por módulo. |
+| RA-06 (2 APIs externas) | Cumplido: festivos (Nager.Date) en catalog y CIE-10 (NLM) en clinical-history. |
+| RA-07 (front) | Pendiente: Fase 7. Skills `impeccable` y `apple-design` instaladas. |
+
+APIs por servicio (las que no son CRUD; hay más de 5 en cada uno):
+
+| Servicio | No CRUD | GET all paginado |
+|---|---|---|
+| auth | POST `/auth/login`, `/auth/logout`, `/auth/cambiar-clave`; POST `/admin/usuarios/{id}/activar` y `/desactivar`; GET `/admin/usuarios/estadisticas`; GET `/internal/usuarios/{id}/contacto` | GET `/admin/usuarios?rol=&activo=` |
+| catalog | POST `/horarios/{id}/franjas`, POST `/bloqueos`; GET `/especialidades/{id}/profesionales`, `/profesionales/{id}/centros`; PUT `/profesionales/{id}/especialidades` y `/centros`; GET `/festivos?anio=` (externa) | GET `/profesionales?texto=&activo=` |
+| appointment | POST `/citas`, `/citas/{id}/reprogramar`, `/citas/{id}/cancelar`; GET `/disponibilidad`, `/citas/agenda`, `/citas/mias`, `/citas/{id}/historial`, `/citas/estadisticas`; PATCH `/citas/{id}/estado` | GET `/citas?estado=&profesionalId=&pacienteId=` (ADMINISTRATIVO) |
+| clinical-history | GET `/pacientes/{id}/resumen`, `/historia/mia/resumen`, `/entradas/{id}/versiones`, `/diagnosticos?q=` (externa); POST `/entradas/{id}/correcciones` | GET `/atenciones` (PROFESIONAL: las que escribió) |
+| notification | POST `/notificaciones/{id}/reenviar`, `/recordatorios/ejecutar`, `/reintentos/ejecutar`; GET `/estadisticas`, `/cita/{citaId}` | GET `/notificaciones?estado=&tipo=&citaId=` |
+
+## Fase 6b: requisitos adicionales
+
+- Festivos (catalog): `FestivosClientGateway` con adaptador a `https://date.nager.at/api/v3/PublicHolidays/{año}/CO` (sin llave, caché Caffeine 24 h, timeouts 2 s y 3 s). Al generar franjas se retiran las que caen en festivo; si la API no responde se generan todas y el mensaje lo avisa. Las franjas ya generadas no se retiran (como en la decisión 18). Variables: `FESTIVOS_API_URL`, `FESTIVOS_PAIS`, `FESTIVOS_TTL_HORAS`.
+- CIE-10 (clinical): `Cie10ClientGateway` con adaptador a `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search` (sin llave, caché 24 h). Solo sale el término (2 a 80 caracteres, letras, dígitos, espacio, punto, guion, coma); nunca ids ni datos del paciente, y no se registra. Es solo ayuda de búsqueda: el diagnóstico del registro sigue siendo texto libre. Variables: `CIE10_API_URL`, `CIE10_TTL_HORAS`.
+- Los listados nuevos usan `Specification` de Spring Data con orden fijo y desempate por id. En clinical, cada paciente cuya historia aparece en una página de `/atenciones` queda en el log de acceso.
+- Auth: un administrativo no puede desactivar su propia cuenta (409). Desactivar no revoca los tokens ya emitidos (decisión 9). Cambiar la clave con la actual incorrecta es 400 `CLAVE_ACTUAL_INCORRECTA`, no 401, para que el front no cierre la sesión.
+- Notification: el historial por cita se ordena por fecha de creación y, en empate, por tipo.
+
+## Validado en la Fase 6b
+
+- `mvn verify` de los 5 módulos: BUILD SUCCESS, 0 fallos, "All coverage checks have been met". Cobertura de líneas: auth 98,0 %, catalog 97,3 %, appointment 96,0 %, clinical-history 97,5 %, notification 97,8 %. JaCoCo excluye solo `*Application`, `application/config`, `infrastructure/config`, `SecurityConfig`, entidades y los `*MapperImpl` generados por MapStruct; la seguridad y la configuración se verifican en las pruebas reales.
+- Pruebas reales contra PostgreSQL: auth 73, catalog 131, appointment 140, clinical 120, notification 46 y `externas.sh` 18 (red real), todas correctas. La prueba de concurrencia de reserva (5 casos, base real) también pasa.
+- Defectos reales encontrados y corregidos: el CIE-10 devolvía 0 resultados sin `sf=code,name` (lo vio la prueba con la API real); el historial por cita salía en orden inestable; un test de ruta esperaba 405 donde ahora el administrativo tiene `GET /admin/usuarios`.
+- Las pruebas de catalog y appointment fijan `FESTIVOS_API_URL` a un puerto cerrado para que los conteos de franjas no dependan del calendario real; con la API real los festivos recortan franjas (se vio: 36 esperadas, 28 reales).
+- No probado: carga, dos instancias a la vez, SMTP real.
 
 ## Validado en la Fase 0
 
@@ -236,7 +264,8 @@ Comportamiento:
 21. Estructura del docente: `domain/usecase` (interfaces de casos de uso), `domain/gateway` (puertos de salida) y `application/usecase` (`*UseCaseImpl`). Antes eran `port/in` y `port/out` con sufijo `Port`.
 22. Las horas del horario llegan y salen como `HH:mm`, con máximo 23:59 (no existe 24:00 en una columna TIME).
 23. APIs externas elegidas por afinidad con el dominio: feriados (Nager.Date) y CIE-10 (NLM). Si el docente prefiere otras, se cambia el adaptador `rest_client`; el puerto en `domain/gateway` no cambia.
-24. Cobertura 90 % medida con JaCoCo por módulo; reemplaza el 70 % del RNF-09.
+24. Cobertura 90 % medida con JaCoCo por módulo (líneas); reemplaza el 70 % del RNF-09. Exclusiones: configuración, entidades, `*Application` y mappers generados.
+27. Las pruebas de controladores usan MockMvc sin contexto de Spring (`standaloneSetup`) y las de adaptadores JPA usan repositorios simulados: así corren sin base de datos. La autorización por rol se prueba en los scripts `scripts/e2e/*.sh`.
 25. El correo del paciente lo resuelve notification en auth (`/internal/usuarios/{id}/contacto`); la especificación decía que llegaba en la llamada, pero appointment solo envía ids (decisión 7).
 26. Correo simulado por defecto (`MAIL_ENABLED=false`) para que el proyecto corra localmente sin credenciales SMTP.
 

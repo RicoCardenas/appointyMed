@@ -6,7 +6,12 @@ import com.appointy.clinicalhistory.infrastructure.driven_adapters.jpa_repositor
 import com.appointy.clinicalhistory.infrastructure.mapper.ClinicaEntityMapper;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import com.appointy.clinicalhistory.domain.model.PaginaEntradas;
+import com.appointy.clinicalhistory.infrastructure.driven_adapters.jpa_repository.entity.EntradaClinicaEntity;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,5 +53,14 @@ public class EntradaClinicaJpaAdapter implements EntradaClinicaRepositoryGateway
     @Transactional(readOnly = true)
     public boolean existeOriginalDeCita(String citaId) {
         return repositorio.existsByCitaIdAndCorrigeAIdIsNull(UUID.fromString(citaId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginaEntradas listarDeProfesional(String profesionalId, int pagina, int tamano) {
+        Page<EntradaClinicaEntity> resultado = repositorio.findByProfesionalId(UUID.fromString(profesionalId),
+                PageRequest.of(pagina, tamano, Sort.by(Sort.Order.desc("creadoEn"), Sort.Order.asc("id"))));
+        return new PaginaEntradas(resultado.getContent().stream().map(mapper::aDominio).toArray(EntradaClinica[]::new), pagina, tamano,
+                resultado.getTotalElements(), resultado.getTotalPages());
     }
 }

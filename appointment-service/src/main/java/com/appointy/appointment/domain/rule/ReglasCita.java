@@ -17,7 +17,18 @@ import com.appointy.appointment.domain.model.Franja;
  */
 public final class ReglasCita {
 
+    public static final int TAMANO_MAXIMO_PAGINA = 100;
+
     private ReglasCita() {}
+
+    public static void validarPaginacion(int pagina, int tamano) {
+        if (pagina < 0) {
+            throw new ValidacionException("PAGINA_INVALIDA", "La pagina no puede ser negativa");
+        }
+        if (tamano < 1 || tamano > TAMANO_MAXIMO_PAGINA) {
+            throw new ValidacionException("TAMANO_INVALIDO", "El tamano debe estar entre 1 y " + TAMANO_MAXIMO_PAGINA);
+        }
+    }
 
     /** Franja DISPONIBLE (409), con la anticipacion minima (422) y dentro del horizonte de agendamiento (422). */
     public static void exigirFranjaReservable(Franja franja, long inicioMin, long ahoraMin, int anticipacionHoras, String fechaLimite) {

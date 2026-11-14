@@ -4,7 +4,13 @@ import com.appointy.appointment.domain.model.Actor;
 import com.appointy.appointment.domain.usecase.CancelarCitaUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarAgendaUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarCitaUseCase;
+import com.appointy.appointment.domain.model.EstadisticasCitas;
+import com.appointy.appointment.domain.model.EstadoCita;
+import com.appointy.appointment.domain.model.FiltroCitas;
+import com.appointy.appointment.domain.usecase.ConsultarEstadisticasCitasUseCase;
 import com.appointy.appointment.domain.usecase.ConsultarHistorialCitaUseCase;
+import com.appointy.appointment.domain.usecase.ListarCitasUseCase;
+import com.appointy.appointment.infrastructure.entry_points.dto.PaginaCitasResponse;
 import com.appointy.appointment.domain.usecase.ConsultarMisCitasUseCase;
 import com.appointy.appointment.domain.usecase.MarcarCitaAtendidaUseCase;
 import com.appointy.appointment.domain.usecase.ReprogramarCitaUseCase;
@@ -47,9 +53,12 @@ public class CitaController {
     private final ConsultarCitaUseCase consultar;
     private final MarcarCitaAtendidaUseCase marcar;
     private final ConsultarHistorialCitaUseCase historial;
+    private final ListarCitasUseCase listar;
+    private final ConsultarEstadisticasCitasUseCase estadisticas;
 
     public CitaController(ReservarCitaUseCase reservar, ReprogramarCitaUseCase reprogramar, CancelarCitaUseCase cancelar, ConsultarMisCitasUseCase misCitas,
-            ConsultarAgendaUseCase agenda, ConsultarCitaUseCase consultar, MarcarCitaAtendidaUseCase marcar, ConsultarHistorialCitaUseCase historial) {
+            ConsultarAgendaUseCase agenda, ConsultarCitaUseCase consultar, MarcarCitaAtendidaUseCase marcar, ConsultarHistorialCitaUseCase historial,
+            ListarCitasUseCase listar, ConsultarEstadisticasCitasUseCase estadisticas) {
         this.reservar = reservar;
         this.reprogramar = reprogramar;
         this.cancelar = cancelar;
@@ -58,6 +67,8 @@ public class CitaController {
         this.consultar = consultar;
         this.marcar = marcar;
         this.historial = historial;
+        this.listar = listar;
+        this.estadisticas = estadisticas;
     }
 
     @PostMapping
@@ -79,6 +90,22 @@ public class CitaController {
     public CitaResponse cancelar(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id,
             @Valid @RequestBody(required = false) CancelarCitaRequest s) {
         return CitaResponse.de(cancelar.ejecutar(new CancelarCitaUseCase.Comando(actor(u), id.toString(), s == null ? null : s.motivo())));
+    }
+
+    /** GET all paginado (RA-04). El listado completo es solo para el personal administrativo. */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    public PaginaCitasResponse listar(@AuthenticationPrincipal UsuarioAutenticado u, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size, @RequestParam(required = false) EstadoCita estado,
+            @RequestParam(required = false) UUID profesionalId, @RequestParam(required = false) UUID pacienteId) {
+        FiltroCitas filtro = new FiltroCitas(estado, profesionalId == null ? null : profesionalId.toString(), pacienteId == null ? null : pacienteId.toString());
+        return PaginaCitasResponse.de(listar.ejecutar(actor(u), filtro, page, size));
+    }
+
+    @GetMapping("/estadisticas")
+    @PreAuthorize("hasRole('ADMINISTRATIVO')")
+    public EstadisticasCitas estadisticas(@AuthenticationPrincipal UsuarioAutenticado u) {
+        return estadisticas.ejecutar(actor(u));
     }
 
     @GetMapping("/mias")

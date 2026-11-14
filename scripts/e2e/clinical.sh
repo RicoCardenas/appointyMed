@@ -211,6 +211,24 @@ igual "ningun 5xx" "$(grep -c '^5' $S/conc-cli.txt)" 0
 igual "una sola entrada original para esa cita" "$(SQLK "select count(*) from entrada_clinica where cita_id='$CITA4' and corrige_a_id is null")" 1
 igual "los 5 perdedores quedaron en el log como DENEGADO" "$(SQLK "select count(*) from log_acceso_clinico where usuario_id='$DOC1_USER' and paciente_id='$PAC3_ID' and accion='ESCRITURA' and resultado='DENEGADO'")" 5
 
+echo "== RA-03 y RA-04: atenciones paginadas, resumenes, versiones y diagnosticos (API externa CIE-10)"
+req $CLI GET "/atenciones?size=1" "$DOC1"; chk "atenciones del profesional, paginadas" 200 tamano=1 pagina=0
+req $CLI GET "/atenciones?size=0" "$DOC1"; chk "tamano invalido" 400 codigo=TAMANO_INVALIDO
+req $CLI GET "/atenciones" "$PAC1"; chk "un paciente no usa el listado de atenciones" 403 codigo=SOLO_PROFESIONAL
+req $CLI GET "/pacientes/$PAC1_ID/resumen" "$DOC1"; chk "resumen de la historia para el profesional" 200
+req $CLI GET "/pacientes/$PAC1_ID/resumen" "$DOC2"; chk "sin relacion no hay resumen" 403 codigo=SIN_RELACION_CON_PACIENTE
+req $CLI GET "/historia/mia/resumen" "$PAC1"; chk "el paciente ve su resumen" 200
+req $CLI GET "/historia/mia/resumen" "$DOC1"; chk "un profesional no usa el resumen propio" 403 codigo=SOLO_PACIENTE
+req $CLI GET "/entradas/$E1/versiones" "$DOC1"; chk "versiones de una atencion" 200
+req $CLI GET "/entradas/$E1/versiones" "$DOC2"; chk "sin relacion no hay versiones" 403
+req $CLI GET "/entradas/$(cat /proc/sys/kernel/random/uuid)/versiones" "$DOC1"; chk "entrada inexistente" 404 codigo=ENTRADA_NO_ENCONTRADA
+req $CLI GET "/diagnosticos?q=a" "$DOC1"; chk "termino demasiado corto" 400 codigo=TERMINO_INVALIDO
+req $CLI GET "/diagnosticos?q=diabetes;drop" "$DOC1"; chk "termino con caracteres no admitidos" 400 codigo=TERMINO_INVALIDO
+req $CLI GET "/diagnosticos?q=diabetes" "$PAC1"; chk "un paciente no busca diagnosticos" 403
+req $CLI GET "/diagnosticos?q=diabetes" "$DOC1"; chk "CIE-10 real (NLM): hay resultados" 200
+echo "   resultados CIE-10: $(echo "$BODY" | python3 -I -c 'import sys,json; d=json.load(sys.stdin); print(len(d), d[0]["codigo"] if d else "-")')"
+igual "el termino buscado no queda en el log" "$(grep -c 'diabetes' "$LOGK")" 0
+
 echo "== API interna: /internal solo con llave"
 CODE=$(curl -s -m 5 -o /dev/null -w '%{http_code}' http://localhost:8084/internal/lo-que-sea); igual "sin llave" "$CODE" 401
 CODE=$(curl -s -m 5 -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $ADMIN" http://localhost:8084/internal/lo-que-sea); igual "un JWT no abre /internal" "$CODE" 401

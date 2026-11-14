@@ -1,5 +1,7 @@
 package com.appointy.catalog.domain.gateway;
 
+import com.appointy.catalog.domain.model.FiltroProfesionales;
+import com.appointy.catalog.domain.model.PaginaProfesionales;
 import com.appointy.catalog.domain.model.Profesional;
 
 public interface ProfesionalRepositoryGateway {
@@ -16,6 +18,9 @@ public interface ProfesionalRepositoryGateway {
     Profesional buscarPorRegistroMedico(String registroMedico);
 
     Profesional[] listarActivosPorEspecialidad(String especialidadId);
+
+    /** Listado paginado ordenado por apellidos y nombres. {@code pagina} empieza en 0. */
+    PaginaProfesionales listar(FiltroProfesionales filtro, int pagina, int tamano);
 
     String[] idsEspecialidades(String profesionalId);
 

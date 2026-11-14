@@ -3,6 +3,10 @@ package com.appointy.auth.application.config;
 import com.appointy.auth.application.usecase.ActualizarDatosEditablesUseCaseImpl;
 import com.appointy.auth.application.usecase.CerrarSesionUseCaseImpl;
 import com.appointy.auth.application.usecase.ConsultarContactoUseCaseImpl;
+import com.appointy.auth.application.usecase.CambiarClaveUseCaseImpl;
+import com.appointy.auth.application.usecase.CambiarEstadoCuentaUseCaseImpl;
+import com.appointy.auth.application.usecase.ConsultarEstadisticasUsuariosUseCaseImpl;
+import com.appointy.auth.application.usecase.ListarUsuariosUseCaseImpl;
 import com.appointy.auth.application.usecase.ConsultarPerfilUseCaseImpl;
 import com.appointy.auth.application.usecase.CorregirDatosInmutablesUseCaseImpl;
 import com.appointy.auth.application.usecase.CrearCuentaStaffUseCaseImpl;
@@ -13,6 +17,10 @@ import com.appointy.auth.application.usecase.SembrarAdministradorUseCaseImpl;
 import com.appointy.auth.domain.usecase.ActualizarDatosEditablesUseCase;
 import com.appointy.auth.domain.usecase.CerrarSesionUseCase;
 import com.appointy.auth.domain.usecase.ConsultarContactoUseCase;
+import com.appointy.auth.domain.usecase.CambiarClaveUseCase;
+import com.appointy.auth.domain.usecase.CambiarEstadoCuentaUseCase;
+import com.appointy.auth.domain.usecase.ConsultarEstadisticasUsuariosUseCase;
+import com.appointy.auth.domain.usecase.ListarUsuariosUseCase;
 import com.appointy.auth.domain.usecase.ConsultarPerfilUseCase;
 import com.appointy.auth.domain.usecase.CorregirDatosInmutablesUseCase;
 import com.appointy.auth.domain.usecase.CrearCuentaStaffUseCase;
@@ -84,5 +92,25 @@ public class UseCaseConfig {
     @Bean
     ConsultarContactoUseCase consultarContacto(UsuarioRepositoryGateway usuarios) {
         return new ConsultarContactoUseCaseImpl(usuarios);
+    }
+
+    @Bean
+    ListarUsuariosUseCase listarUsuarios(UsuarioRepositoryGateway usuarios) {
+        return new ListarUsuariosUseCaseImpl(usuarios);
+    }
+
+    @Bean
+    ConsultarEstadisticasUsuariosUseCase consultarEstadisticasUsuarios(UsuarioRepositoryGateway usuarios) {
+        return new ConsultarEstadisticasUsuariosUseCaseImpl(usuarios);
+    }
+
+    @Bean
+    CambiarEstadoCuentaUseCase cambiarEstadoCuenta(UsuarioRepositoryGateway usuarios, Clock reloj) {
+        return new CambiarEstadoCuentaUseCaseImpl(usuarios, reloj);
+    }
+
+    @Bean
+    CambiarClaveUseCase cambiarClave(UsuarioRepositoryGateway usuarios, CodificadorClaveGateway codificador, Clock reloj) {
+        return new CambiarClaveUseCaseImpl(usuarios, codificador, reloj);
     }
 }

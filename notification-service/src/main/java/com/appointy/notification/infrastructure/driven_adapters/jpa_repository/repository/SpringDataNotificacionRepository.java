@@ -22,7 +22,7 @@ public interface SpringDataNotificacionRepository extends JpaRepository<Notifica
 
     List<NotificacionEntity> findByCitaIdAndTipoAndEstado(UUID citaId, TipoNotificacion tipo, EstadoNotificacion estado);
 
-    List<NotificacionEntity> findByCitaIdOrderByCreadoEnAscIdAsc(UUID citaId);
+    List<NotificacionEntity> findByCitaIdOrderByCreadoEnAscTipoAscIdAsc(UUID citaId);
 
     long countByEstado(EstadoNotificacion estado);
 

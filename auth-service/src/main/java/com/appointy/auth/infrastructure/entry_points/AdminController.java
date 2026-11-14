@@ -1,7 +1,16 @@
 package com.appointy.auth.infrastructure.entry_points;
 
 import com.appointy.auth.domain.usecase.CorregirDatosInmutablesUseCase;
+import com.appointy.auth.domain.model.EstadisticasUsuarios;
+import com.appointy.auth.domain.model.FiltroUsuarios;
+import com.appointy.auth.domain.model.Rol;
+import com.appointy.auth.domain.usecase.CambiarEstadoCuentaUseCase;
+import com.appointy.auth.domain.usecase.ConsultarEstadisticasUsuariosUseCase;
 import com.appointy.auth.domain.usecase.CrearCuentaStaffUseCase;
+import com.appointy.auth.domain.usecase.ListarUsuariosUseCase;
+import com.appointy.auth.infrastructure.entry_points.dto.PaginaUsuariosResponse;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import com.appointy.auth.infrastructure.entry_points.dto.CorregirIdentidadRequest;
 import com.appointy.auth.infrastructure.entry_points.dto.CrearCuentaRequest;
 import com.appointy.auth.infrastructure.entry_points.dto.CuentaResponse;
@@ -27,10 +36,17 @@ public class AdminController {
 
     private final CrearCuentaStaffUseCase crearCuenta;
     private final CorregirDatosInmutablesUseCase corregirDatos;
+    private final ListarUsuariosUseCase listar;
+    private final ConsultarEstadisticasUsuariosUseCase estadisticas;
+    private final CambiarEstadoCuentaUseCase cambiarEstado;
 
-    public AdminController(CrearCuentaStaffUseCase crearCuenta, CorregirDatosInmutablesUseCase corregirDatos) {
+    public AdminController(CrearCuentaStaffUseCase crearCuenta, CorregirDatosInmutablesUseCase corregirDatos,
+            ListarUsuariosUseCase listar, ConsultarEstadisticasUsuariosUseCase estadisticas, CambiarEstadoCuentaUseCase cambiarEstado) {
         this.crearCuenta = crearCuenta;
         this.corregirDatos = corregirDatos;
+        this.listar = listar;
+        this.estadisticas = estadisticas;
+        this.cambiarEstado = cambiarEstado;
     }
 
     @PostMapping("/usuarios")
@@ -45,5 +61,27 @@ public class AdminController {
             @PathVariable UUID usuarioId,
             @Valid @RequestBody CorregirIdentidadRequest solicitud) {
         return PacienteResponse.de(corregirDatos.ejecutar(solicitud.aComando(actor.usuarioId(), usuarioId.toString())));
+    }
+
+    /** GET all paginado (RA-04). */
+    @GetMapping("/usuarios")
+    public PaginaUsuariosResponse listar(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) Rol rol, @RequestParam(required = false) Boolean activo) {
+        return PaginaUsuariosResponse.de(listar.ejecutar(new FiltroUsuarios(rol, activo), page, size));
+    }
+
+    @GetMapping("/usuarios/estadisticas")
+    public EstadisticasUsuarios estadisticas() {
+        return estadisticas.ejecutar();
+    }
+
+    @PostMapping("/usuarios/{usuarioId}/desactivar")
+    public CuentaResponse desactivar(@AuthenticationPrincipal UsuarioAutenticado actor, @PathVariable UUID usuarioId) {
+        return CuentaResponse.de(cambiarEstado.ejecutar(new CambiarEstadoCuentaUseCase.Comando(actor.usuarioId(), usuarioId.toString(), false)));
+    }
+
+    @PostMapping("/usuarios/{usuarioId}/activar")
+    public CuentaResponse activar(@AuthenticationPrincipal UsuarioAutenticado actor, @PathVariable UUID usuarioId) {
+        return CuentaResponse.de(cambiarEstado.ejecutar(new CambiarEstadoCuentaUseCase.Comando(actor.usuarioId(), usuarioId.toString(), true)));
     }
 }

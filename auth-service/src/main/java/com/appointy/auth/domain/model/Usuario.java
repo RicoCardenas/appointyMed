@@ -17,4 +17,12 @@ public record Usuario(
     public Usuario conCorreo(String nuevoCorreo, long ahora) {
         return new Usuario(id, nuevoCorreo, claveHash, rol, activo, creadoEn, ahora, version);
     }
+
+    public Usuario conActivo(boolean nuevoActivo, long ahora) {
+        return new Usuario(id, correo, claveHash, rol, nuevoActivo, creadoEn, ahora, version);
+    }
+
+    public Usuario conClaveHash(String nuevoHash, long ahora) {
+        return new Usuario(id, correo, nuevoHash, rol, activo, creadoEn, ahora, version);
+    }
 }

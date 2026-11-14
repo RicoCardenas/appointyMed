@@ -5,7 +5,16 @@ import com.appointy.catalog.domain.gateway.ProfesionalRepositoryGateway;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.entity.ProfesionalEntity;
 import com.appointy.catalog.infrastructure.driven_adapters.jpa_repository.repository.SpringDataProfesionalRepository;
 import com.appointy.catalog.infrastructure.mapper.ProfesionalEntityMapper;
+import com.appointy.catalog.domain.model.FiltroProfesionales;
+import com.appointy.catalog.domain.model.PaginaProfesionales;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +49,24 @@ public class ProfesionalJpaAdapter implements ProfesionalRepositoryGateway {
     public Profesional buscarPorRegistroMedico(String registroMedico) {
         ProfesionalEntity e = repositorio.findByRegistroMedico(registroMedico);
         return e == null ? null : mapper.aDominio(e);
+    }
+
+    @Override
+    public PaginaProfesionales listar(FiltroProfesionales filtro, int pagina, int tamano) {
+        Specification<ProfesionalEntity> spec = (raiz, consulta, cb) -> {
+            List<Predicate> condiciones = new ArrayList<>();
+            if (filtro != null && filtro.activo() != null) condiciones.add(cb.equal(raiz.get("activo"), filtro.activo()));
+            if (filtro != null && filtro.texto() != null && !filtro.texto().isBlank()) {
+                String patron = "%" + filtro.texto().trim().toLowerCase().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+                condiciones.add(cb.or(cb.like(cb.lower(raiz.get("nombres")), patron, '\\'), cb.like(cb.lower(raiz.get("apellidos")), patron, '\\'),
+                        cb.like(cb.lower(raiz.get("registroMedico")), patron, '\\')));
+            }
+            return cb.and(condiciones.toArray(new Predicate[0]));
+        };
+        Page<ProfesionalEntity> resultado = repositorio.findAll(spec,
+                PageRequest.of(pagina, tamano, Sort.by(Sort.Order.asc("apellidos"), Sort.Order.asc("nombres"), Sort.Order.asc("id"))));
+        return new PaginaProfesionales(resultado.getContent().stream().map(mapper::aDominio).toArray(Profesional[]::new), pagina, tamano,
+                resultado.getTotalElements(), resultado.getTotalPages());
     }
 
     @Override

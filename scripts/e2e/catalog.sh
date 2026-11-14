@@ -9,6 +9,7 @@ S=/tmp/appointy-e2e; mkdir -p $S
 set -a; source .env; set +a
 export JWT_SECRET="$(openssl rand -hex 32)"
 export INTERNAL_API_KEY="$(openssl rand -hex 16)"
+export FESTIVOS_API_URL=http://127.0.0.1:9   # sin API de festivos: los conteos de franjas no dependen del calendario real (la API real se prueba en externas.sh)
 export ADMIN_EMAIL="e2e-admin@test.local"
 export ADMIN_PASSWORD="Aa1$(openssl rand -hex 8)"
 export APPOINTMENT_READ_TIMEOUT_MS=1500
@@ -255,6 +256,18 @@ curl -s -m 5 -H "X-Api-Key: $INTERNAL_API_KEY" "$INT/profesionales/$PROF2/asocia
 curl -s -m 5 -H "X-Api-Key: $INTERNAL_API_KEY" "$INT/parametros" > /tmp/e2e-cat-body; igual "parametros para appointment" "$(python3 -I -c "import json; print(json.load(open('/tmp/e2e-cat-body'))['horizonte_max_dias'])")" 45
 CODE=$(curl -s -m 5 -o /dev/null -w '%{http_code}' -H "X-Api-Key: $INTERNAL_API_KEY" "$CAT/especialidades"); igual "la llave de servicio NO abre la API de usuarios" "$CODE" 401
 CODE=$(curl -s -m 5 -o /dev/null -w '%{http_code}' "localhost:8082/internal/parametros"); igual "ruta interna sin credenciales" "$CODE" 401
+
+echo "== RA-04 listado paginado de profesionales y RA-06 festivos (API externa caida: degrada)"
+req $CAT GET "/profesionales?size=1" "$PAC"; chk "GET all paginado (cualquier usuario autenticado)" 200 tamano=1 pagina=0
+req $CAT GET "/profesionales?texto=ruiz" "$ADMIN"; chk "busqueda por texto" 200 contenido.0.apellidos=Ruiz
+req $CAT GET "/profesionales?activo=false" "$ADMIN"; chk "filtro por estado" 200
+req $CAT GET "/profesionales?size=101" "$ADMIN"; chk "tamano invalido" 400 codigo=TAMANO_INVALIDO
+req $CAT GET "/profesionales?texto=%25" "$ADMIN"; chk "el comodin % se trata como texto" 200 totalElementos=0
+req $CAT GET "/profesionales" ""; chk "sin token" 401
+req $CAT GET "/festivos?anio=2026" "$ADMIN"; chk "festivos con la API externa caida" 503 codigo=FESTIVOS_NO_DISPONIBLES
+req $CAT GET "/festivos?anio=1999" "$ADMIN"; chk "anio fuera de rango" 400 codigo=ANIO_INVALIDO
+req $CAT GET "/festivos" "$ADMIN"; chk "falta el anio" 400
+req $CAT GET "/festivos?anio=2026" ""; chk "festivos sin token" 401
 
 echo "== Errores uniformes, privacidad y logs"
 req $CAT GET /ruta-que-no-existe "$ADMIN"; chk "ruta inexistente" 404

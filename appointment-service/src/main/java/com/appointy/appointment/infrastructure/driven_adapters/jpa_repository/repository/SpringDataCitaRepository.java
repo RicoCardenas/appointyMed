@@ -7,10 +7,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface SpringDataCitaRepository extends JpaRepository<CitaEntity, UUID> {
+public interface SpringDataCitaRepository extends JpaRepository<CitaEntity, UUID>, JpaSpecificationExecutor<CitaEntity> {
 
     @Query("select c from CitaEntity c, FranjaEntity f where f.id = c.franjaId and c.pacienteId = :pacienteId "
             + "and f.fecha between :desde and :hasta order by f.fecha, f.horaInicio")
@@ -25,6 +26,8 @@ public interface SpringDataCitaRepository extends JpaRepository<CitaEntity, UUID
             + "and f.centroId = :centroId and c.estado = :estado and f.fecha between :desde and :hasta order by c.id")
     List<UUID> idsEnRango(@Param("profesionalId") UUID profesionalId, @Param("centroId") UUID centroId, @Param("estado") EstadoCita estado,
             @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
+
+    long countByEstado(EstadoCita estado);
 
     boolean existsByProfesionalIdAndPacienteIdAndEstadoIn(UUID profesionalId, UUID pacienteId, Collection<EstadoCita> estados);
 }
