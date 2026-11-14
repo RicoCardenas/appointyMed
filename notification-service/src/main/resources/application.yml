@@ -14,12 +14,54 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.default_schema: notification
+      hibernate.jdbc.time_zone: UTC
   flyway:
     schemas: notification
     default-schema: notification
     create-schemas: false
 
+app:
+  timezone: ${APP_TIMEZONE:America/Bogota}
+  jwt:
+    secret: ${JWT_SECRET}            # el mismo valor que usa auth-service
+    issuer: appointy-auth
+  internal:
+    api-key: ${INTERNAL_API_KEY}     # protege /internal/**; mismo valor en todos los servicios
+  auth:
+    base-url: ${AUTH_SERVICE_URL:http://localhost:8081}
+    connect-timeout-ms: ${AUTH_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${AUTH_READ_TIMEOUT_MS:5000}
+  mail:
+    enabled: ${MAIL_ENABLED:false}   # false: no envia, solo registra la notificacion como enviada (simulado)
+    from: ${MAIL_FROM:no-responder@appointy.local}
+  notification:
+    max-intentos: ${NOTIFICATION_MAX_INTENTOS:3}
+    lote: ${NOTIFICATION_LOTE:100}
+  jobs:
+    recordatorios-ms: ${JOB_RECORDATORIOS_MS:60000}
+    reintentos-ms: ${JOB_REINTENTOS_MS:300000}
+
+# Solo se usa con app.mail.enabled=true
+spring.mail:
+  host: ${MAIL_HOST:localhost}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME:}
+  password: ${MAIL_PASSWORD:}
+  properties.mail.smtp:
+    auth: true
+    starttls.enable: true
+    connectiontimeout: 5000
+    timeout: 5000
+    writetimeout: 5000
+
+logging:
+  pattern:
+    level: "%5p [%X{correlationId:-}]"
+
 management:
+  health:
+    mail:
+      enabled: false   # una caida del SMTP no debe marcar el servicio como DOWN (RNF-07)
   endpoints:
     web:
       exposure:

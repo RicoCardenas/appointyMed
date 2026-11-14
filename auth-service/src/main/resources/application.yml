@@ -29,6 +29,8 @@ app:
     secret: ${JWT_SECRET}            # minimo 32 caracteres; el mismo valor en todos los servicios
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:15}
     issuer: appointy-auth
+  internal:
+    api-key: ${INTERNAL_API_KEY}     # protege /internal/**; mismo valor en todos los servicios
   admin:                             # administrador inicial, solo si aun no existe ninguno
     email: ${ADMIN_EMAIL:}
     password: ${ADMIN_PASSWORD:}

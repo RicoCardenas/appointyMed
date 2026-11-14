@@ -1,12 +1,12 @@
 # Appointy Med: progreso
 
-Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-05.
+Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-14.
 
-## Siguiente paso: Fase 5, notification-service (CU-33 a CU-35)
+## Siguiente paso: Fase 6b, requisitos adicionales (RA-03 a RA-06)
 
-Leer de `docs/especificacion.md` los CU-33 a CU-35 y el schema notification. El contrato de entrada ya está fijado en "Fase 3" (`POST /internal/notificaciones`, solo ids; el correo del destinatario se resuelve en auth por `/internal`, decisiones 7 y 8). Copiar el estilo de appointment y clinical.
+Ver "Requisitos adicionales" más abajo. Orden sugerido: (1) JaCoCo al 90 % por módulo y medir lo que hay hoy; (2) completar 5 APIs no CRUD y el GET all paginado en auth, catalog, appointment y clinical (notification ya los cumple); (3) las 2 APIs externas (feriados en catalog, CIE-10 en clinical); (4) luego la Fase 6 (OpenAPI, Postman) y la 7 (front).
 
-- Pendiente del equipo: `JWT_SECRET` e `INTERNAL_API_KEY` en `.env`.
+- Pendiente del equipo: `JWT_SECRET`, `INTERNAL_API_KEY` y `NOTIFICATION_DB_PASSWORD` en `.env`; opcional `MAIL_ENABLED=true` con `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` para correo real.
 
 ## Fases
 
@@ -17,10 +17,21 @@ Leer de `docs/especificacion.md` los CU-33 a CU-35 y el schema notification. El 
 | 2 | catalog-service: CU-08 a CU-16 | Hecha y verificada con appointment simulado (ver abajo) |
 | 3 | appointment-service: CU-17 a CU-27 y prueba de concurrencia | Hecha (ver abajo) |
 | 4 | clinical-history-service: CU-28 a CU-32 | Hecha (ver abajo) |
-| 5 | notification-service: CU-33 a CU-35 | Pendiente |
-| 6 | Cierre: OpenAPI, colección Postman, cobertura 70 %, correlación de logs | Pendiente |
-| 7 | Interfaz (proyecto aparte en `frontend/`) | Pendiente, por decidir stack |
+| 5 | notification-service: CU-33 a CU-35 | Hecha y verificada (ver abajo) |
+| 6 | Cierre: OpenAPI, colección Postman, cobertura 90 % (JaCoCo), correlación de logs | Pendiente |
+| 6b | Requisitos RA-03, RA-04 y RA-06: 5 APIs no CRUD y GET all paginado por servicio, 2 APIs externas | Pendiente (ver "Requisitos adicionales") |
+| 7 | Interfaz (proyecto aparte en `frontend/`), con las skills `impeccable` y `apple-design` | Pendiente, por decidir stack |
 | 8 | Despliegue en AWS | Pendiente, por decidir alcance y presupuesto |
+
+## Requisitos adicionales (RA-01 a RA-07, ver especificación sección 11)
+
+Estado frente a cada requisito:
+- RA-01, RA-02: cumplidos (5 servicios, una base `appointy`).
+- RA-03: inventario por servicio y brecha hasta 5 APIs no CRUD. Hacer al abrir la Fase 6b: contar lo que ya existe (casi todo son casos de uso de negocio) y completar con consultas/reportes. Propuesta de relleno: auth (estadísticas de usuarios por rol, buscar pacientes), catalog (disponibilidad por especialidad, profesionales por centro, festivos del mes), appointment (agenda por rango, próximas citas, resumen de estados), clinical (resumen del paciente, búsqueda de diagnósticos con CIE-10), notification (reenviar, estadísticas de envío, historial por cita).
+- RA-04: un GET all paginado (`page`, `size`, `sort`, respuesta con `contenido`, `pagina`, `tamano`, `totalElementos`, `totalPaginas`) por servicio: auth `/admin/usuarios`, catalog `/profesionales`, appointment `/citas`, clinical `/atenciones`, notification `/notificaciones`. Hay que revisar cuáles de los listados actuales ya paginan.
+- RA-05: añadir JaCoCo al POM padre con `check` en 0,90 de líneas por módulo (excluir `*Application`, config y DTOs sin lógica). Hoy no se mide cobertura.
+- RA-06 (propuesta, decisión 23): (1) feriados de Colombia con Nager.Date (`https://date.nager.at/api/v3/PublicHolidays/{año}/CO`, sin llave) consumida por catalog al generar franjas, para no ofrecer citas en festivos; (2) catálogo CIE-10 de NLM Clinical Tables (`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=...`, sin llave) consumido por clinical-history para buscar y validar diagnósticos. Ambas con timeout, caché Caffeine y degradación: si fallan, catalog genera sin filtrar festivos y clinical acepta el diagnóstico en texto libre; nunca tumban la operación.
+- RA-07: Fase 7, carpeta `frontend/`, stack por decidir (propuesta: React + Vite + TypeScript consumiendo la API por un único origen). Skills de diseño ya instaladas: `impeccable` (al empezar el front correr `/impeccable init` para crear `PRODUCT.md` y `DESIGN.md`) y `apple-design`.
 
 ## Validado en la Fase 0
 
@@ -172,6 +183,34 @@ Decisiones de esta fase (las tres primeras las confirmó el equipo al arrancar):
 - Defecto real encontrado por la prueba y corregido: Hibernate registraba el mensaje SQL del driver al violar el índice único, y PostgreSQL puede adjuntar la fila rechazada (texto clínico); se silencia ese registrador y el manejador de errores solo anota la clase de la causa.
 - No probado: carga sostenida, expiración de la cache en tiempo real más allá de la prueba unitaria, y que el log de acceso resista millones de filas (hay índices por paciente y por usuario).
 
+## Fase 5: notification-service
+
+Puerto 8085, base `/api/v1`. Auth gana `GET /internal/usuarios/{id}/contacto` -> `{correo}` (llave de servicio; 404 si no existe o está inactivo) con su propia cadena de seguridad para `/internal/**`.
+
+| Método y ruta | Rol | CU / RA |
+|---|---|---|
+| POST `/internal/notificaciones` (contrato de la Fase 3) -> 201 `{id, estado}` | servicio (appointment) | CU-33 |
+| GET `/api/v1/notificaciones?page=&size=&estado=&tipo=&citaId=` | ADMINISTRATIVO | RA-04 (paginado) |
+| GET `/notificaciones/estadisticas`, GET `/notificaciones/cita/{citaId}` | ADMINISTRATIVO | RA-03 |
+| POST `/notificaciones/{id}/reenviar` | ADMINISTRATIVO | RA-03 |
+| POST `/notificaciones/recordatorios/ejecutar`, POST `/notificaciones/reintentos/ejecutar` | ADMINISTRATIVO | CU-34, CU-35, RA-03 |
+
+Comportamiento:
+- CU-33 resuelve el correo en auth, registra la fila y envía en la misma llamada; si el correo falla, la fila queda FALLIDA y la respuesta sigue siendo 201 (la cita nunca se pierde). Si auth no responde, 503 y no se guarda nada; si el paciente no existe, 404.
+- Idempotencia (RNF-16): UNIQUE(cita_id, tipo, programada_para). Las notificaciones inmediatas usan el inicio de la cita como `programada_para`, así que repetir la misma solicitud devuelve la misma notificación. Límite conocido: reprogramar a un horario al que la cita ya se movió antes (A a B a A a B) no genera un segundo correo.
+- Recordatorio (CU-34): al confirmar o reprogramar con más de 24 h de margen se crea una fila RECORDATORIO PENDIENTE con `programada_para` = inicio menos 24 h. Reprogramar o cancelar pasa los pendientes a CANCELADA (estado añadido, decisión 8). Job cada 60 s.
+- Reintentos (CU-35): job cada 5 min sobre FALLIDA con menos de 3 intentos (`NOTIFICATION_MAX_INTENTOS`); tras el tercero queda FALLIDA definitiva y solo se reenvía a mano. `ultimo_error` guarda un código, nunca el mensaje de la causa.
+- Correo: por defecto `MAIL_ENABLED=false` (adaptador simulado: marca ENVIADA y registra solo el asunto). Con `true` usa SMTP (`spring-boot-starter-mail`) con timeouts de 5 s. El indicador de salud de correo está desactivado para que una caída del SMTP no marque el servicio como DOWN.
+- La API enmascara el correo (`p***@dominio`) y no expone el cuerpo (RNF-05). El cuerpo solo lleva fecha, hora y código de la cita; no consulta a catalog.
+- Los jobs asumen una sola instancia (sin bloqueo de lote).
+
+## Validado en la Fase 5
+
+- `mvn -pl notification-service test`: 39 pruebas; auth pasa de 64 a 68 (caso de uso de contacto y filtro de llave). Incluyen el cliente HTTP a auth (llave, correlación, 404, 5xx, timeout y servicio caído) y la regla de capas.
+- `bash scripts/e2e/notification.sh` (auth real + notification real, PostgreSQL local, correo simulado): 46 comprobaciones correctas, 0 fallidas. Cubre la seguridad de `/internal`, los tres tipos de CU-33, idempotencia, creación y cancelación de recordatorios, paginación y filtros, roles, CU-34, CU-35 y que el log no contiene correos ni cuerpos.
+- Defectos reales encontrados y corregidos: `/actuator/health` quedaba DOWN por el indicador de correo; una fecha con formato válido pero inexistente (`2026-13-45`) daba 500 en vez de 400; el enmascarado de un correo sin `@` lo devolvía completo.
+- No probado: envío por SMTP real, dos instancias a la vez, appointment real llamando a notification (la integración se prueba con las Fases 3 y 5 juntas en la Fase 6).
+
 ## Decisiones propias (tomadas por el equipo; no se consultan al docente)
 
 1. Idioma: dominio en español; sufijos técnicos en inglés (interfaz `ReservarCitaUseCase`, implementación `ReservarCitaUseCaseImpl`, `FranjaRepositoryGateway`).
@@ -196,6 +235,10 @@ Decisiones de esta fase (las tres primeras las confirmó el equipo al arrancar):
 20. API interna adicional de catalog para CU-18 (`/internal/profesionales/{id}/asociacion`, `/internal/parametros`) y de appointment para CU-25/CU-26: la lista de comunicaciones de la especificación no incluye appointment a catalog.
 21. Estructura del docente: `domain/usecase` (interfaces de casos de uso), `domain/gateway` (puertos de salida) y `application/usecase` (`*UseCaseImpl`). Antes eran `port/in` y `port/out` con sufijo `Port`.
 22. Las horas del horario llegan y salen como `HH:mm`, con máximo 23:59 (no existe 24:00 en una columna TIME).
+23. APIs externas elegidas por afinidad con el dominio: feriados (Nager.Date) y CIE-10 (NLM). Si el docente prefiere otras, se cambia el adaptador `rest_client`; el puerto en `domain/gateway` no cambia.
+24. Cobertura 90 % medida con JaCoCo por módulo; reemplaza el 70 % del RNF-09.
+25. El correo del paciente lo resuelve notification en auth (`/internal/usuarios/{id}/contacto`); la especificación decía que llegaba en la llamada, pero appointment solo envía ids (decisión 7).
+26. Correo simulado por defecto (`MAIL_ENABLED=false`) para que el proyecto corra localmente sin credenciales SMTP.
 
 ## Supuestos abiertos
 
@@ -205,4 +248,4 @@ Decisiones de esta fase (las tres primeras las confirmó el equipo al arrancar):
 ## Pendientes menores
 
 - Revisar `.github/modernize/` (restos de una herramienta de actualización de Java, sin relación con el proyecto).
-- Skills de interfaz y AWS: se copian al empezar sus fases (ver `CLAUDE.md`).
+- Skills de AWS: se copian al empezar la Fase 8. Las de interfaz `impeccable` y `apple-design` ya están en `.claude/skills/`.
