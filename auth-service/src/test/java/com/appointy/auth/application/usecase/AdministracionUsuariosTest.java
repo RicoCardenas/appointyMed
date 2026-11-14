@@ -115,4 +115,17 @@ class AdministracionUsuariosTest {
         when(usuarios.buscarPorId("u3")).thenReturn(usuario("u3", true));
         assertEquals("PERFIL_NO_ENCONTRADO", assertThrows(NoEncontradoException.class, () -> caso.ejecutar("u3")).codigo());
     }
+
+    @Test
+    void nombresDePacientesSoloDevuelveNombres() {
+        PacientePerfilRepositoryGateway perfiles = mock(PacientePerfilRepositoryGateway.class);
+        when(perfiles.buscarPorUsuarioIds(new String[] {"u1", "u2"})).thenReturn(new PacientePerfil[] {new PacientePerfil("u1", "123", "Ana", "Perez", "1990-01-01", "300", "Calle", "Bogota")});
+        ConsultarNombresPacientesUseCaseImpl caso = new ConsultarNombresPacientesUseCaseImpl(perfiles);
+        com.appointy.auth.domain.model.NombrePaciente[] r = caso.ejecutar(new String[] {"u1", "u2"});
+        assertEquals(1, r.length);
+        assertEquals("Perez", r[0].apellidos());
+        assertThrows(ValidacionException.class, () -> caso.ejecutar(new String[0]));
+        assertThrows(ValidacionException.class, () -> caso.ejecutar(null));
+        assertThrows(ValidacionException.class, () -> caso.ejecutar(new String[51]));
+    }
 }

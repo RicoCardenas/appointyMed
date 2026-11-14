@@ -24,7 +24,7 @@ Las reglas del servicio están en el sistema, no en la pantalla: una franja ocup
 - Proyecto académico (profundización) con especificación del docente en `docs/especificacion.md`; el back son 5 microservicios Spring Boot con JWT de 15 minutos y sin refresh token.
 - La zona horaria de la clínica es America/Bogota; las fechas y horas de franjas llegan en hora local de la clínica.
 - Los endpoints devuelven errores con `codigo`, `mensaje`, `detalle` y `timestamp`; el front los traduce a mensajes que nombran el problema y la salida.
-- Algunos datos no existen en la API y no se inventan: el profesional no ve el nombre del paciente (solo su id), y los centros se listan solo para el administrativo.
+- Algunos datos no existen en la API y no se inventan: los centros se listan solo para el administrativo y la especialidad se resuelve por el catálogo activo. El nombre del paciente (solo nombre y apellido) lo ven profesionales y administrativos.
 
 ## Capabilities and Constraints
 - Sesión de 15 minutos: al vencer, el front vuelve al login avisando (no hay refresh).

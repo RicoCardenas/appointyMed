@@ -11,4 +11,7 @@ public interface PacientePerfilRepositoryGateway {
 
     /** Devuelve null si no existe. */
     PacientePerfil buscarPorCedula(String cedula);
+
+    /** Perfiles de los usuarios pedidos; los ids sin perfil no aparecen. */
+    PacientePerfil[] buscarPorUsuarioIds(String[] usuarioIds);
 }

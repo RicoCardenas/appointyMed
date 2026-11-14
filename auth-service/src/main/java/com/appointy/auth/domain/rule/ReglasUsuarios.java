@@ -6,6 +6,7 @@ import com.appointy.auth.domain.exception.ValidacionException;
 public final class ReglasUsuarios {
 
     public static final int TAMANO_MAXIMO_PAGINA = 100;
+    public static final int MAXIMO_IDS_POR_LOTE = 50;
 
     private ReglasUsuarios() {}
 
@@ -29,6 +30,12 @@ public final class ReglasUsuarios {
         PoliticaClave.validar(claveNueva);
         if (claveNueva.equals(claveActual)) {
             throw new ValidacionException("CLAVE_IGUAL", "La clave nueva debe ser distinta de la actual");
+        }
+    }
+
+    public static void validarLoteDeIds(String[] ids) {
+        if (ids == null || ids.length == 0 || ids.length > MAXIMO_IDS_POR_LOTE) {
+            throw new ValidacionException("LOTE_INVALIDO", "Se piden entre 1 y " + MAXIMO_IDS_POR_LOTE + " ids");
         }
     }
 }

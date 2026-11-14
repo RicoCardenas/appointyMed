@@ -175,6 +175,14 @@ igual "un JWT de usuario no abre /internal" "$(curl -s -m 5 -o /dev/null -w '%{h
 igual "la llave no abre la API de usuarios" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$BASE/admin/usuarios" -H "X-Api-Key: $INTERNAL_API_KEY")" 401
 igual "usuario inexistente en /internal" "$(curl -s -m 5 -o /dev/null -w '%{http_code}' "$INT/usuarios/$(cat /proc/sys/kernel/random/uuid)/contacto" -H "X-Api-Key: $INTERNAL_API_KEY")" 404
 
+echo "== Nombres de pacientes para profesionales y administrativos"
+req POST /pacientes/nombres "$ADMIN" "{\"ids\":[\"$PACIENTE_ID\"]}"; chk "el administrativo obtiene el nombre" 200 0.nombres=Ana 0.apellidos=Perez
+igual "solo nombre y apellido (sin cedula ni contacto)" "$(echo "$BODY" | python3 -I -c 'import sys,json; print(sorted(json.load(sys.stdin)[0].keys()))')" "['apellidos', 'nombres', 'usuarioId']"
+req POST /pacientes/nombres "$ADMIN" "{\"ids\":[\"$(cat /proc/sys/kernel/random/uuid)\"]}"; chk "un id sin perfil simplemente no aparece" 200
+req POST /pacientes/nombres "$ADMIN" '{"ids":[]}'; chk "lote vacio" 400
+req POST /pacientes/nombres "$PT" "{\"ids\":[\"$PACIENTE_ID\"]}"; chk "un paciente no consulta nombres de otros" 403
+req POST /pacientes/nombres "" "{\"ids\":[\"$PACIENTE_ID\"]}"; chk "sin token" 401
+
 echo "== OpenAPI (RNF-11)"
 igual "la especificacion es publica" "$(curl -s -m 10 -o /tmp/e2e-auth-api -w '%{http_code}' http://localhost:8081/v3/api-docs)" 200
 igual "documenta /api/v1 y no /internal" "$(python3 -I -c "import json; p=json.load(open('/tmp/e2e-auth-api'))['paths']; print(any(k.startswith('/api/v1') for k in p) and not any(k.startswith('/internal') for k in p))")" True

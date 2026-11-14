@@ -11,6 +11,7 @@ export const auth = {
   miPerfil: () => llamar<T.Paciente>('auth', '/pacientes/me'),
   actualizarPerfil: (d: Record<string, unknown>) => llamar<T.Paciente>('auth', '/pacientes/me', { metodo: 'PATCH', cuerpo: d }),
   usuarios: (q: P & { rol?: string; activo?: boolean }) => llamar<Pagina<T.Cuenta>>('auth', '/admin/usuarios', { query: q }),
+  nombresPacientes: (ids: string[]) => llamar<{ usuarioId: string; nombres: string; apellidos: string }[]>('auth', '/pacientes/nombres', { metodo: 'POST', cuerpo: { ids } }),
   estadisticas: () => llamar<T.EstadisticasUsuarios>('auth', '/admin/usuarios/estadisticas'),
   crearCuenta: (d: { correo: string; clave: string; rol: T.Rol }) => llamar<T.Cuenta>('auth', '/admin/usuarios', { metodo: 'POST', cuerpo: d }),
   activar: (id: string) => llamar<T.Cuenta>('auth', `/admin/usuarios/${id}/activar`, { metodo: 'POST' }),

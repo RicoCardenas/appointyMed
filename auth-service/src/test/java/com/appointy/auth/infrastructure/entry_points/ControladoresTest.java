@@ -52,6 +52,7 @@ class ControladoresTest {
     final ConsultarEstadisticasUsuariosUseCase estadisticas = mock(ConsultarEstadisticasUsuariosUseCase.class);
     final CambiarEstadoCuentaUseCase cambiarEstado = mock(CambiarEstadoCuentaUseCase.class);
     final ConsultarContactoUseCase contacto = mock(ConsultarContactoUseCase.class);
+    final ConsultarNombresPacientesUseCase nombres = mock(ConsultarNombresPacientesUseCase.class);
     MockMvc mvc;
 
     static Usuario usuario(boolean activo) {
@@ -69,7 +70,7 @@ class ControladoresTest {
                 new UsernamePasswordAuthenticationToken(new UsuarioAutenticado(U, Rol.ADMINISTRATIVO, "jti-1", 9000), null, List.of()));
         ObjectMapper estricto = new ObjectMapper().findAndRegisterModules().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
         mvc = MockMvcBuilders.standaloneSetup(new AuthController(registrar, login, logout, cambiarClave), new PacienteController(perfil, actualizar),
-                        new AdminController(crearCuenta, corregir, listar, estadisticas, cambiarEstado), new InternalController(contacto))
+                        new AdminController(crearCuenta, corregir, listar, estadisticas, cambiarEstado), new InternalController(contacto), new NombresPacientesController(nombres))
                 .setControllerAdvice(new GlobalExceptionHandler()).setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(estricto)).build();
     }
@@ -147,6 +148,14 @@ class ControladoresTest {
         mvc.perform(post("/api/v1/admin/usuarios/" + V + "/desactivar")).andExpect(status().isOk()).andExpect(jsonPath("$.activo").value(false));
         mvc.perform(post("/api/v1/admin/usuarios/" + V + "/activar")).andExpect(status().isOk());
         mvc.perform(post("/api/v1/admin/usuarios/no-uuid/activar")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void nombresDePacientes() throws Exception {
+        when(nombres.ejecutar(new String[] {V})).thenReturn(new com.appointy.auth.domain.model.NombrePaciente[] {new com.appointy.auth.domain.model.NombrePaciente(V, "Ana", "Perez")});
+        mvc.perform(post("/api/v1/pacientes/nombres").contentType("application/json").content("{\"ids\":[\"" + V + "\"]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].nombres").value("Ana")).andExpect(jsonPath("$[0].cedula").doesNotExist());
+        mvc.perform(post("/api/v1/pacientes/nombres").contentType("application/json").content("{\"ids\":[]}")).andExpect(status().isBadRequest());
     }
 
     @Test

@@ -3,9 +3,10 @@ import { citas } from '../../api/servicios'
 import type { Cita } from '../../api/tipos'
 import { useToast } from '../../componentes/Toasts'
 import { Boton, Confirmar, ErrorAviso, Esqueleto, Insignia, Pagina, Paginador, Seleccion, Vacio } from '../../componentes/ui'
-import { ESTADOS_CITA, fechaLarga, idCorto, mensajeDeError } from '../../util/formato'
+import { ESTADOS_CITA, fechaLarga, mensajeDeError } from '../../util/formato'
 import { useAsync } from '../../util/useAsync'
 import { useNombres } from '../../util/useNombres'
+import { useNombresPacientes } from '../../util/useNombresPacientes'
 
 const TONO: Record<string, 'acento' | 'neutro' | 'exito' | 'aviso'> = { CONFIRMADA: 'acento', CANCELADA: 'neutro', COMPLETADA: 'exito', NO_ASISTIDA: 'aviso' }
 
@@ -15,6 +16,7 @@ export function CitasAdmin() {
   const lista = useAsync(() => citas.listar({ page: pagina, size: 10, estado }), [pagina, estado])
   const stats = useAsync(() => citas.estadisticas(), [lista.datos])
   const nombres = useNombres(useMemo(() => lista.datos?.contenido ?? [], [lista.datos]))
+  const paciente = useNombresPacientes((lista.datos?.contenido ?? []).map((c) => c.pacienteId))
   const [aCancelar, setACancelar] = useState<Cita | null>(null)
   const [cancelando, setCancelando] = useState(false)
   const avisar = useToast()
@@ -62,7 +64,7 @@ export function CitasAdmin() {
                   <tr key={c.id}>
                     <td data-etiqueta="Fecha y hora">{fechaLarga(c.fecha)} · {c.horaInicio}</td>
                     <td data-etiqueta="Profesional">{nombres.profesional(c.profesionalId)}</td>
-                    <td data-etiqueta="Paciente">{idCorto(c.pacienteId)}</td>
+                    <td data-etiqueta="Paciente">{paciente(c.pacienteId)}</td>
                     <td data-etiqueta="Centro">{nombres.centro(c.centroId)}</td>
                     <td data-etiqueta="Estado"><Insignia tono={TONO[c.estado]}>{ESTADOS_CITA[c.estado]}</Insignia></td>
                     <td>{c.estado === 'CONFIRMADA' && <Boton variante="fantasma" className="btn-chico" onClick={() => setACancelar(c)}>Cancelar</Boton>}</td>

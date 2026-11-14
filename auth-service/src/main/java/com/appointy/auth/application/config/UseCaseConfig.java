@@ -3,6 +3,7 @@ package com.appointy.auth.application.config;
 import com.appointy.auth.application.usecase.ActualizarDatosEditablesUseCaseImpl;
 import com.appointy.auth.application.usecase.CerrarSesionUseCaseImpl;
 import com.appointy.auth.application.usecase.ConsultarContactoUseCaseImpl;
+import com.appointy.auth.application.usecase.ConsultarNombresPacientesUseCaseImpl;
 import com.appointy.auth.application.usecase.CambiarClaveUseCaseImpl;
 import com.appointy.auth.application.usecase.CambiarEstadoCuentaUseCaseImpl;
 import com.appointy.auth.application.usecase.ConsultarEstadisticasUsuariosUseCaseImpl;
@@ -17,6 +18,7 @@ import com.appointy.auth.application.usecase.SembrarAdministradorUseCaseImpl;
 import com.appointy.auth.domain.usecase.ActualizarDatosEditablesUseCase;
 import com.appointy.auth.domain.usecase.CerrarSesionUseCase;
 import com.appointy.auth.domain.usecase.ConsultarContactoUseCase;
+import com.appointy.auth.domain.usecase.ConsultarNombresPacientesUseCase;
 import com.appointy.auth.domain.usecase.CambiarClaveUseCase;
 import com.appointy.auth.domain.usecase.CambiarEstadoCuentaUseCase;
 import com.appointy.auth.domain.usecase.ConsultarEstadisticasUsuariosUseCase;
@@ -112,5 +114,10 @@ public class UseCaseConfig {
     @Bean
     CambiarClaveUseCase cambiarClave(UsuarioRepositoryGateway usuarios, CodificadorClaveGateway codificador, Clock reloj) {
         return new CambiarClaveUseCaseImpl(usuarios, codificador, reloj);
+    }
+
+    @Bean
+    ConsultarNombresPacientesUseCase consultarNombresPacientes(PacientePerfilRepositoryGateway perfiles) {
+        return new ConsultarNombresPacientesUseCaseImpl(perfiles);
     }
 }

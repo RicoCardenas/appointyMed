@@ -6,12 +6,13 @@ import { AtencionForm } from '../../componentes/AtencionForm'
 import { ListaEntradas } from '../../componentes/EntradasClinicas'
 import { useToast } from '../../componentes/Toasts'
 import { Boton, ErrorAviso, Esqueleto, Pagina, Paginador, Vacio } from '../../componentes/ui'
-import { idCorto } from '../../util/formato'
+import { useNombresPacientes } from '../../util/useNombresPacientes'
 import { useAsync } from '../../util/useAsync'
 
 export function Atenciones() {
   const [pagina, setPagina] = useState(0)
   const lista = useAsync(() => clinica.atenciones({ page: pagina, size: 10 }), [pagina])
+  const paciente = useNombresPacientes((lista.datos?.contenido ?? []).map((e) => e.pacienteId))
   const [corrigiendo, setCorrigiendo] = useState<string | null>(null)
   const avisar = useToast()
 
@@ -24,7 +25,7 @@ export function Atenciones() {
           <div className="panel">
             <ListaEntradas entradas={[...lista.datos.contenido].reverse()} accion={(e: Entrada) => (
               <>
-                <Link to={`/pacientes/${e.pacienteId}`} className="item-sub">Paciente {idCorto(e.pacienteId)}</Link>
+                <Link to={`/pacientes/${e.pacienteId}`} className="item-sub">{paciente(e.pacienteId)}</Link>
                 <Boton variante="fantasma" className="btn-chico" onClick={() => setCorrigiendo(corrigiendo === e.id ? null : e.id)}>Corregir</Boton>
                 {corrigiendo === e.id && (
                   <div style={{ flexBasis: '100%' }}>

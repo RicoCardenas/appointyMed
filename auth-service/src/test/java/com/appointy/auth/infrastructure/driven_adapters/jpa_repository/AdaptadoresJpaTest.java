@@ -106,6 +106,8 @@ class AdaptadoresJpaTest {
         when(perfiles.findByCedula("12345")).thenReturn(Optional.of(e));
         assertEquals(ID, a.buscarPorCedula("12345").usuarioId());
         assertNull(a.buscarPorCedula("0"));
+        when(perfiles.findAllById(any())).thenReturn(List.of(e));
+        assertEquals(1, a.buscarPorUsuarioIds(new String[] {ID}).length);
     }
 
     @Test

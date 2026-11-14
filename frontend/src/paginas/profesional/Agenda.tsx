@@ -5,15 +5,17 @@ import type { Cita } from '../../api/tipos'
 import { AtencionForm } from '../../componentes/AtencionForm'
 import { useToast } from '../../componentes/Toasts'
 import { Aviso, Boton, ErrorAviso, Esqueleto, Insignia, Pagina, Vacio } from '../../componentes/ui'
-import { ESTADOS_CITA, fechaLarga, hoyIso, idCorto, mensajeDeError, sumarDias } from '../../util/formato'
+import { ESTADOS_CITA, fechaLarga, hoyIso, mensajeDeError, sumarDias } from '../../util/formato'
 import { useAsync } from '../../util/useAsync'
 import { useNombres } from '../../util/useNombres'
+import { useNombresPacientes } from '../../util/useNombresPacientes'
 
 export function Agenda() {
   const [fecha, setFecha] = useState(hoyIso())
   const [todas, setTodas] = useState(false)
   const lista = useAsync(() => citas.agenda(todas ? undefined : fecha), [fecha, todas])
   const nombres = useNombres(useMemo(() => lista.datos ?? [], [lista.datos]))
+  const paciente = useNombresPacientes((lista.datos ?? []).map((c) => c.pacienteId))
   const [registrando, setRegistrando] = useState<string | null>(null)
   const [pendienteMarcar, setPendienteMarcar] = useState<Cita | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +53,7 @@ export function Agenda() {
               <div>
                 <div className="item-titulo">{todas && c.fecha ? `${fechaLarga(c.fecha)} · ` : ''}{c.horaInicio} a {c.horaFin}</div>
                 <div className="item-sub">
-                  <Link to={`/pacientes/${c.pacienteId}`}>Paciente {idCorto(c.pacienteId)}</Link> · {nombres.especialidad(c.especialidadId)} · {nombres.centro(c.centroId)}
+                  <Link to={`/pacientes/${c.pacienteId}`}>{paciente(c.pacienteId)}</Link> · {nombres.especialidad(c.especialidadId)} · {nombres.centro(c.centroId)}
                 </div>
               </div>
               <div className="acciones">

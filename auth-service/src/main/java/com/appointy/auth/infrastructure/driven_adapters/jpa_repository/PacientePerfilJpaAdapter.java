@@ -32,4 +32,10 @@ public class PacientePerfilJpaAdapter implements PacientePerfilRepositoryGateway
     public PacientePerfil buscarPorCedula(String cedula) {
         return repositorio.findByCedula(cedula).map(mapper::aDominio).orElse(null);
     }
+
+    @Override
+    public PacientePerfil[] buscarPorUsuarioIds(String[] usuarioIds) {
+        return repositorio.findAllById(java.util.Arrays.stream(usuarioIds).map(UUID::fromString).toList())
+                .stream().map(mapper::aDominio).toArray(PacientePerfil[]::new);
+    }
 }
