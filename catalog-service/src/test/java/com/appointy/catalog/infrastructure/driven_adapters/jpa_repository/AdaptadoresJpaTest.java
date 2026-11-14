@@ -86,6 +86,10 @@ class AdaptadoresJpaTest {
         assertNull(centros.buscarPorId(V));
         when(cr.listarActivosDeProfesional(UUID.fromString(V))).thenReturn(List.of(ce));
         assertEquals(1, centros.listarActivosDeProfesional(V).length);
+        when(cr.findAllByOrderByNombre()).thenReturn(List.of(ce, ce));
+        when(cr.findByActivoTrueOrderByNombre()).thenReturn(List.of(ce));
+        assertEquals(2, centros.listar(true).length);
+        assertEquals(1, centros.listar(false).length);
 
         EspecialidadEntityMapperImpl em = mapper(EspecialidadEntityMapperImpl.class);
         SpringDataEspecialidadRepository er = mock(SpringDataEspecialidadRepository.class);

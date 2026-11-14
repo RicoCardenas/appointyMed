@@ -25,7 +25,9 @@ import com.appointy.catalog.application.usecase.ListarProfesionalesPorEspecialid
 import com.appointy.catalog.application.usecase.ModificarHorarioUseCaseImpl;
 import com.appointy.catalog.application.usecase.ConsultarFestivosUseCaseImpl;
 import com.appointy.catalog.application.usecase.ListarProfesionalesUseCaseImpl;
+import com.appointy.catalog.application.usecase.ListarCentrosUseCaseImpl;
 import com.appointy.catalog.application.usecase.PublicadorDeFranjas;
+import com.appointy.catalog.domain.usecase.ListarCentrosUseCase;
 import com.appointy.catalog.domain.gateway.FestivosClientGateway;
 import com.appointy.catalog.domain.usecase.ConsultarFestivosUseCase;
 import com.appointy.catalog.domain.usecase.ListarProfesionalesUseCase;
@@ -219,5 +221,10 @@ public class UseCaseConfig {
     @Bean
     ConsultarFestivosUseCase consultarFestivos(FestivosClientGateway festivos) {
         return new ConsultarFestivosUseCaseImpl(festivos);
+    }
+
+    @Bean
+    ListarCentrosUseCase listarCentros(CentroRepositoryGateway centros) {
+        return new ListarCentrosUseCaseImpl(centros);
     }
 }

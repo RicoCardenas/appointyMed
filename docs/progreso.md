@@ -2,9 +2,9 @@
 
 Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-14.
 
-## Siguiente paso: Fase 7, interfaz (`frontend/`)
+## Siguiente paso: Fase 8, despliegue en AWS (por decidir alcance y presupuesto)
 
-Decidir el stack (propuesta: React + Vite + TypeScript, un único origen o proxy hacia los 5 puertos), correr `/impeccable init` para crear `PRODUCT.md` y `DESIGN.md`, y usar `apple-design` para movimiento y tipografía. Las rutas y los esquemas están en `docs/openapi/*.json` (se puede generar el cliente tipado desde ahí) y la colección en `docs/postman/`. Antes habría que resolver CORS o el proxy: hoy ningún servicio habilita CORS.
+Antes de ejecutar nada sobre la cuenta: estimar costo y pedir confirmación (CLAUDE.md). Pendientes de la Fase 7 que conviene decidir primero: un proxy inverso en producción que reproduzca los prefijos `/svc/<servicio>` del front (hoy los hace Vite en desarrollo), y la política de la sesión de 15 minutos sin refresh token.
 
 - Pendiente del equipo: `JWT_SECRET`, `INTERNAL_API_KEY` y `NOTIFICATION_DB_PASSWORD` en `.env`; opcional `MAIL_ENABLED=true` con `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` para correo real.
 - Si Maven falla con "Unresolved compilation problems" o "cannot access ...": la extensión Java de VS Code compila en `target/` a la vez. Correr Maven sobre una copia (ver `CLAUDE.md`, "Comandos").
@@ -21,7 +21,7 @@ Decidir el stack (propuesta: React + Vite + TypeScript, un único origen o proxy
 | 5 | notification-service: CU-33 a CU-35 | Hecha y verificada (ver abajo) |
 | 6 | Cierre: OpenAPI, colección Postman, correlación de logs | Hecha y verificada (ver abajo) |
 | 6b | Requisitos RA-03 a RA-06: 5 APIs no CRUD y GET all paginado por servicio, 2 APIs externas, cobertura 90 % | Hecha y verificada (ver abajo) |
-| 7 | Interfaz (proyecto aparte en `frontend/`), con las skills `impeccable` y `apple-design` | Pendiente, por decidir stack |
+| 7 | Interfaz (proyecto aparte en `frontend/`), con las skills `impeccable` y `apple-design` | Hecha y verificada en navegador (ver abajo) |
 | 8 | Despliegue en AWS | Pendiente, por decidir alcance y presupuesto |
 
 ## Requisitos adicionales (RA-01 a RA-07, ver especificación sección 11)
@@ -33,7 +33,7 @@ Decidir el stack (propuesta: React + Vite + TypeScript, un único origen o proxy
 | RA-04 (GET all paginado por servicio) | Cumplido: `page` (desde 0), `size` (1 a 100, por defecto 20) y filtros; respuesta `contenido`, `pagina`, `tamano`, `totalElementos`, `totalPaginas`. |
 | RA-05 (cobertura 90 %) | Cumplido y exigido por Maven: JaCoCo `check` en `verify`, 90 % de líneas por módulo. |
 | RA-06 (2 APIs externas) | Cumplido: festivos (Nager.Date) en catalog y CIE-10 (NLM) en clinical-history. |
-| RA-07 (front) | Pendiente: Fase 7. Skills `impeccable` y `apple-design` instaladas. |
+| RA-07 (front) | Cumplido: `frontend/`, ver Fase 7. |
 
 APIs por servicio (las que no son CRUD; hay más de 5 en cada uno):
 
@@ -73,6 +73,25 @@ APIs por servicio (las que no son CRUD; hay más de 5 en cada uno):
 - `auth.sh` 84 comprobaciones correctas (incluye OpenAPI público, sin `/internal`, esquema bearer, Swagger UI, y que publicar la especificación no abre la API) y `notification.sh` 49, ambas contra PostgreSQL.
 - Incidente corregido: la primera versión de `generar.sh` arrancó auth con `ADMIN_EMAIL` de `.env` y sembró ese administrador en la base real; se borró y el script ya lo anula.
 - No probado: importar la colección en Postman (se comprobó su estructura, no la aplicación), la correlación de punta a punta a través de los 3 saltos con servicios reales, y CORS.
+
+## Fase 7: interfaz web
+
+- Stack: React 19, Vite 8, TypeScript, React Router, lucide-react, Figtree autoalojada; sin librería de componentes. `PRODUCT.md` y `DESIGN.md` en la raíz recogen el producto y el sistema de diseño (superficie Operate, teal clínico restringido, OKLCH, claro y oscuro, una sola familia tipográfica, movimiento solo para estado, sin coreografía de carga).
+- Estructura: `src/api` (cliente con JWT, `X-Correlation-Id` y errores uniformes; un archivo por servicio), `src/sesion` (sesión en `sessionStorage`, cierre automático al vencer el token de 15 minutos con aviso), `src/componentes` (botón, campos, aviso, tabla paginada, diálogo nativo, toasts), `src/paginas/{publicas,paciente,profesional,admin}`.
+- Paciente: reservar en un recorrido (especialidad, profesional, centro, fecha, hora; un 409 recarga las franjas libres), mis citas (próximas y pasadas, reprogramar con otra franja, cancelar con confirmación), mi historia con resumen, perfil y cambio de clave, registro.
+- Profesional: agenda por día o desde hoy, registrar atención con búsqueda CIE-10 (API externa, se puede escribir a mano si falla), marcar atendida o no asistió, mis atenciones paginadas con corrección, historia de un paciente (403 explicado).
+- Administrativo: citas (estadísticas, filtro, paginado, cancelar), cuentas (estadísticas, filtros, crear personal, activar y desactivar), profesionales (búsqueda, crear, especialidades, centros y horarios con generación de franjas), catálogo (especialidades, centros, festivos), notificaciones (estadísticas, filtros, reenviar, ejecutar jobs), parámetros.
+- Cambio en el back: `GET /api/v1/centros` (ADMINISTRATIVO) en catalog, porque no había forma de listar centros para asociarlos. OpenAPI y Postman regenerados (63 peticiones).
+- Límites de datos que el front respeta y no inventa: los profesionales ven el id corto del paciente (auth no expone nombres), los centros de una cita se resuelven por los centros del profesional, la especialidad por el catálogo activo.
+- Demo: `scripts/dev/demo.sh` levanta los servicios con secretos temporales, siembra especialidades, centros, 2 profesionales con horarios y 1 paciente, y al terminar borra todo (incluidas las tablas clínicas de solo inserción, con el mismo método de los scripts e2e).
+
+## Validado en la Fase 7
+
+- `corepack pnpm test`: 25 pruebas (cliente HTTP, formato, sesión con vencimiento, login, rutas por rol, tabla paginada); `tsc` sin errores y `vite build` correcto (337 kB de JS, 101 kB comprimido).
+- En el navegador integrado, contra los 5 servicios reales y PostgreSQL: login de paciente, reserva completa (franjas reales, confirmación), mis citas con nombres resueltos, login de profesional, registro de atención con la búsqueda CIE-10 real, y como administrativo citas con estadísticas y notificaciones (confirmación enviada y recordatorio programado a las 24 h). Tema claro y oscuro, y vista móvil.
+- Defectos encontrados al probar y corregidos: los botones chicos perdían sus estilos base (`className` pisaba la clase), y la resolución de especialidades pedía las inactivas (403 para pacientes).
+- `catalog.sh` 134 correctas con los centros; `generar.sh` regenera la colección.
+- No probado: reprogramar y cancelar desde la interfaz, la administración de profesionales y horarios en el navegador (probadas por API y con pruebas de componentes solo en parte), lector de pantalla, Safari y Firefox, y la sesión de 15 minutos de punta a punta.
 
 ## Validado en la Fase 0
 

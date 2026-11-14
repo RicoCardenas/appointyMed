@@ -60,6 +60,9 @@ mvn -pl auth-service spring-boot:run       # arrancar un servicio (variables de 
 mvn -q verify                              # pruebas + cobertura: falla si algún módulo baja de 90 % de líneas (JaCoCo)
 mvn -q -DskipTests package && bash scripts/e2e/catalog.sh   # prueba real contra PostgreSQL (genera sus propias claves; borra lo que crea)
 bash scripts/e2e/externas.sh               # prueba las 2 APIs externas con la red real (festivos y CIE-10)
+bash scripts/dev/demo.sh                   # servicios + datos de ejemplo para el front; Ctrl+C borra todo
+cd frontend && corepack pnpm dev           # front en :5173 (no hay npm; se usa pnpm con corepack)
+cd frontend && corepack pnpm test && corepack pnpm run build
 ```
 
 Si Maven falla con "Unresolved compilation problems" o "cannot access X", la extensión Java de VS Code está compilando en `target/` al mismo tiempo. Copiar el proyecto (`rsync -a --exclude target --exclude .git --exclude .env ./ /tmp/build/`) y correr Maven allí; para los scripts e2e, copiar de vuelta los `.jar`.

@@ -506,6 +506,39 @@
       }
     },
     "/api/v1/centros": {
+      "get": {
+        "operationId": "listar_2",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "incluirInactivos",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "*/*": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CentroResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Listar centros por nombre; los inactivos solo con incluirInactivos=true",
+        "tags": [
+          "Centros"
+        ]
+      },
       "post": {
         "operationId": "crear_2",
         "requestBody": {

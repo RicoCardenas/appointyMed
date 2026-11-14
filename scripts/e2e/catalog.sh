@@ -264,6 +264,9 @@ req $CAT GET "/profesionales?activo=false" "$ADMIN"; chk "filtro por estado" 200
 req $CAT GET "/profesionales?size=101" "$ADMIN"; chk "tamano invalido" 400 codigo=TAMANO_INVALIDO
 req $CAT GET "/profesionales?texto=%25" "$ADMIN"; chk "el comodin % se trata como texto" 200 totalElementos=0
 req $CAT GET "/profesionales" ""; chk "sin token" 401
+req $CAT GET "/centros" "$ADMIN"; chk "el administrativo lista los centros activos" 200
+req $CAT GET "/centros?incluirInactivos=true" "$ADMIN"; chk "con inactivos" 200
+req $CAT GET "/centros" "$PAC"; chk "un paciente no lista centros (los ve por profesional)" 403
 req $CAT GET "/festivos?anio=2026" "$ADMIN"; chk "festivos con la API externa caida" 503 codigo=FESTIVOS_NO_DISPONIBLES
 req $CAT GET "/festivos?anio=1999" "$ADMIN"; chk "anio fuera de rango" 400 codigo=ANIO_INVALIDO
 req $CAT GET "/festivos" "$ADMIN"; chk "falta el anio" 400

@@ -32,4 +32,10 @@ public class CentroJpaAdapter implements CentroRepositoryGateway {
     public Centro[] listarActivosDeProfesional(String profesionalId) {
         return repositorio.listarActivosDeProfesional(UUID.fromString(profesionalId)).stream().map(mapper::aDominio).toArray(Centro[]::new);
     }
+
+    @Override
+    public Centro[] listar(boolean incluirInactivos) {
+        return (incluirInactivos ? repositorio.findAllByOrderByNombre() : repositorio.findByActivoTrueOrderByNombre())
+                .stream().map(mapper::aDominio).toArray(Centro[]::new);
+    }
 }

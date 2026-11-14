@@ -8,6 +8,11 @@ import com.appointy.catalog.domain.usecase.DesactivarCentroUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroResponse;
 import jakarta.validation.Valid;
+import com.appointy.catalog.domain.usecase.ListarCentrosUseCase;
+import java.util.Arrays;
+import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,11 +35,20 @@ public class CentroController {
     private final CrearCentroUseCase crear;
     private final ActualizarCentroUseCase actualizar;
     private final DesactivarCentroUseCase desactivar;
+    private final ListarCentrosUseCase listar;
 
-    public CentroController(CrearCentroUseCase crear, ActualizarCentroUseCase actualizar, DesactivarCentroUseCase desactivar) {
+    public CentroController(CrearCentroUseCase crear, ActualizarCentroUseCase actualizar, DesactivarCentroUseCase desactivar,
+            ListarCentrosUseCase listar) {
         this.crear = crear;
         this.actualizar = actualizar;
         this.desactivar = desactivar;
+        this.listar = listar;
+    }
+
+    @Operation(summary = "Listar centros por nombre; los inactivos solo con incluirInactivos=true")
+    @GetMapping
+    public List<CentroResponse> listar(@RequestParam(defaultValue = "false") boolean incluirInactivos) {
+        return Arrays.stream(listar.ejecutar(incluirInactivos)).map(CentroResponse::de).toList();
     }
 
     @Operation(summary = "Crear un centro")

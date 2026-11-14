@@ -61,6 +61,9 @@ class CasosDeUsoSencillosTest {
         assertEquals("Nueva", actualizar.ejecutar(new ActualizarCentroUseCase.Comando("c1", " Nueva ", "Calle 2", "Cali", null)).nombre());
         assertThrows(NoEncontradoException.class, () -> actualizar.ejecutar(new ActualizarCentroUseCase.Comando("x", "n", "d", "c", null)));
 
+        when(centros.listar(true)).thenReturn(new Centro[] {centro(true), centro(false)});
+        assertEquals(2, new ListarCentrosUseCaseImpl(centros).ejecutar(true).length);
+
         DesactivarCentroUseCaseImpl desactivar = new DesactivarCentroUseCaseImpl(centros);
         desactivar.ejecutar("c1");
         verify(centros, org.mockito.Mockito.times(3)).guardar(any());

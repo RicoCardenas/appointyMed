@@ -16,4 +16,8 @@ public interface SpringDataCentroRepository extends JpaRepository<CentroEntity, 
             order by c.nombre
             """, nativeQuery = true)
     List<CentroEntity> listarActivosDeProfesional(@Param("profesionalId") UUID profesionalId);
+
+    List<CentroEntity> findAllByOrderByNombre();
+
+    List<CentroEntity> findByActivoTrueOrderByNombre();
 }

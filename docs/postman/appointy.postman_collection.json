@@ -520,6 +520,34 @@
           "name": "Centros",
           "item": [
             {
+              "name": "Listar centros por nombre; los inactivos solo con incluirInactivos=true",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{catalog_url}}/api/v1/centros",
+                  "host": [
+                    "{{catalog_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "v1",
+                    "centros"
+                  ],
+                  "query": [
+                    {
+                      "key": "incluirInactivos",
+                      "value": "false",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": []
+                },
+                "description": "Listar centros por nombre; los inactivos solo con incluirInactivos=true"
+              },
+              "response": []
+            },
+            {
               "name": "Crear un centro",
               "request": {
                 "method": "POST",

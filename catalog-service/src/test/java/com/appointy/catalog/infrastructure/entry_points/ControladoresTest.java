@@ -59,6 +59,7 @@ class ControladoresTest {
     final CrearCentroUseCase crearCentro = mock(CrearCentroUseCase.class);
     final ActualizarCentroUseCase actualizarCentro = mock(ActualizarCentroUseCase.class);
     final DesactivarCentroUseCase desactivarCentro = mock(DesactivarCentroUseCase.class);
+    final ListarCentrosUseCase listarCentros = mock(ListarCentrosUseCase.class);
     final ListarEspecialidadesUseCase listarEspecialidades = mock(ListarEspecialidadesUseCase.class);
     final CrearEspecialidadUseCase crearEspecialidad = mock(CrearEspecialidadUseCase.class);
     final ActualizarEspecialidadUseCase actualizarEspecialidad = mock(ActualizarEspecialidadUseCase.class);
@@ -101,7 +102,7 @@ class ControladoresTest {
         mvc = MockMvcBuilders.standaloneSetup(
                         new ProfesionalController(crearProfesional, actualizarProfesional, desactivarProfesional, consultarProfesional, centrosDe,
                                 asociarEspecialidades, asociarCentros, definirHorario, listarHorarios, listarProfesionales),
-                        new CentroController(crearCentro, actualizarCentro, desactivarCentro),
+                        new CentroController(crearCentro, actualizarCentro, desactivarCentro, listarCentros),
                         new EspecialidadController(listarEspecialidades, crearEspecialidad, actualizarEspecialidad, desactivarEspecialidad, profesionalesDe),
                         new HorarioController(modificarHorario, generarFranjas), new BloqueoController(bloquear),
                         new ParametroController(consultarParametros, configurarParametros), new FestivoController(festivos),
@@ -174,6 +175,10 @@ class ControladoresTest {
         mvc.perform(delete("/api/v1/centros/" + U)).andExpect(status().isNoContent());
         verify(desactivarCentro).ejecutar(U);
         mvc.perform(post("/api/v1/centros").contentType("application/json").content("{\"nombre\":\"\"}")).andExpect(status().isBadRequest());
+        when(listarCentros.ejecutar(false)).thenReturn(new Centro[] {centro()});
+        when(listarCentros.ejecutar(true)).thenReturn(new Centro[] {centro(), centro()});
+        mvc.perform(get("/api/v1/centros")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+        mvc.perform(get("/api/v1/centros?incluirInactivos=true")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test

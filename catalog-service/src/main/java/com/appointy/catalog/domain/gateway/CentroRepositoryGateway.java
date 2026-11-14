@@ -11,4 +11,7 @@ public interface CentroRepositoryGateway {
 
     /** Centros activos donde atiende el profesional. */
     Centro[] listarActivosDeProfesional(String profesionalId);
+
+    /** Por nombre; con {@code incluirInactivos} false, solo los activos. */
+    Centro[] listar(boolean incluirInactivos);
 }

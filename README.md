@@ -30,3 +30,17 @@ mvn -pl auth-service spring-boot:run
 ```
 
 Las migraciones de Flyway se aplican al arrancar. Swagger y la colección de Postman se agregan en la fase de cierre.
+
+## Interfaz web (`frontend/`)
+
+React 19 + Vite + TypeScript. En desarrollo el front llama a los 5 servicios por un proxy (`/svc/<servicio>`), sin CORS. No hay `npm` instalado en esta máquina: se usa pnpm con corepack.
+
+```bash
+bash scripts/dev/demo.sh            # servicios + datos de ejemplo (Ctrl+C los detiene y borra todo)
+cd frontend && corepack pnpm install && corepack pnpm dev   # http://localhost:5173
+corepack pnpm test                  # pruebas del front (vitest)
+corepack pnpm run build             # tsc + vite build
+```
+
+Cuentas de la demo (clave `Demo12345`): `paciente@demo.local`, `dra.rojas@demo.local`, `dr.mejia@demo.local`, `admin@demo.local`.
+La documentación de la API está en `/swagger-ui/index.html` de cada servicio, en `docs/openapi/` y en la colección `docs/postman/`.
