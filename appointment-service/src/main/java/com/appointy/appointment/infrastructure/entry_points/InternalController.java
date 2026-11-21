@@ -4,10 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.appointment.domain.model.Cita;
 import com.appointy.appointment.domain.model.ResultadoGeneracion;
-import com.appointy.appointment.domain.usecase.BloquearFranjasUseCase;
-import com.appointy.appointment.domain.usecase.GenerarFranjasUseCase;
-import com.appointy.appointment.domain.usecase.ObtenerCitaServicioUseCase;
-import com.appointy.appointment.domain.usecase.ValidarRelacionUseCase;
+import com.appointy.appointment.domain.usecase.FranjaUseCase;
+import com.appointy.appointment.domain.usecase.ConsultaCitaUseCase;
 import com.appointy.appointment.infrastructure.entry_points.dto.BloquearFranjasRequest;
 import com.appointy.appointment.infrastructure.entry_points.dto.GenerarFranjasRequest;
 import jakarta.validation.Valid;
@@ -27,44 +25,39 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal")
 public class InternalController {
 
-    private final GenerarFranjasUseCase generar;
-    private final BloquearFranjasUseCase bloquear;
-    private final ValidarRelacionUseCase relacion;
-    private final ObtenerCitaServicioUseCase cita;
+    private final FranjaUseCase franjaUseCase;
+    private final ConsultaCitaUseCase consultaCitaUseCase;
 
-    public InternalController(GenerarFranjasUseCase generar, BloquearFranjasUseCase bloquear, ValidarRelacionUseCase relacion,
-            ObtenerCitaServicioUseCase cita) {
-        this.generar = generar;
-        this.bloquear = bloquear;
-        this.relacion = relacion;
-        this.cita = cita;
+    public InternalController(FranjaUseCase franjaUseCase, ConsultaCitaUseCase consultaCitaUseCase) {
+        this.franjaUseCase = franjaUseCase;
+        this.consultaCitaUseCase = consultaCitaUseCase;
     }
 
     @Operation(summary = "Generar franjas (catalog)")
     @PostMapping("/franjas/generar")
     public Map<String, Integer> generar(@Valid @RequestBody GenerarFranjasRequest s) {
-        ResultadoGeneracion r = generar.ejecutar(s.profesionalId().toString(), s.centroId().toString(), s.aDominio());
+        ResultadoGeneracion r = franjaUseCase.generarFranjas(s.profesionalId().toString(), s.centroId().toString(), s.aDominio());
         return Map.of("creadas", r.creadas(), "existentes", r.existentes());
     }
 
     @Operation(summary = "Bloquear franjas (catalog)")
     @PostMapping("/franjas/bloquear")
     public Map<String, Integer> bloquear(@Valid @RequestBody BloquearFranjasRequest s) {
-        int bloqueadas = bloquear.ejecutar(s.profesionalId().toString(), s.centroId().toString(), s.fechaInicio().toString(), s.fechaFin().toString());
+        int bloqueadas = franjaUseCase.bloquearFranjas(s.profesionalId().toString(), s.centroId().toString(), s.fechaInicio().toString(), s.fechaFin().toString());
         return Map.of("bloqueadas", bloqueadas);
     }
 
     @Operation(summary = "Existe relación profesional-paciente (clinical)")
     @GetMapping("/relaciones")
     public Map<String, Boolean> relacion(@RequestParam UUID profesionalId, @RequestParam UUID pacienteId) {
-        return Map.of("existe", relacion.ejecutar(profesionalId.toString(), pacienteId.toString()));
+        return Map.of("existe", consultaCitaUseCase.validarRelacion(profesionalId.toString(), pacienteId.toString()));
     }
 
     /** CU-28: clinical comprueba el profesional y el estado de la cita. Solo ids y estado, sin datos personales. */
     @Operation(summary = "Datos mínimos de una cita (clinical)")
     @GetMapping("/citas/{id}")
     public Map<String, String> cita(@PathVariable UUID id) {
-        Cita c = cita.ejecutar(id.toString());
+        Cita c = consultaCitaUseCase.obtenerCitaServicio(id.toString());
         return Map.of("citaId", c.id(), "pacienteId", c.pacienteId(), "profesionalId", c.profesionalId(), "estado", c.estado().name());
     }
 }

@@ -2,8 +2,7 @@ package com.appointy.catalog.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.catalog.domain.usecase.ConfigurarParametrosUseCase;
-import com.appointy.catalog.domain.usecase.ConsultarParametrosUseCase;
+import com.appointy.catalog.domain.usecase.ParametroUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.ParametroResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.ParametrosRequest;
 import jakarta.validation.Valid;
@@ -23,23 +22,21 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class ParametroController {
 
-    private final ConsultarParametrosUseCase consultar;
-    private final ConfigurarParametrosUseCase configurar;
+    private final ParametroUseCase parametroUseCase;
 
-    public ParametroController(ConsultarParametrosUseCase consultar, ConfigurarParametrosUseCase configurar) {
-        this.consultar = consultar;
-        this.configurar = configurar;
+    public ParametroController(ParametroUseCase parametroUseCase) {
+        this.parametroUseCase = parametroUseCase;
     }
 
     @Operation(summary = "Consultar los parámetros del servicio")
     @GetMapping
     public List<ParametroResponse> consultar() {
-        return Arrays.stream(consultar.ejecutar()).map(ParametroResponse::de).toList();
+        return Arrays.stream(parametroUseCase.consultarParametros()).map(ParametroResponse::de).toList();
     }
 
     @Operation(summary = "Configurar parámetros del servicio")
     @PutMapping
     public List<ParametroResponse> configurar(@Valid @RequestBody ParametrosRequest s) {
-        return Arrays.stream(configurar.ejecutar(new ConfigurarParametrosUseCase.Comando(s.comoParametros()))).map(ParametroResponse::de).toList();
+        return Arrays.stream(parametroUseCase.configurarParametros(new ParametroUseCase.ConfigurarParametrosComando(s.comoParametros()))).map(ParametroResponse::de).toList();
     }
 }

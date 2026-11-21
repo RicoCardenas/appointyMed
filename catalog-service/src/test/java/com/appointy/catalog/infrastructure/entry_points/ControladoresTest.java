@@ -25,7 +25,11 @@ import com.appointy.catalog.domain.model.PaginaProfesionales;
 import com.appointy.catalog.domain.model.ParametroServicio;
 import com.appointy.catalog.domain.model.Profesional;
 import com.appointy.catalog.domain.model.ResultadoHorario;
-import com.appointy.catalog.domain.usecase.*;
+import com.appointy.catalog.domain.usecase.CentroUseCase;
+import com.appointy.catalog.domain.usecase.EspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.HorarioUseCase;
+import com.appointy.catalog.domain.usecase.ParametroUseCase;
+import com.appointy.catalog.domain.usecase.ProfesionalUseCase;
 import com.appointy.catalog.infrastructure.security.UsuarioAutenticado;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
@@ -45,34 +49,11 @@ class ControladoresTest {
 
     static final String U = "11111111-1111-1111-1111-111111111111";
     static final String V = "22222222-2222-2222-2222-222222222222";
-
-    final CrearProfesionalUseCase crearProfesional = mock(CrearProfesionalUseCase.class);
-    final ActualizarProfesionalUseCase actualizarProfesional = mock(ActualizarProfesionalUseCase.class);
-    final DesactivarProfesionalUseCase desactivarProfesional = mock(DesactivarProfesionalUseCase.class);
-    final ConsultarProfesionalUseCase consultarProfesional = mock(ConsultarProfesionalUseCase.class);
-    final ListarCentrosDeProfesionalUseCase centrosDe = mock(ListarCentrosDeProfesionalUseCase.class);
-    final AsociarEspecialidadesUseCase asociarEspecialidades = mock(AsociarEspecialidadesUseCase.class);
-    final AsociarCentrosUseCase asociarCentros = mock(AsociarCentrosUseCase.class);
-    final DefinirHorarioUseCase definirHorario = mock(DefinirHorarioUseCase.class);
-    final ListarHorariosUseCase listarHorarios = mock(ListarHorariosUseCase.class);
-    final ListarProfesionalesUseCase listarProfesionales = mock(ListarProfesionalesUseCase.class);
-    final CrearCentroUseCase crearCentro = mock(CrearCentroUseCase.class);
-    final ActualizarCentroUseCase actualizarCentro = mock(ActualizarCentroUseCase.class);
-    final DesactivarCentroUseCase desactivarCentro = mock(DesactivarCentroUseCase.class);
-    final ListarCentrosUseCase listarCentros = mock(ListarCentrosUseCase.class);
-    final ListarEspecialidadesUseCase listarEspecialidades = mock(ListarEspecialidadesUseCase.class);
-    final CrearEspecialidadUseCase crearEspecialidad = mock(CrearEspecialidadUseCase.class);
-    final ActualizarEspecialidadUseCase actualizarEspecialidad = mock(ActualizarEspecialidadUseCase.class);
-    final DesactivarEspecialidadUseCase desactivarEspecialidad = mock(DesactivarEspecialidadUseCase.class);
-    final ListarProfesionalesPorEspecialidadUseCase profesionalesDe = mock(ListarProfesionalesPorEspecialidadUseCase.class);
-    final ModificarHorarioUseCase modificarHorario = mock(ModificarHorarioUseCase.class);
-    final GenerarFranjasUseCase generarFranjas = mock(GenerarFranjasUseCase.class);
-    final BloquearFranjasUseCase bloquear = mock(BloquearFranjasUseCase.class);
-    final ConsultarParametrosUseCase consultarParametros = mock(ConsultarParametrosUseCase.class);
-    final ConfigurarParametrosUseCase configurarParametros = mock(ConfigurarParametrosUseCase.class);
-    final ValidarAsociacionUseCase validarAsociacion = mock(ValidarAsociacionUseCase.class);
-    final BuscarProfesionalPorUsuarioUseCase porUsuario = mock(BuscarProfesionalPorUsuarioUseCase.class);
-    final ConsultarFestivosUseCase festivos = mock(ConsultarFestivosUseCase.class);
+    final ProfesionalUseCase profesionalUseCase = mock(ProfesionalUseCase.class);
+    final CentroUseCase centroUseCase = mock(CentroUseCase.class);
+    final HorarioUseCase horarioUseCase = mock(HorarioUseCase.class);
+    final EspecialidadUseCase especialidadUseCase = mock(EspecialidadUseCase.class);
+    final ParametroUseCase parametroUseCase = mock(ParametroUseCase.class);
     MockMvc mvc;
     String rol = "ADMINISTRATIVO";
 
@@ -100,13 +81,12 @@ class ControladoresTest {
     void preparar() {
         autenticar("ADMINISTRATIVO");
         mvc = MockMvcBuilders.standaloneSetup(
-                        new ProfesionalController(crearProfesional, actualizarProfesional, desactivarProfesional, consultarProfesional, centrosDe,
-                                asociarEspecialidades, asociarCentros, definirHorario, listarHorarios, listarProfesionales),
-                        new CentroController(crearCentro, actualizarCentro, desactivarCentro, listarCentros),
-                        new EspecialidadController(listarEspecialidades, crearEspecialidad, actualizarEspecialidad, desactivarEspecialidad, profesionalesDe),
-                        new HorarioController(modificarHorario, generarFranjas), new BloqueoController(bloquear),
-                        new ParametroController(consultarParametros, configurarParametros), new FestivoController(festivos),
-                        new InternalController(validarAsociacion, consultarParametros, porUsuario))
+                        new ProfesionalController(profesionalUseCase, centroUseCase, horarioUseCase),
+                        new CentroController(centroUseCase),
+                        new EspecialidadController(especialidadUseCase, profesionalUseCase),
+                        new HorarioController(horarioUseCase), new BloqueoController(horarioUseCase),
+                        new ParametroController(parametroUseCase), new FestivoController(parametroUseCase),
+                        new InternalController(profesionalUseCase, parametroUseCase))
                 .setControllerAdvice(new GlobalExceptionHandler()).setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(new ObjectMapper().findAndRegisterModules())).build();
     }
@@ -123,18 +103,18 @@ class ControladoresTest {
 
     @Test
     void profesionalesCrudYAsociaciones() throws Exception {
-        when(crearProfesional.ejecutar(any())).thenReturn(profesional());
-        when(actualizarProfesional.ejecutar(any())).thenReturn(profesional());
-        when(consultarProfesional.ejecutar(U)).thenReturn(detalle());
-        when(asociarEspecialidades.ejecutar(any())).thenReturn(detalle());
-        when(asociarCentros.ejecutar(any())).thenReturn(detalle());
-        when(centrosDe.ejecutar(U)).thenReturn(new Centro[] {centro()});
+        when(profesionalUseCase.crearProfesional(any())).thenReturn(profesional());
+        when(profesionalUseCase.actualizarProfesional(any())).thenReturn(profesional());
+        when(profesionalUseCase.consultarProfesional(U)).thenReturn(detalle());
+        when(profesionalUseCase.asociarEspecialidades(any())).thenReturn(detalle());
+        when(profesionalUseCase.asociarCentros(any())).thenReturn(detalle());
+        when(centroUseCase.listarCentrosDeProfesional(U)).thenReturn(new Centro[] {centro()});
         String cuerpo = "{\"nombres\":\"Ana\",\"apellidos\":\"Perez\",\"registroMedico\":\"RM-1\"}";
         mvc.perform(post("/api/v1/profesionales").contentType("application/json").content("{\"usuarioId\":\"" + V + "\"," + cuerpo.substring(1)))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.registroMedico").value("RM-1"));
         mvc.perform(put("/api/v1/profesionales/" + U).contentType("application/json").content(cuerpo)).andExpect(status().isOk());
         mvc.perform(delete("/api/v1/profesionales/" + U)).andExpect(status().isNoContent());
-        verify(desactivarProfesional).ejecutar(U);
+        verify(profesionalUseCase).desactivarProfesional(U);
         mvc.perform(get("/api/v1/profesionales/" + U)).andExpect(status().isOk()).andExpect(jsonPath("$.especialidadIds[0]").value(V));
         mvc.perform(get("/api/v1/profesionales/" + U + "/centros")).andExpect(status().isOk()).andExpect(jsonPath("$[0].ciudad").value("Bogota"));
         mvc.perform(put("/api/v1/profesionales/" + U + "/especialidades").contentType("application/json").content("{\"ids\":[\"" + V + "\"]}")).andExpect(status().isOk());
@@ -144,19 +124,19 @@ class ControladoresTest {
 
     @Test
     void listadoPaginadoDeProfesionales() throws Exception {
-        when(listarProfesionales.ejecutar(any(), eq(1), eq(5))).thenReturn(new PaginaProfesionales(new Profesional[] {profesional()}, 1, 5, 6, 2));
+        when(profesionalUseCase.listarProfesionales(any(), eq(1), eq(5))).thenReturn(new PaginaProfesionales(new Profesional[] {profesional()}, 1, 5, 6, 2));
         mvc.perform(get("/api/v1/profesionales?page=1&size=5&texto=ana&activo=true"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalPaginas").value(2)).andExpect(jsonPath("$.contenido[0].nombres").value("Ana"));
         ArgumentCaptor<FiltroProfesionales> filtro = ArgumentCaptor.forClass(FiltroProfesionales.class);
-        verify(listarProfesionales).ejecutar(filtro.capture(), eq(1), eq(5));
+        verify(profesionalUseCase).listarProfesionales(filtro.capture(), eq(1), eq(5));
         org.junit.jupiter.api.Assertions.assertEquals("ana", filtro.getValue().texto());
         org.junit.jupiter.api.Assertions.assertEquals(Boolean.TRUE, filtro.getValue().activo());
     }
 
     @Test
     void horariosDeUnProfesional() throws Exception {
-        when(listarHorarios.ejecutar(U)).thenReturn(new HorarioAtencion[] {horario()});
-        when(definirHorario.ejecutar(any())).thenReturn(resultado());
+        when(horarioUseCase.listarHorarios(U)).thenReturn(new HorarioAtencion[] {horario()});
+        when(horarioUseCase.definirHorario(any())).thenReturn(resultado());
         mvc.perform(get("/api/v1/profesionales/" + U + "/horarios")).andExpect(status().isOk()).andExpect(jsonPath("$[0].horaInicio").value("08:00"));
         mvc.perform(post("/api/v1/profesionales/" + U + "/horarios").contentType("application/json")
                 .content("{\"centroId\":\"" + U + "\",\"diaSemana\":1,\"horaInicio\":\"08:00\",\"horaFin\":\"09:00\",\"duracionFranjaMin\":30}"))
@@ -167,27 +147,27 @@ class ControladoresTest {
 
     @Test
     void centros() throws Exception {
-        when(crearCentro.ejecutar(any())).thenReturn(centro());
-        when(actualizarCentro.ejecutar(any())).thenReturn(centro());
+        when(centroUseCase.crearCentro(any())).thenReturn(centro());
+        when(centroUseCase.actualizarCentro(any())).thenReturn(centro());
         String cuerpo = "{\"nombre\":\"Sede\",\"direccion\":\"Calle 1\",\"ciudad\":\"Bogota\",\"telefono\":\"3001234567\"}";
         mvc.perform(post("/api/v1/centros").contentType("application/json").content(cuerpo)).andExpect(status().isCreated()).andExpect(jsonPath("$.nombre").value("Sede"));
         mvc.perform(put("/api/v1/centros/" + U).contentType("application/json").content(cuerpo)).andExpect(status().isOk());
         mvc.perform(delete("/api/v1/centros/" + U)).andExpect(status().isNoContent());
-        verify(desactivarCentro).ejecutar(U);
+        verify(centroUseCase).desactivarCentro(U);
         mvc.perform(post("/api/v1/centros").contentType("application/json").content("{\"nombre\":\"\"}")).andExpect(status().isBadRequest());
-        when(listarCentros.ejecutar(false)).thenReturn(new Centro[] {centro()});
-        when(listarCentros.ejecutar(true)).thenReturn(new Centro[] {centro(), centro()});
+        when(centroUseCase.listarCentros(false)).thenReturn(new Centro[] {centro()});
+        when(centroUseCase.listarCentros(true)).thenReturn(new Centro[] {centro(), centro()});
         mvc.perform(get("/api/v1/centros")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
         mvc.perform(get("/api/v1/centros?incluirInactivos=true")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
     void especialidades() throws Exception {
-        when(listarEspecialidades.ejecutar(false)).thenReturn(new Especialidad[] {new Especialidad(U, "Cardiologia", null, true)});
-        when(listarEspecialidades.ejecutar(true)).thenReturn(new Especialidad[0]);
-        when(profesionalesDe.ejecutar(U)).thenReturn(new Profesional[] {profesional()});
-        when(crearEspecialidad.ejecutar(any())).thenReturn(new Especialidad(U, "Cardiologia", null, true));
-        when(actualizarEspecialidad.ejecutar(any())).thenReturn(new Especialidad(U, "Cardiologia", "x", true));
+        when(especialidadUseCase.listarEspecialidades(false)).thenReturn(new Especialidad[] {new Especialidad(U, "Cardiologia", null, true)});
+        when(especialidadUseCase.listarEspecialidades(true)).thenReturn(new Especialidad[0]);
+        when(profesionalUseCase.listarProfesionalesPorEspecialidad(U)).thenReturn(new Profesional[] {profesional()});
+        when(especialidadUseCase.crearEspecialidad(any())).thenReturn(new Especialidad(U, "Cardiologia", null, true));
+        when(especialidadUseCase.actualizarEspecialidad(any())).thenReturn(new Especialidad(U, "Cardiologia", "x", true));
         mvc.perform(get("/api/v1/especialidades")).andExpect(status().isOk()).andExpect(jsonPath("$[0].nombre").value("Cardiologia"));
         mvc.perform(get("/api/v1/especialidades/" + U + "/profesionales")).andExpect(status().isOk()).andExpect(jsonPath("$[0].apellidos").value("Perez"));
         mvc.perform(post("/api/v1/especialidades").contentType("application/json").content("{\"nombre\":\"Cardiologia\"}")).andExpect(status().isCreated());
@@ -205,11 +185,11 @@ class ControladoresTest {
 
     @Test
     void horariosBloqueosYParametros() throws Exception {
-        when(modificarHorario.ejecutar(any())).thenReturn(resultado());
-        when(generarFranjas.ejecutar(U)).thenReturn(resultado());
-        when(bloquear.ejecutar(any())).thenReturn(new Bloqueo(U, V, U, "2026-11-20", "2026-11-21", "Congreso", U, 1000));
-        when(consultarParametros.ejecutar()).thenReturn(new ParametroServicio[] {new ParametroServicio("horizonte_max_dias", "60", "d")});
-        when(configurarParametros.ejecutar(any())).thenReturn(new ParametroServicio[] {new ParametroServicio("horizonte_max_dias", "30", "d")});
+        when(horarioUseCase.modificarHorario(any())).thenReturn(resultado());
+        when(horarioUseCase.generarFranjas(U)).thenReturn(resultado());
+        when(horarioUseCase.bloquearFranjas(any())).thenReturn(new Bloqueo(U, V, U, "2026-11-20", "2026-11-21", "Congreso", U, 1000));
+        when(parametroUseCase.consultarParametros()).thenReturn(new ParametroServicio[] {new ParametroServicio("horizonte_max_dias", "60", "d")});
+        when(parametroUseCase.configurarParametros(any())).thenReturn(new ParametroServicio[] {new ParametroServicio("horizonte_max_dias", "30", "d")});
         mvc.perform(put("/api/v1/horarios/" + U).contentType("application/json")
                 .content("{\"centroId\":\"" + U + "\",\"diaSemana\":2,\"horaInicio\":\"08:00\",\"horaFin\":\"09:00\",\"activo\":true}")).andExpect(status().isOk());
         mvc.perform(post("/api/v1/horarios/" + U + "/franjas")).andExpect(status().isOk()).andExpect(jsonPath("$.franjasGeneradas").value(true));
@@ -223,8 +203,8 @@ class ControladoresTest {
 
     @Test
     void conflictoDeBloqueoYAppointmentCaido() throws Exception {
-        when(bloquear.ejecutar(any())).thenThrow(new ConflictoException("CITAS_AFECTADAS", "hay citas"));
-        when(generarFranjas.ejecutar(U)).thenThrow(new ServicioNoDisponibleException("APPOINTMENT_NO_DISPONIBLE", "caido"));
+        when(horarioUseCase.bloquearFranjas(any())).thenThrow(new ConflictoException("CITAS_AFECTADAS", "hay citas"));
+        when(horarioUseCase.generarFranjas(U)).thenThrow(new ServicioNoDisponibleException("APPOINTMENT_NO_DISPONIBLE", "caido"));
         mvc.perform(post("/api/v1/bloqueos").contentType("application/json")
                 .content("{\"profesionalId\":\"" + V + "\",\"centroId\":\"" + U + "\",\"fechaInicio\":\"2026-11-20\",\"fechaFin\":\"2026-11-21\",\"motivo\":\"x\"}"))
                 .andExpect(status().isConflict());
@@ -233,8 +213,8 @@ class ControladoresTest {
 
     @Test
     void festivosDeLaApiExterna() throws Exception {
-        when(festivos.ejecutar(2026)).thenReturn(new Festivo[] {new Festivo("2026-01-01", "Anio Nuevo")});
-        when(festivos.ejecutar(2027)).thenThrow(new ServicioNoDisponibleException("FESTIVOS_NO_DISPONIBLES", "x"));
+        when(parametroUseCase.consultarFestivos(2026)).thenReturn(new Festivo[] {new Festivo("2026-01-01", "Anio Nuevo")});
+        when(parametroUseCase.consultarFestivos(2027)).thenThrow(new ServicioNoDisponibleException("FESTIVOS_NO_DISPONIBLES", "x"));
         mvc.perform(get("/api/v1/festivos?anio=2026")).andExpect(status().isOk()).andExpect(jsonPath("$[0].nombre").value("Anio Nuevo"));
         mvc.perform(get("/api/v1/festivos?anio=2027")).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.codigo").value("FESTIVOS_NO_DISPONIBLES"));
         mvc.perform(get("/api/v1/festivos")).andExpect(status().isBadRequest());
@@ -242,9 +222,9 @@ class ControladoresTest {
 
     @Test
     void consultasInternas() throws Exception {
-        when(validarAsociacion.ejecutar(U, V, U)).thenReturn(new ValidarAsociacionUseCase.Resultado(true, true));
-        when(porUsuario.ejecutar(V)).thenReturn(profesional());
-        when(consultarParametros.ejecutar()).thenReturn(new ParametroServicio[] {new ParametroServicio("k", "v", null)});
+        when(profesionalUseCase.validarAsociacion(U, V, U)).thenReturn(new ProfesionalUseCase.ValidarAsociacionResultado(true, true));
+        when(profesionalUseCase.buscarProfesionalPorUsuario(V)).thenReturn(profesional());
+        when(parametroUseCase.consultarParametros()).thenReturn(new ParametroServicio[] {new ParametroServicio("k", "v", null)});
         mvc.perform(get("/internal/profesionales/" + U + "/asociacion?especialidadId=" + V + "&centroId=" + U))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.asociado").value(true));
         mvc.perform(get("/internal/profesionales/por-usuario/" + V)).andExpect(status().isOk()).andExpect(jsonPath("$.profesionalId").value(U));

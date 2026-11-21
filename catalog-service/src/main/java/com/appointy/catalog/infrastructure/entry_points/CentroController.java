@@ -2,13 +2,10 @@ package com.appointy.catalog.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.catalog.domain.usecase.ActualizarCentroUseCase;
-import com.appointy.catalog.domain.usecase.CrearCentroUseCase;
-import com.appointy.catalog.domain.usecase.DesactivarCentroUseCase;
+import com.appointy.catalog.domain.usecase.CentroUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroResponse;
 import jakarta.validation.Valid;
-import com.appointy.catalog.domain.usecase.ListarCentrosUseCase;
 import java.util.Arrays;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,36 +29,29 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class CentroController {
 
-    private final CrearCentroUseCase crear;
-    private final ActualizarCentroUseCase actualizar;
-    private final DesactivarCentroUseCase desactivar;
-    private final ListarCentrosUseCase listar;
+    private final CentroUseCase centroUseCase;
 
-    public CentroController(CrearCentroUseCase crear, ActualizarCentroUseCase actualizar, DesactivarCentroUseCase desactivar,
-            ListarCentrosUseCase listar) {
-        this.crear = crear;
-        this.actualizar = actualizar;
-        this.desactivar = desactivar;
-        this.listar = listar;
+    public CentroController(CentroUseCase centroUseCase) {
+        this.centroUseCase = centroUseCase;
     }
 
     @Operation(summary = "Listar centros por nombre; los inactivos solo con incluirInactivos=true")
     @GetMapping
     public List<CentroResponse> listar(@RequestParam(defaultValue = "false") boolean incluirInactivos) {
-        return Arrays.stream(listar.ejecutar(incluirInactivos)).map(CentroResponse::de).toList();
+        return Arrays.stream(centroUseCase.listarCentros(incluirInactivos)).map(CentroResponse::de).toList();
     }
 
     @Operation(summary = "Crear un centro")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CentroResponse crear(@Valid @RequestBody CentroRequest s) {
-        return CentroResponse.de(crear.ejecutar(new CrearCentroUseCase.Comando(s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
+        return CentroResponse.de(centroUseCase.crearCentro(new CentroUseCase.CrearCentroComando(s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
     }
 
     @Operation(summary = "Actualizar un centro")
     @PutMapping("/{id}")
     public CentroResponse actualizar(@PathVariable UUID id, @Valid @RequestBody CentroRequest s) {
-        return CentroResponse.de(actualizar.ejecutar(new ActualizarCentroUseCase.Comando(id.toString(), s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
+        return CentroResponse.de(centroUseCase.actualizarCentro(new CentroUseCase.ActualizarCentroComando(id.toString(), s.nombre(), s.direccion(), s.ciudad(), s.telefono())));
     }
 
     /** Borrado logico: el centro queda inactivo, no se elimina. */
@@ -69,6 +59,6 @@ public class CentroController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void desactivar(@PathVariable UUID id) {
-        desactivar.ejecutar(id.toString());
+        centroUseCase.desactivarCentro(id.toString());
     }
 }

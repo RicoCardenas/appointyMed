@@ -2,7 +2,7 @@ package com.appointy.auth.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.auth.domain.usecase.ConsultarContactoUseCase;
+import com.appointy.auth.domain.usecase.PerfilUseCase;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,16 +15,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal")
 public class InternalController {
 
-    private final ConsultarContactoUseCase contacto;
+    private final PerfilUseCase perfiles;
 
-    public InternalController(ConsultarContactoUseCase contacto) {
-        this.contacto = contacto;
+    public InternalController(PerfilUseCase perfiles) {
+        this.perfiles = perfiles;
     }
 
     @Operation(summary = "Correo de una cuenta activa (notification)")
     @GetMapping("/usuarios/{id}/contacto")
     public Contacto contacto(@PathVariable UUID id) {
-        return new Contacto(contacto.ejecutar(id.toString()));
+        return new Contacto(perfiles.consultarContacto(id.toString()));
     }
 
     record Contacto(String correo) {}

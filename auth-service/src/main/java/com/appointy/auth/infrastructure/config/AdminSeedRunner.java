@@ -1,6 +1,6 @@
 package com.appointy.auth.infrastructure.config;
 
-import com.appointy.auth.domain.usecase.SembrarAdministradorUseCase;
+import com.appointy.auth.domain.usecase.CuentaUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
@@ -14,11 +14,11 @@ public class AdminSeedRunner implements ApplicationRunner {
     private static final Logger LOG = LoggerFactory.getLogger(AdminSeedRunner.class);
 
     private final AdminProperties propiedades;
-    private final SembrarAdministradorUseCase sembrar;
+    private final CuentaUseCase cuentas;
 
-    public AdminSeedRunner(AdminProperties propiedades, SembrarAdministradorUseCase sembrar) {
+    public AdminSeedRunner(AdminProperties propiedades, CuentaUseCase cuentas) {
         this.propiedades = propiedades;
-        this.sembrar = sembrar;
+        this.cuentas = cuentas;
     }
 
     @Override
@@ -26,7 +26,7 @@ public class AdminSeedRunner implements ApplicationRunner {
         if (esVacio(propiedades.email()) || esVacio(propiedades.password())) {
             return;
         }
-        if (sembrar.ejecutar(new SembrarAdministradorUseCase.Comando(propiedades.email(), propiedades.password()))) {
+        if (cuentas.sembrarAdministrador(new CuentaUseCase.SembrarAdministradorComando(propiedades.email(), propiedades.password()))) {
             LOG.info("Administrador inicial creado");
         }
     }

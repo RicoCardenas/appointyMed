@@ -13,8 +13,7 @@ import com.appointy.appointment.domain.model.AsociacionProfesional;
 import com.appointy.appointment.domain.model.EstadoFranja;
 import com.appointy.appointment.domain.model.Franja;
 import com.appointy.appointment.domain.model.ParametrosCita;
-import com.appointy.appointment.domain.usecase.ReprogramarCitaUseCase;
-import com.appointy.appointment.domain.usecase.ReservarCitaUseCase;
+import com.appointy.appointment.domain.usecase.CitaUseCase;
 import com.appointy.appointment.domain.gateway.CatalogClientGateway;
 import com.appointy.appointment.domain.gateway.FranjaRepositoryGateway;
 import com.appointy.appointment.domain.gateway.NotificacionClientGateway;
@@ -53,8 +52,8 @@ class ReservaConcurrenteTest {
 
     static final int HILOS = 12;
 
-    @Autowired ReservarCitaUseCase reservar;
-    @Autowired ReprogramarCitaUseCase reprogramar;
+    @Autowired CitaUseCase reservar;
+    @Autowired CitaUseCase reprogramar;
     @Autowired FranjaRepositoryGateway franjas;
     @Autowired JdbcTemplate jdbc;
     @Autowired TransactionTemplate tx;
@@ -86,8 +85,8 @@ class ReservaConcurrenteTest {
         return id;
     }
 
-    ReservarCitaUseCase.Comando reserva(String paciente, String franjaId) {
-        return new ReservarCitaUseCase.Comando(new Actor(paciente, "PACIENTE"), especialidadId, profesionalId, centroId, franjaId);
+    CitaUseCase.ReservarCitaComando reserva(String paciente, String franjaId) {
+        return new CitaUseCase.ReservarCitaComando(new Actor(paciente, "PACIENTE"), especialidadId, profesionalId, centroId, franjaId);
     }
 
     /** Suelta todas las tareas a la vez y devuelve el resultado de cada una: null si tuvo exito, o la excepcion. */
@@ -124,7 +123,7 @@ class ReservaConcurrenteTest {
         List<Callable<Object>> tareas = new ArrayList<>();
         for (int i = 0; i < HILOS; i++) {
             String paciente = UUID.randomUUID().toString();
-            tareas.add(() -> reservar.ejecutar(reserva(paciente, franja)));
+            tareas.add(() -> reservar.reservarCita(reserva(paciente, franja)));
         }
 
         List<Throwable> resultados = correrJuntas(tareas);
@@ -143,7 +142,7 @@ class ReservaConcurrenteTest {
         String f2 = crearFranja(495);  // se cruza con la anterior (08:00-08:30 y 08:15-08:45)
         String paciente = UUID.randomUUID().toString();
 
-        List<Throwable> resultados = correrJuntas(List.of(() -> reservar.ejecutar(reserva(paciente, f1)), () -> reservar.ejecutar(reserva(paciente, f2))));
+        List<Throwable> resultados = correrJuntas(List.of(() -> reservar.reservarCita(reserva(paciente, f1)), () -> reservar.reservarCita(reserva(paciente, f2))));
 
         assertEquals(1, resultados.stream().filter(r -> r == null).count(), "solo una de las dos citas cruzadas: " + resultados);
         resultados.stream().filter(r -> r != null).forEach(r -> assertEquals("CRUCE_DE_CITAS", ((ConflictoException) r).codigo()));
@@ -156,13 +155,13 @@ class ReservaConcurrenteTest {
         String f2 = crearFranja(600);
         String pacienteA = UUID.randomUUID().toString();
         String pacienteB = UUID.randomUUID().toString();
-        String citaA = reservar.ejecutar(reserva(pacienteA, f1)).cita().id();
-        String citaB = reservar.ejecutar(reserva(pacienteB, f2)).cita().id();
+        String citaA = reservar.reservarCita(reserva(pacienteA, f1)).cita().id();
+        String citaB = reservar.reservarCita(reserva(pacienteB, f2)).cita().id();
 
         // A pide la franja de B y B la de A, a la vez: ambas estan OCUPADAS, asi que ambas deben rechazarse sin deadlock.
         List<Throwable> resultados = correrJuntas(List.of(
-                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteA, "PACIENTE"), citaA, f2)),
-                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteB, "PACIENTE"), citaB, f1))));
+                () -> reprogramar.reprogramarCita(new CitaUseCase.ReprogramarCitaComando(new Actor(pacienteA, "PACIENTE"), citaA, f2)),
+                () -> reprogramar.reprogramarCita(new CitaUseCase.ReprogramarCitaComando(new Actor(pacienteB, "PACIENTE"), citaB, f1))));
 
         resultados.forEach(r -> assertInstanceOf(ConflictoException.class, r, "rechazo controlado, no deadlock: " + r));
         assertEquals(f1, jdbc.queryForObject("select franja_id::text from cita where id = ?::uuid", String.class, citaA));
@@ -177,12 +176,12 @@ class ReservaConcurrenteTest {
         String libre = crearFranja(720);
         String pacienteA = UUID.randomUUID().toString();
         String pacienteB = UUID.randomUUID().toString();
-        String citaA = reservar.ejecutar(reserva(pacienteA, f1)).cita().id();
-        String citaB = reservar.ejecutar(reserva(pacienteB, f2)).cita().id();
+        String citaA = reservar.reservarCita(reserva(pacienteA, f1)).cita().id();
+        String citaB = reservar.reservarCita(reserva(pacienteB, f2)).cita().id();
 
         List<Throwable> resultados = correrJuntas(List.of(
-                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteA, "PACIENTE"), citaA, libre)),
-                () -> reprogramar.ejecutar(new ReprogramarCitaUseCase.Comando(new Actor(pacienteB, "PACIENTE"), citaB, libre))));
+                () -> reprogramar.reprogramarCita(new CitaUseCase.ReprogramarCitaComando(new Actor(pacienteA, "PACIENTE"), citaA, libre)),
+                () -> reprogramar.reprogramarCita(new CitaUseCase.ReprogramarCitaComando(new Actor(pacienteB, "PACIENTE"), citaB, libre))));
 
         assertEquals(1, resultados.stream().filter(r -> r == null).count(), "una gana y la otra recibe conflicto: " + resultados);
         assertEquals(1, jdbc.queryForObject("select count(*) from cita where franja_id = ?::uuid and estado = 'CONFIRMADA'", Integer.class, libre));

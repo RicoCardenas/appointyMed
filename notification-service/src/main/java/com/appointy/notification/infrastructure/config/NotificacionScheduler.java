@@ -1,8 +1,7 @@
 package com.appointy.notification.infrastructure.config;
 
 import com.appointy.notification.domain.model.ResultadoLote;
-import com.appointy.notification.domain.usecase.EnviarRecordatoriosUseCase;
-import com.appointy.notification.domain.usecase.ReintentarFallidasUseCase;
+import com.appointy.notification.domain.usecase.NotificacionUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,18 +13,16 @@ public class NotificacionScheduler {
 
     private static final Logger LOG = LoggerFactory.getLogger(NotificacionScheduler.class);
 
-    private final EnviarRecordatoriosUseCase recordatorios;
-    private final ReintentarFallidasUseCase reintentos;
+    private final NotificacionUseCase notificacionUseCase;
 
-    public NotificacionScheduler(EnviarRecordatoriosUseCase recordatorios, ReintentarFallidasUseCase reintentos) {
-        this.recordatorios = recordatorios;
-        this.reintentos = reintentos;
+    public NotificacionScheduler(NotificacionUseCase notificacionUseCase) {
+        this.notificacionUseCase = notificacionUseCase;
     }
 
     @Scheduled(fixedDelayString = "${app.jobs.recordatorios-ms:60000}", initialDelayString = "${app.jobs.recordatorios-ms:60000}")
     void enviarRecordatorios() {
         try {
-            ResultadoLote r = recordatorios.ejecutar();
+            ResultadoLote r = notificacionUseCase.enviarRecordatorios();
             if (r.procesadas() > 0) LOG.info("Recordatorios: procesadas={}, enviadas={}, fallidas={}", r.procesadas(), r.enviadas(), r.fallidas());
         } catch (RuntimeException e) {
             LOG.error("Fallo el job de recordatorios ({})", e.getClass().getName());
@@ -35,7 +32,7 @@ public class NotificacionScheduler {
     @Scheduled(fixedDelayString = "${app.jobs.reintentos-ms:300000}", initialDelayString = "${app.jobs.reintentos-ms:300000}")
     void reintentarFallidas() {
         try {
-            ResultadoLote r = reintentos.ejecutar();
+            ResultadoLote r = notificacionUseCase.reintentarFallidas();
             if (r.procesadas() > 0) LOG.info("Reintentos: procesadas={}, enviadas={}, fallidas={}", r.procesadas(), r.enviadas(), r.fallidas());
         } catch (RuntimeException e) {
             LOG.error("Fallo el job de reintentos ({})", e.getClass().getName());

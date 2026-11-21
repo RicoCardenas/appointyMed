@@ -1,6 +1,6 @@
 package com.appointy.auth.infrastructure.entry_points.dto;
 
-import com.appointy.auth.domain.usecase.ActualizarDatosEditablesUseCase;
+import com.appointy.auth.domain.usecase.PerfilUseCase;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -12,7 +12,7 @@ public record ActualizarContactoRequest(
         @Size(min = 1, max = 200) String direccion,
         @Size(min = 1, max = 100) String ciudad) {
 
-    public ActualizarDatosEditablesUseCase.Comando aComando(String usuarioId) {
-        return new ActualizarDatosEditablesUseCase.Comando(usuarioId, correo, telefono, direccion, ciudad);
+    public PerfilUseCase.ActualizarDatosEditablesComando aComando(String usuarioId) {
+        return new PerfilUseCase.ActualizarDatosEditablesComando(usuarioId, correo, telefono, direccion, ciudad);
     }
 }

@@ -1,6 +1,6 @@
 package com.appointy.catalog.infrastructure.entry_points.dto;
 
-import com.appointy.catalog.domain.usecase.ModificarHorarioUseCase;
+import com.appointy.catalog.domain.usecase.HorarioUseCase;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -15,8 +15,8 @@ public record ModificarHorarioRequest(
         @Min(5) @Max(240) Integer duracionFranjaMin,
         @NotNull Boolean activo) {
 
-    public ModificarHorarioUseCase.Comando aComando(String horarioId) {
-        return new ModificarHorarioUseCase.Comando(
+    public HorarioUseCase.ModificarHorarioComando aComando(String horarioId) {
+        return new HorarioUseCase.ModificarHorarioComando(
                 horarioId, centroId.toString(), diaSemana, Horas.aMinutos(horaInicio), Horas.aMinutos(horaFin), duracionFranjaMin, activo);
     }
 }

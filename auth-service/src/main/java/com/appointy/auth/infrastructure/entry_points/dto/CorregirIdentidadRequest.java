@@ -1,6 +1,6 @@
 package com.appointy.auth.infrastructure.entry_points.dto;
 
-import com.appointy.auth.domain.usecase.CorregirDatosInmutablesUseCase;
+import com.appointy.auth.domain.usecase.PerfilUseCase;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -12,8 +12,8 @@ public record CorregirIdentidadRequest(
         @Size(min = 1, max = 100) String apellidos,
         @Past LocalDate fechaNacimiento) {
 
-    public CorregirDatosInmutablesUseCase.Comando aComando(String actorId, String pacienteUsuarioId) {
-        return new CorregirDatosInmutablesUseCase.Comando(
+    public PerfilUseCase.CorregirDatosInmutablesComando aComando(String actorId, String pacienteUsuarioId) {
+        return new PerfilUseCase.CorregirDatosInmutablesComando(
                 actorId, pacienteUsuarioId, cedula, nombres, apellidos,
                 fechaNacimiento == null ? null : fechaNacimiento.toString());
     }

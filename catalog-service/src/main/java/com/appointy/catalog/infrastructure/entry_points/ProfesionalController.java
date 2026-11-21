@@ -2,17 +2,10 @@ package com.appointy.catalog.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.catalog.domain.usecase.ActualizarProfesionalUseCase;
-import com.appointy.catalog.domain.usecase.AsociarCentrosUseCase;
-import com.appointy.catalog.domain.usecase.AsociarEspecialidadesUseCase;
-import com.appointy.catalog.domain.usecase.ConsultarProfesionalUseCase;
-import com.appointy.catalog.domain.usecase.CrearProfesionalUseCase;
-import com.appointy.catalog.domain.usecase.DefinirHorarioUseCase;
-import com.appointy.catalog.domain.usecase.DesactivarProfesionalUseCase;
-import com.appointy.catalog.domain.usecase.ListarCentrosDeProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.ProfesionalUseCase;
+import com.appointy.catalog.domain.usecase.HorarioUseCase;
+import com.appointy.catalog.domain.usecase.CentroUseCase;
 import com.appointy.catalog.domain.model.FiltroProfesionales;
-import com.appointy.catalog.domain.usecase.ListarHorariosUseCase;
-import com.appointy.catalog.domain.usecase.ListarProfesionalesUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.PaginaProfesionalesResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.ActualizarProfesionalRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.CentroResponse;
@@ -45,38 +38,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/profesionales")
 public class ProfesionalController {
 
-    private final CrearProfesionalUseCase crear;
-    private final ActualizarProfesionalUseCase actualizar;
-    private final DesactivarProfesionalUseCase desactivar;
-    private final ConsultarProfesionalUseCase consultar;
-    private final ListarCentrosDeProfesionalUseCase listarCentros;
-    private final AsociarEspecialidadesUseCase asociarEspecialidades;
-    private final AsociarCentrosUseCase asociarCentros;
-    private final DefinirHorarioUseCase definirHorario;
-    private final ListarHorariosUseCase listarHorarios;
-    private final ListarProfesionalesUseCase listar;
+    private final ProfesionalUseCase profesionalUseCase;
+    private final CentroUseCase centroUseCase;
+    private final HorarioUseCase horarioUseCase;
 
-    public ProfesionalController(
-            CrearProfesionalUseCase crear,
-            ActualizarProfesionalUseCase actualizar,
-            DesactivarProfesionalUseCase desactivar,
-            ConsultarProfesionalUseCase consultar,
-            ListarCentrosDeProfesionalUseCase listarCentros,
-            AsociarEspecialidadesUseCase asociarEspecialidades,
-            AsociarCentrosUseCase asociarCentros,
-            DefinirHorarioUseCase definirHorario,
-            ListarHorariosUseCase listarHorarios,
-            ListarProfesionalesUseCase listar) {
-        this.crear = crear;
-        this.actualizar = actualizar;
-        this.desactivar = desactivar;
-        this.consultar = consultar;
-        this.listarCentros = listarCentros;
-        this.asociarEspecialidades = asociarEspecialidades;
-        this.asociarCentros = asociarCentros;
-        this.definirHorario = definirHorario;
-        this.listarHorarios = listarHorarios;
-        this.listar = listar;
+    public ProfesionalController(ProfesionalUseCase profesionalUseCase, CentroUseCase centroUseCase, HorarioUseCase horarioUseCase) {
+        this.profesionalUseCase = profesionalUseCase;
+        this.centroUseCase = centroUseCase;
+        this.horarioUseCase = horarioUseCase;
     }
 
     /** GET all paginado (RA-04): `texto` busca en nombres, apellidos y registro medico. */
@@ -84,7 +53,7 @@ public class ProfesionalController {
     @GetMapping
     public PaginaProfesionalesResponse listar(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String texto, @RequestParam(required = false) Boolean activo) {
-        return PaginaProfesionalesResponse.de(listar.ejecutar(new FiltroProfesionales(texto, activo), page, size));
+        return PaginaProfesionalesResponse.de(profesionalUseCase.listarProfesionales(new FiltroProfesionales(texto, activo), page, size));
     }
 
     @Operation(summary = "Crear un profesional")
@@ -93,7 +62,7 @@ public class ProfesionalController {
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public ProfesionalResponse crear(@Valid @RequestBody CrearProfesionalRequest s) {
         return ProfesionalResponse.de(
-                crear.ejecutar(new CrearProfesionalUseCase.Comando(s.usuarioId().toString(), s.nombres(), s.apellidos(), s.registroMedico())));
+                profesionalUseCase.crearProfesional(new ProfesionalUseCase.CrearProfesionalComando(s.usuarioId().toString(), s.nombres(), s.apellidos(), s.registroMedico())));
     }
 
     @Operation(summary = "Actualizar un profesional")
@@ -101,7 +70,7 @@ public class ProfesionalController {
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public ProfesionalResponse actualizar(@PathVariable UUID id, @Valid @RequestBody ActualizarProfesionalRequest s) {
         return ProfesionalResponse.de(
-                actualizar.ejecutar(new ActualizarProfesionalUseCase.Comando(id.toString(), s.nombres(), s.apellidos(), s.registroMedico())));
+                profesionalUseCase.actualizarProfesional(new ProfesionalUseCase.ActualizarProfesionalComando(id.toString(), s.nombres(), s.apellidos(), s.registroMedico())));
     }
 
     /** Borrado logico: el profesional queda inactivo, no se elimina. */
@@ -110,20 +79,20 @@ public class ProfesionalController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public void desactivar(@PathVariable UUID id) {
-        desactivar.ejecutar(id.toString());
+        profesionalUseCase.desactivarProfesional(id.toString());
     }
 
     @Operation(summary = "Consultar un profesional con sus especialidades y centros")
     @GetMapping("/{id}")
     public DetalleProfesionalResponse consultar(@PathVariable UUID id) {
-        return DetalleProfesionalResponse.de(consultar.ejecutar(id.toString()));
+        return DetalleProfesionalResponse.de(profesionalUseCase.consultarProfesional(id.toString()));
     }
 
     /** CU-10: el paciente elige centro cuando el profesional atiende en mas de uno. */
     @Operation(summary = "Centros activos donde atiende un profesional")
     @GetMapping("/{id}/centros")
     public List<CentroResponse> centros(@PathVariable UUID id) {
-        return Arrays.stream(listarCentros.ejecutar(id.toString())).map(CentroResponse::de).toList();
+        return Arrays.stream(centroUseCase.listarCentrosDeProfesional(id.toString())).map(CentroResponse::de).toList();
     }
 
     /** CU-12. */
@@ -131,7 +100,7 @@ public class ProfesionalController {
     @PutMapping("/{id}/especialidades")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public DetalleProfesionalResponse asociarEspecialidades(@PathVariable UUID id, @Valid @RequestBody IdsRequest s) {
-        return DetalleProfesionalResponse.de(asociarEspecialidades.ejecutar(new AsociarEspecialidadesUseCase.Comando(id.toString(), s.comoTexto())));
+        return DetalleProfesionalResponse.de(profesionalUseCase.asociarEspecialidades(new ProfesionalUseCase.AsociarEspecialidadesComando(id.toString(), s.comoTexto())));
     }
 
     /** CU-12. */
@@ -139,14 +108,14 @@ public class ProfesionalController {
     @PutMapping("/{id}/centros")
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public DetalleProfesionalResponse asociarCentros(@PathVariable UUID id, @Valid @RequestBody IdsRequest s) {
-        return DetalleProfesionalResponse.de(asociarCentros.ejecutar(new AsociarCentrosUseCase.Comando(id.toString(), s.comoTexto())));
+        return DetalleProfesionalResponse.de(profesionalUseCase.asociarCentros(new ProfesionalUseCase.AsociarCentrosComando(id.toString(), s.comoTexto())));
     }
 
     @Operation(summary = "Horarios de un profesional")
     @GetMapping("/{id}/horarios")
     @PreAuthorize("hasAnyRole('ADMINISTRATIVO', 'PROFESIONAL')")
     public List<HorarioResponse> horarios(@PathVariable UUID id) {
-        return Arrays.stream(listarHorarios.ejecutar(id.toString())).map(HorarioResponse::de).toList();
+        return Arrays.stream(horarioUseCase.listarHorarios(id.toString())).map(HorarioResponse::de).toList();
     }
 
     /** CU-13: el horario siempre se guarda; la respuesta dice si appointment alcanzo a generar las franjas. */
@@ -155,6 +124,6 @@ public class ProfesionalController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public ResultadoHorarioResponse definirHorario(@PathVariable UUID id, @Valid @RequestBody DefinirHorarioRequest s) {
-        return ResultadoHorarioResponse.de(definirHorario.ejecutar(s.aComando(id.toString())));
+        return ResultadoHorarioResponse.de(horarioUseCase.definirHorario(s.aComando(id.toString())));
     }
 }

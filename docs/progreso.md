@@ -274,7 +274,7 @@ Comportamiento:
 
 ## Decisiones propias (tomadas por el equipo; no se consultan al docente)
 
-1. Idioma: dominio en español; sufijos técnicos en inglés (interfaz `ReservarCitaUseCase`, implementación `ReservarCitaUseCaseImpl`, `FranjaRepositoryGateway`).
+1. Idioma: dominio en español; sufijos técnicos en inglés (`CitaUseCase`, `FranjaRepositoryGateway`).
 2. Spring Boot 3.5.16 (la especificación dice 3.x).
 3. `MODIFICADA` fuera del CHECK de `cita`; el cambio de franja queda en `historial_cita` (recomendación del docente).
 4. Códigos 422 y 503 además de los de la convención, porque los casos de uso los piden.
@@ -294,7 +294,7 @@ Comportamiento:
 18. Modificar un horario no retira las franjas ya generadas; se usa un bloqueo para dejar de ofrecerlas.
 19. Catalog no comprueba en auth que el `usuarioId` de un profesional exista ni tenga rol PROFESIONAL (no hay llamada auth a catalog en la especificación); confía en el administrativo.
 20. API interna adicional de catalog para CU-18 (`/internal/profesionales/{id}/asociacion`, `/internal/parametros`) y de appointment para CU-25/CU-26: la lista de comunicaciones de la especificación no incluye appointment a catalog.
-21. Estructura del docente: `domain/usecase` (interfaces de casos de uso), `domain/gateway` (puertos de salida) y `application/usecase` (`*UseCaseImpl`). Antes eran `port/in` y `port/out` con sufijo `Port`.
+21. Estructura del docente: `domain/usecase` y `domain/gateway` (puertos de salida, única interfaz). Antes eran `port/in` y `port/out` con sufijo `Port`. Desde 2026-11-21 los casos de uso están en `domain/usecase` (instrucción obligatoria del docente), sin interfaz ni `*Impl` y sin imports ajenos al dominio (transacción, reloj, ids y log por puertos; fechas con `FechaIso`; arreglos). Una clase por tema (auth: `SesionUseCase`, `CuentaUseCase`, `PerfilUseCase`; catalog: Especialidad, Centro, Profesional, Horario, Parametro; appointment: `CitaUseCase`, `ConsultaCitaUseCase`, `FranjaUseCase`; clinical-history: `EntradaClinicaUseCase`, `HistoriaUseCase`; notification: `NotificacionUseCase`, `ConsultaNotificacionUseCase`), con comandos como `record` anidados y auxiliares (`Busquedas`, `Fechas`, etc.). Los controladores inyectan la clase directamente. Las pruebas siguen AAA con mocks y cobertura >= 90 % por módulo.
 22. Las horas del horario llegan y salen como `HH:mm`, con máximo 23:59 (no existe 24:00 en una columna TIME).
 23. APIs externas elegidas por afinidad con el dominio: feriados (Nager.Date) y CIE-10 (NLM). Si el docente prefiere otras, se cambia el adaptador `rest_client`; el puerto en `domain/gateway` no cambia.
 24. Cobertura 90 % medida con JaCoCo por módulo (líneas); reemplaza el 70 % del RNF-09. Exclusiones: configuración, entidades, `*Application` y mappers generados.

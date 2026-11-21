@@ -19,7 +19,9 @@ import com.appointy.auth.domain.model.PacientePerfil;
 import com.appointy.auth.domain.model.PaginaUsuarios;
 import com.appointy.auth.domain.model.Rol;
 import com.appointy.auth.domain.model.Usuario;
-import com.appointy.auth.domain.usecase.*;
+import com.appointy.auth.domain.usecase.CuentaUseCase;
+import com.appointy.auth.domain.usecase.PerfilUseCase;
+import com.appointy.auth.domain.usecase.SesionUseCase;
 import com.appointy.auth.infrastructure.security.UsuarioAutenticado;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,19 +42,9 @@ class ControladoresTest {
     static final String U = "11111111-1111-1111-1111-111111111111";
     static final String V = "22222222-2222-2222-2222-222222222222";
 
-    final RegistrarPacienteUseCase registrar = mock(RegistrarPacienteUseCase.class);
-    final IniciarSesionUseCase login = mock(IniciarSesionUseCase.class);
-    final CerrarSesionUseCase logout = mock(CerrarSesionUseCase.class);
-    final CambiarClaveUseCase cambiarClave = mock(CambiarClaveUseCase.class);
-    final ConsultarPerfilUseCase perfil = mock(ConsultarPerfilUseCase.class);
-    final ActualizarDatosEditablesUseCase actualizar = mock(ActualizarDatosEditablesUseCase.class);
-    final CrearCuentaStaffUseCase crearCuenta = mock(CrearCuentaStaffUseCase.class);
-    final CorregirDatosInmutablesUseCase corregir = mock(CorregirDatosInmutablesUseCase.class);
-    final ListarUsuariosUseCase listar = mock(ListarUsuariosUseCase.class);
-    final ConsultarEstadisticasUsuariosUseCase estadisticas = mock(ConsultarEstadisticasUsuariosUseCase.class);
-    final CambiarEstadoCuentaUseCase cambiarEstado = mock(CambiarEstadoCuentaUseCase.class);
-    final ConsultarContactoUseCase contacto = mock(ConsultarContactoUseCase.class);
-    final ConsultarNombresPacientesUseCase nombres = mock(ConsultarNombresPacientesUseCase.class);
+    final CuentaUseCase cuentas = mock(CuentaUseCase.class);
+    final SesionUseCase sesiones = mock(SesionUseCase.class);
+    final PerfilUseCase perfiles = mock(PerfilUseCase.class);
     MockMvc mvc;
 
     static Usuario usuario(boolean activo) {
@@ -69,8 +61,8 @@ class ControladoresTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(new UsuarioAutenticado(U, Rol.ADMINISTRATIVO, "jti-1", 9000), null, List.of()));
         ObjectMapper estricto = new ObjectMapper().findAndRegisterModules().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, true);
-        mvc = MockMvcBuilders.standaloneSetup(new AuthController(registrar, login, logout, cambiarClave), new PacienteController(perfil, actualizar),
-                        new AdminController(crearCuenta, corregir, listar, estadisticas, cambiarEstado), new InternalController(contacto), new NombresPacientesController(nombres))
+        mvc = MockMvcBuilders.standaloneSetup(new AuthController(cuentas, sesiones), new PacienteController(perfiles),
+                        new AdminController(cuentas, perfiles), new InternalController(perfiles), new NombresPacientesController(perfiles))
                 .setControllerAdvice(new GlobalExceptionHandler()).setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .setMessageConverters(new MappingJackson2HttpMessageConverter(estricto)).build();
     }
@@ -82,23 +74,23 @@ class ControladoresTest {
 
     @Test
     void registroLoginYLogout() throws Exception {
-        when(registrar.ejecutar(any())).thenReturn(paciente());
-        when(login.ejecutar(any())).thenReturn(new IniciarSesionUseCase.Resultado("tok", 5000, U, Rol.PACIENTE));
+        when(cuentas.registrarPaciente(any())).thenReturn(paciente());
+        when(sesiones.iniciarSesion(any())).thenReturn(new SesionUseCase.IniciarSesionResultado("tok", 5000, U, Rol.PACIENTE));
         String registro = "{\"correo\":\"ana@correo.co\",\"clave\":\"Clave1234\",\"cedula\":\"12345\",\"nombres\":\"Ana\",\"apellidos\":\"Perez\",\"fechaNacimiento\":\"1990-05-01\"}";
         mvc.perform(post("/api/v1/auth/register").contentType("application/json").content(registro))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.cedula").value("12345")).andExpect(jsonPath("$.ciudad").value("Bogota"));
         mvc.perform(post("/api/v1/auth/login").contentType("application/json").content("{\"correo\":\"a@b.co\",\"clave\":\"x\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.accessToken").value("tok")).andExpect(jsonPath("$.tokenType").value("Bearer"));
         mvc.perform(post("/api/v1/auth/logout")).andExpect(status().isNoContent());
-        ArgumentCaptor<CerrarSesionUseCase.Comando> comando = ArgumentCaptor.forClass(CerrarSesionUseCase.Comando.class);
-        verify(logout).ejecutar(comando.capture());
+        ArgumentCaptor<SesionUseCase.CerrarSesionComando> comando = ArgumentCaptor.forClass(SesionUseCase.CerrarSesionComando.class);
+        verify(sesiones).cerrarSesion(comando.capture());
         org.junit.jupiter.api.Assertions.assertEquals("jti-1", comando.getValue().jti());
         mvc.perform(post("/api/v1/auth/register").contentType("application/json").content("{\"correo\":\"x\"}")).andExpect(status().isBadRequest());
     }
 
     @Test
     void credencialesInvalidasSon401() throws Exception {
-        when(login.ejecutar(any())).thenThrow(new CredencialesInvalidasException());
+        when(sesiones.iniciarSesion(any())).thenThrow(new CredencialesInvalidasException());
         mvc.perform(post("/api/v1/auth/login").contentType("application/json").content("{\"correo\":\"a@b.co\",\"clave\":\"x\"}"))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.codigo").value("CREDENCIALES_INVALIDAS"));
     }
@@ -107,16 +99,16 @@ class ControladoresTest {
     void cambiarLaClaveDelUsuarioAutenticado() throws Exception {
         mvc.perform(post("/api/v1/auth/cambiar-clave").contentType("application/json").content("{\"claveActual\":\"Actual123\",\"claveNueva\":\"Nueva456\"}"))
                 .andExpect(status().isNoContent());
-        ArgumentCaptor<CambiarClaveUseCase.Comando> comando = ArgumentCaptor.forClass(CambiarClaveUseCase.Comando.class);
-        verify(cambiarClave).ejecutar(comando.capture());
+        ArgumentCaptor<CuentaUseCase.CambiarClaveComando> comando = ArgumentCaptor.forClass(CuentaUseCase.CambiarClaveComando.class);
+        verify(cuentas).cambiarClave(comando.capture());
         org.junit.jupiter.api.Assertions.assertEquals(U, comando.getValue().usuarioId());
         mvc.perform(post("/api/v1/auth/cambiar-clave").contentType("application/json").content("{\"claveActual\":\"\"}")).andExpect(status().isBadRequest());
     }
 
     @Test
     void perfilDelPaciente() throws Exception {
-        when(perfil.ejecutar(U)).thenReturn(paciente());
-        when(actualizar.ejecutar(any())).thenReturn(paciente());
+        when(perfiles.consultarPerfil(U)).thenReturn(paciente());
+        when(perfiles.actualizarDatosEditables(any())).thenReturn(paciente());
         mvc.perform(get("/api/v1/pacientes/me")).andExpect(status().isOk()).andExpect(jsonPath("$.nombres").value("Ana"));
         mvc.perform(patch("/api/v1/pacientes/me").contentType("application/json").content("{\"telefono\":\"3001234567\"}")).andExpect(status().isOk());
         mvc.perform(patch("/api/v1/pacientes/me").contentType("application/json").content("{\"cedula\":\"999\"}"))
@@ -125,8 +117,8 @@ class ControladoresTest {
 
     @Test
     void administracionDeCuentas() throws Exception {
-        when(crearCuenta.ejecutar(any())).thenReturn(usuario(true));
-        when(corregir.ejecutar(any())).thenReturn(paciente());
+        when(cuentas.crearCuentaStaff(any())).thenReturn(usuario(true));
+        when(perfiles.corregirDatosInmutables(any())).thenReturn(paciente());
         mvc.perform(post("/api/v1/admin/usuarios").contentType("application/json").content("{\"correo\":\"doc@correo.co\",\"clave\":\"Clave1234\",\"rol\":\"PROFESIONAL\"}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.rol").value("PROFESIONAL"));
         mvc.perform(patch("/api/v1/admin/pacientes/" + V + "/identidad").contentType("application/json").content("{\"nombres\":\"Ana Maria\"}"))
@@ -135,13 +127,13 @@ class ControladoresTest {
 
     @Test
     void listadoPaginadoEstadisticasYCambioDeEstado() throws Exception {
-        when(listar.ejecutar(any(FiltroUsuarios.class), eq(1), eq(5))).thenReturn(new PaginaUsuarios(new Usuario[] {usuario(true)}, 1, 5, 6, 2));
-        when(estadisticas.ejecutar()).thenReturn(new EstadisticasUsuarios(5, 2, 1, 7, 1));
-        when(cambiarEstado.ejecutar(any())).thenReturn(usuario(false));
+        when(cuentas.listarUsuarios(any(FiltroUsuarios.class), eq(1), eq(5))).thenReturn(new PaginaUsuarios(new Usuario[] {usuario(true)}, 1, 5, 6, 2));
+        when(cuentas.consultarEstadisticasUsuarios()).thenReturn(new EstadisticasUsuarios(5, 2, 1, 7, 1));
+        when(cuentas.cambiarEstadoCuenta(any())).thenReturn(usuario(false));
         mvc.perform(get("/api/v1/admin/usuarios?page=1&size=5&rol=PROFESIONAL&activo=true"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElementos").value(6)).andExpect(jsonPath("$.contenido[0].correo").value("ana@correo.co"));
         ArgumentCaptor<FiltroUsuarios> filtro = ArgumentCaptor.forClass(FiltroUsuarios.class);
-        verify(listar).ejecutar(filtro.capture(), eq(1), eq(5));
+        verify(cuentas).listarUsuarios(filtro.capture(), eq(1), eq(5));
         org.junit.jupiter.api.Assertions.assertEquals(Rol.PROFESIONAL, filtro.getValue().rol());
         org.junit.jupiter.api.Assertions.assertEquals(Boolean.TRUE, filtro.getValue().activo());
         mvc.perform(get("/api/v1/admin/usuarios/estadisticas")).andExpect(status().isOk()).andExpect(jsonPath("$.inactivos").value(1));
@@ -152,7 +144,7 @@ class ControladoresTest {
 
     @Test
     void nombresDePacientes() throws Exception {
-        when(nombres.ejecutar(new String[] {V})).thenReturn(new com.appointy.auth.domain.model.NombrePaciente[] {new com.appointy.auth.domain.model.NombrePaciente(V, "Ana", "Perez")});
+        when(perfiles.consultarNombresPacientes(new String[] {V})).thenReturn(new com.appointy.auth.domain.model.NombrePaciente[] {new com.appointy.auth.domain.model.NombrePaciente(V, "Ana", "Perez")});
         mvc.perform(post("/api/v1/pacientes/nombres").contentType("application/json").content("{\"ids\":[\"" + V + "\"]}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].nombres").value("Ana")).andExpect(jsonPath("$[0].cedula").doesNotExist());
         mvc.perform(post("/api/v1/pacientes/nombres").contentType("application/json").content("{\"ids\":[]}")).andExpect(status().isBadRequest());
@@ -160,7 +152,7 @@ class ControladoresTest {
 
     @Test
     void contactoInterno() throws Exception {
-        when(contacto.ejecutar(V)).thenReturn("ana@correo.co");
+        when(perfiles.consultarContacto(V)).thenReturn("ana@correo.co");
         mvc.perform(get("/internal/usuarios/" + V + "/contacto")).andExpect(status().isOk()).andExpect(jsonPath("$.correo").value("ana@correo.co"));
     }
 }

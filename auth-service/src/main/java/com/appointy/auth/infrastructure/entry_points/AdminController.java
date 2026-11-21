@@ -2,14 +2,11 @@ package com.appointy.auth.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.auth.domain.usecase.CorregirDatosInmutablesUseCase;
+import com.appointy.auth.domain.usecase.CuentaUseCase;
+import com.appointy.auth.domain.usecase.PerfilUseCase;
 import com.appointy.auth.domain.model.EstadisticasUsuarios;
 import com.appointy.auth.domain.model.FiltroUsuarios;
 import com.appointy.auth.domain.model.Rol;
-import com.appointy.auth.domain.usecase.CambiarEstadoCuentaUseCase;
-import com.appointy.auth.domain.usecase.ConsultarEstadisticasUsuariosUseCase;
-import com.appointy.auth.domain.usecase.CrearCuentaStaffUseCase;
-import com.appointy.auth.domain.usecase.ListarUsuariosUseCase;
 import com.appointy.auth.infrastructure.entry_points.dto.PaginaUsuariosResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,26 +34,19 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class AdminController {
 
-    private final CrearCuentaStaffUseCase crearCuenta;
-    private final CorregirDatosInmutablesUseCase corregirDatos;
-    private final ListarUsuariosUseCase listar;
-    private final ConsultarEstadisticasUsuariosUseCase estadisticas;
-    private final CambiarEstadoCuentaUseCase cambiarEstado;
+    private final CuentaUseCase cuentas;
+    private final PerfilUseCase perfiles;
 
-    public AdminController(CrearCuentaStaffUseCase crearCuenta, CorregirDatosInmutablesUseCase corregirDatos,
-            ListarUsuariosUseCase listar, ConsultarEstadisticasUsuariosUseCase estadisticas, CambiarEstadoCuentaUseCase cambiarEstado) {
-        this.crearCuenta = crearCuenta;
-        this.corregirDatos = corregirDatos;
-        this.listar = listar;
-        this.estadisticas = estadisticas;
-        this.cambiarEstado = cambiarEstado;
+    public AdminController(CuentaUseCase cuentas, PerfilUseCase perfiles) {
+        this.cuentas = cuentas;
+        this.perfiles = perfiles;
     }
 
     @Operation(summary = "Crear una cuenta de PROFESIONAL o ADMINISTRATIVO")
     @PostMapping("/usuarios")
     @ResponseStatus(HttpStatus.CREATED)
     public CuentaResponse crearCuenta(@Valid @RequestBody CrearCuentaRequest solicitud) {
-        return CuentaResponse.de(crearCuenta.ejecutar(solicitud.aComando()));
+        return CuentaResponse.de(cuentas.crearCuentaStaff(solicitud.aComando()));
     }
 
     @Operation(summary = "Corregir cédula, nombres o nacimiento de un paciente")
@@ -65,7 +55,7 @@ public class AdminController {
             @AuthenticationPrincipal UsuarioAutenticado actor,
             @PathVariable UUID usuarioId,
             @Valid @RequestBody CorregirIdentidadRequest solicitud) {
-        return PacienteResponse.de(corregirDatos.ejecutar(solicitud.aComando(actor.usuarioId(), usuarioId.toString())));
+        return PacienteResponse.de(perfiles.corregirDatosInmutables(solicitud.aComando(actor.usuarioId(), usuarioId.toString())));
     }
 
     /** GET all paginado (RA-04). */
@@ -73,24 +63,24 @@ public class AdminController {
     @GetMapping("/usuarios")
     public PaginaUsuariosResponse listar(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Rol rol, @RequestParam(required = false) Boolean activo) {
-        return PaginaUsuariosResponse.de(listar.ejecutar(new FiltroUsuarios(rol, activo), page, size));
+        return PaginaUsuariosResponse.de(cuentas.listarUsuarios(new FiltroUsuarios(rol, activo), page, size));
     }
 
     @Operation(summary = "Conteo de cuentas por rol y estado")
     @GetMapping("/usuarios/estadisticas")
     public EstadisticasUsuarios estadisticas() {
-        return estadisticas.ejecutar();
+        return cuentas.consultarEstadisticasUsuarios();
     }
 
     @Operation(summary = "Desactivar una cuenta (idempotente; no la propia)")
     @PostMapping("/usuarios/{usuarioId}/desactivar")
     public CuentaResponse desactivar(@AuthenticationPrincipal UsuarioAutenticado actor, @PathVariable UUID usuarioId) {
-        return CuentaResponse.de(cambiarEstado.ejecutar(new CambiarEstadoCuentaUseCase.Comando(actor.usuarioId(), usuarioId.toString(), false)));
+        return CuentaResponse.de(cuentas.cambiarEstadoCuenta(new CuentaUseCase.CambiarEstadoCuentaComando(actor.usuarioId(), usuarioId.toString(), false)));
     }
 
     @Operation(summary = "Activar una cuenta (idempotente)")
     @PostMapping("/usuarios/{usuarioId}/activar")
     public CuentaResponse activar(@AuthenticationPrincipal UsuarioAutenticado actor, @PathVariable UUID usuarioId) {
-        return CuentaResponse.de(cambiarEstado.ejecutar(new CambiarEstadoCuentaUseCase.Comando(actor.usuarioId(), usuarioId.toString(), true)));
+        return CuentaResponse.de(cuentas.cambiarEstadoCuenta(new CuentaUseCase.CambiarEstadoCuentaComando(actor.usuarioId(), usuarioId.toString(), true)));
     }
 }

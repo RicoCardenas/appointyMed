@@ -1,7 +1,7 @@
 package com.appointy.auth.infrastructure.entry_points;
 
 import com.appointy.auth.domain.model.NombrePaciente;
-import com.appointy.auth.domain.usecase.ConsultarNombresPacientesUseCase;
+import com.appointy.auth.domain.usecase.PerfilUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -26,16 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasAnyRole('PROFESIONAL', 'ADMINISTRATIVO')")
 public class NombresPacientesController {
 
-    private final ConsultarNombresPacientesUseCase consultar;
+    private final PerfilUseCase perfiles;
 
-    public NombresPacientesController(ConsultarNombresPacientesUseCase consultar) {
-        this.consultar = consultar;
+    public NombresPacientesController(PerfilUseCase perfiles) {
+        this.perfiles = perfiles;
     }
 
     @Operation(summary = "Nombres de hasta 50 pacientes (PROFESIONAL o ADMINISTRATIVO)")
     @PostMapping
     public List<Nombre> nombres(@Valid @RequestBody Solicitud solicitud) {
-        NombrePaciente[] r = consultar.ejecutar(solicitud.ids().stream().map(UUID::toString).toArray(String[]::new));
+        NombrePaciente[] r = perfiles.consultarNombresPacientes(solicitud.ids().stream().map(UUID::toString).toArray(String[]::new));
         return Arrays.stream(r).map(n -> new Nombre(n.usuarioId(), n.nombres(), n.apellidos())).toList();
     }
 

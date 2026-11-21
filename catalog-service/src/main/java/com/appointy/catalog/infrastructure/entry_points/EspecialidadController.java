@@ -2,11 +2,8 @@ package com.appointy.catalog.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.catalog.domain.usecase.ActualizarEspecialidadUseCase;
-import com.appointy.catalog.domain.usecase.CrearEspecialidadUseCase;
-import com.appointy.catalog.domain.usecase.DesactivarEspecialidadUseCase;
-import com.appointy.catalog.domain.usecase.ListarEspecialidadesUseCase;
-import com.appointy.catalog.domain.usecase.ListarProfesionalesPorEspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.EspecialidadUseCase;
+import com.appointy.catalog.domain.usecase.ProfesionalUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.EspecialidadRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.EspecialidadResponse;
 import com.appointy.catalog.infrastructure.entry_points.dto.ProfesionalResponse;
@@ -35,23 +32,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/especialidades")
 public class EspecialidadController {
 
-    private final ListarEspecialidadesUseCase listar;
-    private final CrearEspecialidadUseCase crear;
-    private final ActualizarEspecialidadUseCase actualizar;
-    private final DesactivarEspecialidadUseCase desactivar;
-    private final ListarProfesionalesPorEspecialidadUseCase listarProfesionales;
+    private final EspecialidadUseCase especialidadUseCase;
+    private final ProfesionalUseCase profesionalUseCase;
 
-    public EspecialidadController(
-            ListarEspecialidadesUseCase listar,
-            CrearEspecialidadUseCase crear,
-            ActualizarEspecialidadUseCase actualizar,
-            DesactivarEspecialidadUseCase desactivar,
-            ListarProfesionalesPorEspecialidadUseCase listarProfesionales) {
-        this.listar = listar;
-        this.crear = crear;
-        this.actualizar = actualizar;
-        this.desactivar = desactivar;
-        this.listarProfesionales = listarProfesionales;
+    public EspecialidadController(EspecialidadUseCase especialidadUseCase, ProfesionalUseCase profesionalUseCase) {
+        this.especialidadUseCase = especialidadUseCase;
+        this.profesionalUseCase = profesionalUseCase;
     }
 
     /** CU-08. Solo un administrativo puede pedir tambien las inactivas. */
@@ -62,14 +48,14 @@ public class EspecialidadController {
         if (incluirInactivas && !"ADMINISTRATIVO".equals(usuario.rol())) {
             throw new AccessDeniedException("Solo un administrativo ve las especialidades inactivas");
         }
-        return Arrays.stream(listar.ejecutar(incluirInactivas)).map(EspecialidadResponse::de).toList();
+        return Arrays.stream(especialidadUseCase.listarEspecialidades(incluirInactivas)).map(EspecialidadResponse::de).toList();
     }
 
     /** CU-09. */
     @Operation(summary = "Profesionales activos de una especialidad")
     @GetMapping("/{id}/profesionales")
     public List<ProfesionalResponse> profesionales(@PathVariable UUID id) {
-        return Arrays.stream(listarProfesionales.ejecutar(id.toString())).map(ProfesionalResponse::de).toList();
+        return Arrays.stream(profesionalUseCase.listarProfesionalesPorEspecialidad(id.toString())).map(ProfesionalResponse::de).toList();
     }
 
     @Operation(summary = "Crear una especialidad")
@@ -77,7 +63,7 @@ public class EspecialidadController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public EspecialidadResponse crear(@Valid @RequestBody EspecialidadRequest solicitud) {
-        return EspecialidadResponse.de(crear.ejecutar(new CrearEspecialidadUseCase.Comando(solicitud.nombre(), solicitud.descripcion())));
+        return EspecialidadResponse.de(especialidadUseCase.crearEspecialidad(new EspecialidadUseCase.CrearEspecialidadComando(solicitud.nombre(), solicitud.descripcion())));
     }
 
     @Operation(summary = "Actualizar una especialidad")
@@ -85,7 +71,7 @@ public class EspecialidadController {
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public EspecialidadResponse actualizar(@PathVariable UUID id, @Valid @RequestBody EspecialidadRequest solicitud) {
         return EspecialidadResponse.de(
-                actualizar.ejecutar(new ActualizarEspecialidadUseCase.Comando(id.toString(), solicitud.nombre(), solicitud.descripcion())));
+                especialidadUseCase.actualizarEspecialidad(new EspecialidadUseCase.ActualizarEspecialidadComando(id.toString(), solicitud.nombre(), solicitud.descripcion())));
     }
 
     /** Borrado logico: la especialidad queda inactiva, no se elimina. */
@@ -94,6 +80,6 @@ public class EspecialidadController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMINISTRATIVO')")
     public void desactivar(@PathVariable UUID id) {
-        desactivar.ejecutar(id.toString());
+        especialidadUseCase.desactivarEspecialidad(id.toString());
     }
 }

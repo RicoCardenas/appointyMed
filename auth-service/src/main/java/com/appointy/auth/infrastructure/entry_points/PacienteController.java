@@ -2,8 +2,7 @@ package com.appointy.auth.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.auth.domain.usecase.ActualizarDatosEditablesUseCase;
-import com.appointy.auth.domain.usecase.ConsultarPerfilUseCase;
+import com.appointy.auth.domain.usecase.PerfilUseCase;
 import com.appointy.auth.infrastructure.entry_points.dto.ActualizarContactoRequest;
 import com.appointy.auth.infrastructure.entry_points.dto.PacienteResponse;
 import com.appointy.auth.infrastructure.security.UsuarioAutenticado;
@@ -23,24 +22,22 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('PACIENTE')")
 public class PacienteController {
 
-    private final ConsultarPerfilUseCase consultarPerfil;
-    private final ActualizarDatosEditablesUseCase actualizarDatos;
+    private final PerfilUseCase perfiles;
 
-    public PacienteController(ConsultarPerfilUseCase consultarPerfil, ActualizarDatosEditablesUseCase actualizarDatos) {
-        this.consultarPerfil = consultarPerfil;
-        this.actualizarDatos = actualizarDatos;
+    public PacienteController(PerfilUseCase perfiles) {
+        this.perfiles = perfiles;
     }
 
     @Operation(summary = "Consultar el perfil propio")
     @GetMapping
     public PacienteResponse consultar(@AuthenticationPrincipal UsuarioAutenticado usuario) {
-        return PacienteResponse.de(consultarPerfil.ejecutar(usuario.usuarioId()));
+        return PacienteResponse.de(perfiles.consultarPerfil(usuario.usuarioId()));
     }
 
     @Operation(summary = "Actualizar correo, teléfono, dirección o ciudad")
     @PatchMapping
     public PacienteResponse actualizar(
             @AuthenticationPrincipal UsuarioAutenticado usuario, @Valid @RequestBody ActualizarContactoRequest solicitud) {
-        return PacienteResponse.de(actualizarDatos.ejecutar(solicitud.aComando(usuario.usuarioId())));
+        return PacienteResponse.de(perfiles.actualizarDatosEditables(solicitud.aComando(usuario.usuarioId())));
     }
 }

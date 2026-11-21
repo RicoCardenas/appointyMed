@@ -2,7 +2,7 @@ package com.appointy.catalog.infrastructure.entry_points;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import com.appointy.catalog.domain.usecase.BloquearFranjasUseCase;
+import com.appointy.catalog.domain.usecase.HorarioUseCase;
 import com.appointy.catalog.infrastructure.entry_points.dto.BloqueoRequest;
 import com.appointy.catalog.infrastructure.entry_points.dto.BloqueoResponse;
 import com.appointy.catalog.infrastructure.security.UsuarioAutenticado;
@@ -23,16 +23,16 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class BloqueoController {
 
-    private final BloquearFranjasUseCase bloquear;
+    private final HorarioUseCase horarioUseCase;
 
-    public BloqueoController(BloquearFranjasUseCase bloquear) {
-        this.bloquear = bloquear;
+    public BloqueoController(HorarioUseCase horarioUseCase) {
+        this.horarioUseCase = horarioUseCase;
     }
 
     @Operation(summary = "Bloquear un rango de fechas de un profesional (409 si hay citas confirmadas)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public BloqueoResponse bloquear(@AuthenticationPrincipal UsuarioAutenticado actor, @Valid @RequestBody BloqueoRequest s) {
-        return BloqueoResponse.de(bloquear.ejecutar(s.aComando(actor.usuarioId())));
+        return BloqueoResponse.de(horarioUseCase.bloquearFranjas(s.aComando(actor.usuarioId())));
     }
 }

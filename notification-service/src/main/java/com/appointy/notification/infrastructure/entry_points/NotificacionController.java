@@ -7,12 +7,8 @@ import com.appointy.notification.domain.model.Estadisticas;
 import com.appointy.notification.domain.model.FiltroNotificaciones;
 import com.appointy.notification.domain.model.ResultadoLote;
 import com.appointy.notification.domain.model.TipoNotificacion;
-import com.appointy.notification.domain.usecase.ConsultarEstadisticasUseCase;
-import com.appointy.notification.domain.usecase.EnviarRecordatoriosUseCase;
-import com.appointy.notification.domain.usecase.ListarNotificacionesDeCitaUseCase;
-import com.appointy.notification.domain.usecase.ListarNotificacionesUseCase;
-import com.appointy.notification.domain.usecase.ReenviarNotificacionUseCase;
-import com.appointy.notification.domain.usecase.ReintentarFallidasUseCase;
+import com.appointy.notification.domain.usecase.ConsultaNotificacionUseCase;
+import com.appointy.notification.domain.usecase.NotificacionUseCase;
 import com.appointy.notification.infrastructure.entry_points.dto.NotificacionResponse;
 import com.appointy.notification.infrastructure.entry_points.dto.PaginaResponse;
 import java.util.Arrays;
@@ -33,22 +29,12 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMINISTRATIVO')")
 public class NotificacionController {
 
-    private final ListarNotificacionesUseCase listar;
-    private final ListarNotificacionesDeCitaUseCase deCita;
-    private final ReenviarNotificacionUseCase reenviar;
-    private final ConsultarEstadisticasUseCase estadisticas;
-    private final EnviarRecordatoriosUseCase recordatorios;
-    private final ReintentarFallidasUseCase reintentos;
+    private final ConsultaNotificacionUseCase consultaNotificacionUseCase;
+    private final NotificacionUseCase notificacionUseCase;
 
-    public NotificacionController(ListarNotificacionesUseCase listar, ListarNotificacionesDeCitaUseCase deCita,
-            ReenviarNotificacionUseCase reenviar, ConsultarEstadisticasUseCase estadisticas, EnviarRecordatoriosUseCase recordatorios,
-            ReintentarFallidasUseCase reintentos) {
-        this.listar = listar;
-        this.deCita = deCita;
-        this.reenviar = reenviar;
-        this.estadisticas = estadisticas;
-        this.recordatorios = recordatorios;
-        this.reintentos = reintentos;
+    public NotificacionController(ConsultaNotificacionUseCase consultaNotificacionUseCase, NotificacionUseCase notificacionUseCase) {
+        this.consultaNotificacionUseCase = consultaNotificacionUseCase;
+        this.notificacionUseCase = notificacionUseCase;
     }
 
     /** GET all paginado (RA-04). */
@@ -58,36 +44,36 @@ public class NotificacionController {
             @RequestParam(required = false) EstadoNotificacion estado, @RequestParam(required = false) TipoNotificacion tipo,
             @RequestParam(required = false) UUID citaId) {
         FiltroNotificaciones filtro = new FiltroNotificaciones(estado, tipo, citaId == null ? null : citaId.toString());
-        return PaginaResponse.de(listar.ejecutar(filtro, page, size));
+        return PaginaResponse.de(consultaNotificacionUseCase.listarNotificaciones(filtro, page, size));
     }
 
     @Operation(summary = "Conteo por estado y tipo (ADMINISTRATIVO)")
     @GetMapping("/estadisticas")
     public Estadisticas estadisticas() {
-        return estadisticas.ejecutar();
+        return consultaNotificacionUseCase.consultarEstadisticas();
     }
 
     @Operation(summary = "Notificaciones de una cita (ADMINISTRATIVO)")
     @GetMapping("/cita/{citaId}")
     public List<NotificacionResponse> deCita(@PathVariable UUID citaId) {
-        return Arrays.stream(deCita.ejecutar(citaId.toString())).map(NotificacionResponse::de).toList();
+        return Arrays.stream(consultaNotificacionUseCase.listarNotificacionesDeCita(citaId.toString())).map(NotificacionResponse::de).toList();
     }
 
     @Operation(summary = "Reenviar una notificación pendiente o fallida (ADMINISTRATIVO)")
     @PostMapping("/{id}/reenviar")
     public NotificacionResponse reenviar(@PathVariable UUID id) {
-        return NotificacionResponse.de(reenviar.ejecutar(id.toString()));
+        return NotificacionResponse.de(notificacionUseCase.reenviarNotificacion(id.toString()));
     }
 
     @Operation(summary = "Ejecutar ahora el envío de recordatorios vencidos (ADMINISTRATIVO)")
     @PostMapping("/recordatorios/ejecutar")
     public ResultadoLote ejecutarRecordatorios() {
-        return recordatorios.ejecutar();
+        return notificacionUseCase.enviarRecordatorios();
     }
 
     @Operation(summary = "Ejecutar ahora el reintento de fallidas (ADMINISTRATIVO)")
     @PostMapping("/reintentos/ejecutar")
     public ResultadoLote ejecutarReintentos() {
-        return reintentos.ejecutar();
+        return notificacionUseCase.reintentarFallidas();
     }
 }

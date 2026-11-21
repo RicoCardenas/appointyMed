@@ -12,11 +12,11 @@ Español, profesional y conciso. Sin emojis ni relleno. Responde primero; no rep
 Java 21, Spring Boot 3.5, Maven multimódulo, PostgreSQL local (base `appointy`, un schema y un usuario por servicio), Flyway con `ddl-auto: validate`, JUnit 5 y Mockito. Sin Docker ni broker. API en `/api/v1`; `/internal/**` con API key.
 
 Paquetes `com.appointy.<servicio>` (`auth`, `catalog`, `appointment`, `clinicalhistory`, `notification`):
-- `domain`: model, exception, rule, usecase (interfaces de los casos de uso), gateway (puertos de salida). **Cero imports ajenos al dominio** (regla del docente): ni librerías, ni Spring, JPA o Lombok, ni siquiera del JDK (`java.util`, `java.time`, `java.nio`). Solo `java.lang` y clases del propio `domain`. Lo vigila `DependenciasEntreCapasTest`.
-- `application`: usecase (implementaciones `*UseCaseImpl`), config.
+- `domain`: model, exception, rule, usecase (los casos de uso, obligatorio del docente: una clase por tema, sin interfaz, con comandos `record` anidados `XxxComando` y clases auxiliares), gateway (puertos de salida; solo ellos son interfaz). Transacciones, reloj, ids y registro técnico llegan por puertos (`TransactionGateway`, `RelojGateway`, `GeneradorIdGateway`, `RegistroGateway`); las fechas se calculan con `rule/FechaIso` (texto ISO) y las listas son arreglos. **Cero imports ajenos al dominio** (regla del docente): ni librerías, ni Spring, JPA o Lombok, ni siquiera del JDK (`java.util`, `java.time`, `java.nio`). Solo `java.lang` y clases del propio `domain`. Lo vigila `DependenciasEntreCapasTest`.
+- `application`: config (registro de beans de los casos de uso).
 - `infrastructure`: entry_points, driven_adapters (jpa_repository, rest_client), mapper, security.
 
-Un caso de uso por clase, gateways pequeños, reglas de negocio componibles. Dominio en español; sufijos técnicos en inglés: interfaz `ReservarCitaUseCase` en `domain/usecase`, su implementación `ReservarCitaUseCaseImpl` en `application/usecase`, y `FranjaRepositoryGateway` en `domain/gateway`.
+Casos de uso agrupados por tema en una sola clase (regla del docente), gateways pequeños, reglas de negocio y auxiliares componibles. Dominio en español; sufijos técnicos en inglés: `CitaUseCase` en `domain/usecase` y `FranjaRepositoryGateway` en `domain/gateway`. Los adaptadores de sistema (`SpringTransactionAdapter`, `RelojAdapter`, `UuidGeneradorIdAdapter`, `Slf4jRegistroAdapter`) viven en `infrastructure/driven_adapters/sistema`.
 
 ## Tipos del dominio (sin imports)
 - Ids: `String` (texto de un UUID; lo genera el caso de uso con `UUID.randomUUID().toString()`).
@@ -35,6 +35,9 @@ Un caso de uso por clase, gateways pequeños, reglas de negocio componibles. Dom
 - Notificación con `AFTER_COMMIT` y `@Async`; su fallo no revierte la cita.
 - Zona horaria: la JVM corre en UTC (`TimeZone.setDefault` en cada `*Application`) y los instantes se guardan en UTC. El "hoy" de la clínica sale de `app.timezone` (America/Bogota), nunca de la zona de la máquina. Sin esto una hora TIME se guarda desplazada.
 - Entre servicios: solo REST a `/internal/**` con `X-Api-Key` (`INTERNAL_API_KEY`) y `X-Correlation-Id`, con timeouts; todo fallo de red o 5xx se informa como 503. El contrato de appointment está en `docs/progreso.md`. Un JWT de usuario no abre `/internal` ni la llave abre la API de usuarios.
+
+## Pruebas (requisito del docente)
+Pruebas unitarias aisladas con mocks (Mockito), organizadas en Arrange–Act–Assert. Se trabaja con TDD: rojo (prueba que falla), verde (lo mínimo para pasar), refactorización conservando las pruebas. La entrega exige cobertura de líneas mínima 90 % con éxito (`mvn -q verify`).
 
 ## Cómo trabajar
 - Una fase a la vez (ver `docs/progreso.md`). Lee solo lo de la fase; usa `rg` y lecturas delimitadas.

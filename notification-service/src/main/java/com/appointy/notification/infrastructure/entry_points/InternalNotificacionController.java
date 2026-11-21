@@ -3,7 +3,7 @@ package com.appointy.notification.infrastructure.entry_points;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.notification.domain.model.Notificacion;
-import com.appointy.notification.domain.usecase.NotificarCitaUseCase;
+import com.appointy.notification.domain.usecase.NotificacionUseCase;
 import com.appointy.notification.infrastructure.entry_points.dto.NotificarCitaRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,17 +19,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/internal")
 public class InternalNotificacionController {
 
-    private final NotificarCitaUseCase notificar;
+    private final NotificacionUseCase notificacionUseCase;
 
-    public InternalNotificacionController(NotificarCitaUseCase notificar) {
-        this.notificar = notificar;
+    public InternalNotificacionController(NotificacionUseCase notificacionUseCase) {
+        this.notificacionUseCase = notificacionUseCase;
     }
 
     @Operation(summary = "Notificar un hecho de una cita (appointment)")
     @PostMapping("/notificaciones")
     @ResponseStatus(HttpStatus.CREATED)
     public Resultado notificar(@Valid @RequestBody NotificarCitaRequest solicitud) {
-        Notificacion n = notificar.ejecutar(solicitud.aSolicitud());
+        Notificacion n = notificacionUseCase.notificarCita(solicitud.aSolicitud());
         return new Resultado(n.id(), n.estado().name());
     }
 

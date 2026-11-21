@@ -3,10 +3,8 @@ package com.appointy.clinicalhistory.infrastructure.entry_points;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.appointy.clinicalhistory.domain.model.Actor;
-import com.appointy.clinicalhistory.domain.usecase.ConsultarHistoriaPacienteUseCase;
-import com.appointy.clinicalhistory.domain.usecase.ConsultarMiHistoriaUseCase;
-import com.appointy.clinicalhistory.domain.usecase.CorregirEntradaUseCase;
-import com.appointy.clinicalhistory.domain.usecase.RegistrarAtencionUseCase;
+import com.appointy.clinicalhistory.domain.usecase.HistoriaUseCase;
+import com.appointy.clinicalhistory.domain.usecase.EntradaClinicaUseCase;
 import com.appointy.clinicalhistory.infrastructure.entry_points.dto.CorregirEntradaRequest;
 import com.appointy.clinicalhistory.infrastructure.entry_points.dto.EntradaClinicaResponse;
 import com.appointy.clinicalhistory.infrastructure.entry_points.dto.RegistrarAtencionRequest;
@@ -14,11 +12,6 @@ import com.appointy.clinicalhistory.infrastructure.security.UsuarioAutenticado;
 import jakarta.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
-import com.appointy.clinicalhistory.domain.usecase.BuscarDiagnosticosUseCase;
-import com.appointy.clinicalhistory.domain.usecase.ConsultarMiResumenUseCase;
-import com.appointy.clinicalhistory.domain.usecase.ConsultarResumenPacienteUseCase;
-import com.appointy.clinicalhistory.domain.usecase.ListarAtencionesUseCase;
-import com.appointy.clinicalhistory.domain.usecase.ListarVersionesEntradaUseCase;
 import com.appointy.clinicalhistory.infrastructure.entry_points.dto.DiagnosticoResponse;
 import com.appointy.clinicalhistory.infrastructure.entry_points.dto.PaginaEntradasResponse;
 import com.appointy.clinicalhistory.infrastructure.entry_points.dto.ResumenHistoriaResponse;
@@ -43,55 +36,38 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class HistoriaClinicaController {
 
-    private final RegistrarAtencionUseCase registrar;
-    private final ConsultarHistoriaPacienteUseCase historiaDePaciente;
-    private final ConsultarMiHistoriaUseCase miHistoria;
-    private final CorregirEntradaUseCase corregir;
-    private final BuscarDiagnosticosUseCase diagnosticos;
-    private final ConsultarResumenPacienteUseCase resumenPaciente;
-    private final ConsultarMiResumenUseCase miResumen;
-    private final ListarVersionesEntradaUseCase versiones;
-    private final ListarAtencionesUseCase atenciones;
+    private final EntradaClinicaUseCase entradaClinicaUseCase;
+    private final HistoriaUseCase historiaUseCase;
 
-    public HistoriaClinicaController(RegistrarAtencionUseCase registrar, ConsultarHistoriaPacienteUseCase historiaDePaciente,
-            ConsultarMiHistoriaUseCase miHistoria, CorregirEntradaUseCase corregir,
-            BuscarDiagnosticosUseCase diagnosticos, ConsultarResumenPacienteUseCase resumenPaciente, ConsultarMiResumenUseCase miResumen,
-            ListarVersionesEntradaUseCase versiones, ListarAtencionesUseCase atenciones) {
-        this.registrar = registrar;
-        this.historiaDePaciente = historiaDePaciente;
-        this.miHistoria = miHistoria;
-        this.corregir = corregir;
-        this.diagnosticos = diagnosticos;
-        this.resumenPaciente = resumenPaciente;
-        this.miResumen = miResumen;
-        this.versiones = versiones;
-        this.atenciones = atenciones;
+    public HistoriaClinicaController(EntradaClinicaUseCase entradaClinicaUseCase, HistoriaUseCase historiaUseCase) {
+        this.entradaClinicaUseCase = entradaClinicaUseCase;
+        this.historiaUseCase = historiaUseCase;
     }
 
     @Operation(summary = "Registrar la atención de una cita (PROFESIONAL de la cita)")
     @PostMapping("/entradas")
     @ResponseStatus(HttpStatus.CREATED)
     public EntradaClinicaResponse registrar(@AuthenticationPrincipal UsuarioAutenticado u, @Valid @RequestBody RegistrarAtencionRequest s) {
-        return EntradaClinicaResponse.de(registrar.ejecutar(new RegistrarAtencionUseCase.Comando(actor(u), s.citaId().toString(), s.aContenido())));
+        return EntradaClinicaResponse.de(entradaClinicaUseCase.registrarAtencion(new EntradaClinicaUseCase.RegistrarAtencionComando(actor(u), s.citaId().toString(), s.aContenido())));
     }
 
     @Operation(summary = "Corregir una entrada: crea una nueva que apunta a la anterior")
     @PostMapping("/entradas/{id}/correcciones")
     @ResponseStatus(HttpStatus.CREATED)
     public EntradaClinicaResponse corregir(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id, @Valid @RequestBody CorregirEntradaRequest s) {
-        return EntradaClinicaResponse.de(corregir.ejecutar(new CorregirEntradaUseCase.Comando(actor(u), id.toString(), s.aContenido())));
+        return EntradaClinicaResponse.de(entradaClinicaUseCase.corregirEntrada(new EntradaClinicaUseCase.CorregirEntradaComando(actor(u), id.toString(), s.aContenido())));
     }
 
     @Operation(summary = "Historia completa de un paciente (PROFESIONAL con relación)")
     @GetMapping("/pacientes/{pacienteId}/historia")
     public List<EntradaClinicaResponse> historiaDePaciente(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID pacienteId) {
-        return Arrays.stream(historiaDePaciente.ejecutar(actor(u), pacienteId.toString())).map(EntradaClinicaResponse::de).toList();
+        return Arrays.stream(historiaUseCase.consultarHistoriaPaciente(actor(u), pacienteId.toString())).map(EntradaClinicaResponse::de).toList();
     }
 
     @Operation(summary = "Mi historia clínica (PACIENTE)")
     @GetMapping("/historia/mia")
     public List<EntradaClinicaResponse> miHistoria(@AuthenticationPrincipal UsuarioAutenticado u) {
-        return Arrays.stream(miHistoria.ejecutar(actor(u))).map(EntradaClinicaResponse::de).toList();
+        return Arrays.stream(historiaUseCase.consultarMiHistoria(actor(u))).map(EntradaClinicaResponse::de).toList();
     }
 
     /** GET all paginado (RA-04): las entradas que escribio el profesional autenticado. */
@@ -99,32 +75,32 @@ public class HistoriaClinicaController {
     @GetMapping("/atenciones")
     public PaginaEntradasResponse atenciones(@AuthenticationPrincipal UsuarioAutenticado u, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return PaginaEntradasResponse.de(atenciones.ejecutar(actor(u), page, size));
+        return PaginaEntradasResponse.de(historiaUseCase.listarAtenciones(actor(u), page, size));
     }
 
     @Operation(summary = "La entrada original de una atención y sus correcciones")
     @GetMapping("/entradas/{id}/versiones")
     public List<EntradaClinicaResponse> versiones(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID id) {
-        return Arrays.stream(versiones.ejecutar(actor(u), id.toString())).map(EntradaClinicaResponse::de).toList();
+        return Arrays.stream(entradaClinicaUseCase.listarVersionesEntrada(actor(u), id.toString())).map(EntradaClinicaResponse::de).toList();
     }
 
     @Operation(summary = "Resumen de la historia de un paciente (PROFESIONAL con relación)")
     @GetMapping("/pacientes/{pacienteId}/resumen")
     public ResumenHistoriaResponse resumenDePaciente(@AuthenticationPrincipal UsuarioAutenticado u, @PathVariable UUID pacienteId) {
-        return ResumenHistoriaResponse.de(resumenPaciente.ejecutar(actor(u), pacienteId.toString()));
+        return ResumenHistoriaResponse.de(historiaUseCase.consultarResumenPaciente(actor(u), pacienteId.toString()));
     }
 
     @Operation(summary = "Resumen de mi historia (PACIENTE)")
     @GetMapping("/historia/mia/resumen")
     public ResumenHistoriaResponse miResumen(@AuthenticationPrincipal UsuarioAutenticado u) {
-        return ResumenHistoriaResponse.de(miResumen.ejecutar(actor(u)));
+        return ResumenHistoriaResponse.de(historiaUseCase.consultarMiResumen(actor(u)));
     }
 
     /** Busqueda en el catalogo CIE-10 (API externa, RA-06). Solo PROFESIONAL. */
     @Operation(summary = "Buscar diagnósticos CIE-10 en la API externa NLM (PROFESIONAL)")
     @GetMapping("/diagnosticos")
     public List<DiagnosticoResponse> diagnosticos(@AuthenticationPrincipal UsuarioAutenticado u, @RequestParam String q) {
-        return Arrays.stream(diagnosticos.ejecutar(actor(u), q)).map(DiagnosticoResponse::de).toList();
+        return Arrays.stream(historiaUseCase.buscarDiagnosticos(actor(u), q)).map(DiagnosticoResponse::de).toList();
     }
 
     private static Actor actor(UsuarioAutenticado u) {

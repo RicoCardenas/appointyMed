@@ -1,11 +1,6 @@
 package com.appointy.auth.domain.model;
 
-/**
- * Perfil del paciente (RF-04 a RF-06). {@code fechaNacimiento} es texto ISO yyyy-MM-dd.
- * Cedula, nombres, apellidos y fecha de nacimiento son inmutables para el paciente: solo
- * {@link #corregirIdentidad} los cambia y solo lo invoca el proceso administrativo. El paciente
- * unicamente puede usar {@link #actualizarContacto}.
- */
+
 public record PacientePerfil(
         String usuarioId,
         String cedula,
