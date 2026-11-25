@@ -2,7 +2,7 @@
 
 Rama `main`. El código anterior está en el historial hasta el commit `efb6897`; consúltalo con `git show efb6897:<ruta>`. Última actualización: 2026-11-14.
 
-## Siguiente paso: Fase 8, despliegue en AWS (por decidir alcance y presupuesto)
+## Siguiente paso: Fase 8, subir a Render con `render.yaml` (pasos en el README)
 
 Antes de ejecutar nada sobre la cuenta: estimar costo y pedir confirmación (CLAUDE.md). Pendientes de la Fase 7 que conviene decidir primero: un proxy inverso en producción que reproduzca los prefijos `/svc/<servicio>` del front (hoy los hace Vite en desarrollo), y la política de la sesión de 15 minutos sin refresh token.
 
@@ -22,7 +22,7 @@ Antes de ejecutar nada sobre la cuenta: estimar costo y pedir confirmación (CLA
 | 6 | Cierre: OpenAPI, colección Postman, correlación de logs | Hecha y verificada (ver abajo) |
 | 6b | Requisitos RA-03 a RA-06: 5 APIs no CRUD y GET all paginado por servicio, 2 APIs externas, cobertura 90 % | Hecha y verificada (ver abajo) |
 | 7 | Interfaz (proyecto aparte en `frontend/`), con las skills `impeccable` y `apple-design` | Hecha y verificada en navegador (ver abajo) |
-| 8 | Despliegue en AWS | Pendiente, por decidir alcance y presupuesto |
+| 8 | Despliegue (Render gratuito, para la sustentación) | Archivos listos y probados en local con Docker; falta subirlo a Render |
 
 ## Requisitos adicionales (RA-01 a RA-07, ver especificación sección 11)
 
@@ -308,6 +308,9 @@ Comportamiento:
 - Alcance y presupuesto del despliegue en AWS: se decide al llegar a la Fase 8.
 
 - Correo por API HTTP de Brevo (2026-11-25): Render gratuito bloquea los puertos SMTP 25, 465 y 587, así que se añadió un segundo adaptador de `CorreoGateway` por HTTPS (443) elegido con `MAIL_PROVIDER`. El dominio no cambia. Se descartó probar el SMTP por 2525 para no depender de algo no confirmado.
+
+- Despliegue en Render gratuito (2026-11-25), solo para la sustentación; sustituye al plan de AWS. Un `Dockerfile` por servicio (contexto: raíz; JVM con `-Xmx300m`), `frontend/Dockerfile` con Nginx que hace de proxy `/svc/<servicio>/api/` y no expone `/internal`, y `render.yaml`. Los servicios se hablan por sus URL públicas `onrender.com` con la API key (la red privada no se confirmó en el plan gratuito). En Render todos usan el usuario de la base y `FLYWAY_CREATE_SCHEMAS=true` (RNF-15 se cumple en local con `db/init.sql`, no aquí). La BD se arma con `DB_HOST`, `DB_PORT` y `DB_NAME`. Verificado en local con `docker compose`: login por el proxy, SPA y los 5 servicios con JWT; `render.yaml` sin validar en Render (`fromGroup` y `fromDatabase` por confirmar).
+- Pendiente de seguridad: límite de intentos en `/auth/login`.
 
 ## Pendientes menores
 

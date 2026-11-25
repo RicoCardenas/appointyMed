@@ -1,0 +1,65 @@
+# Prueba local de las imagenes tal como correran en Render: una BD con un solo usuario (el schema lo crea Flyway),
+# los servicios por red interna y el front con Nginx en http://localhost:8080.
+# Uso: JWT_SECRET=... INTERNAL_API_KEY=... ADMIN_EMAIL=... ADMIN_PASSWORD=... docker compose up --build
+# No usa ni lee .env. Los puertos publicados son solo el del front.
+x-servicio: &servicio
+  environment: &env
+    DB_HOST: db
+    DB_NAME: appointy
+    FLYWAY_CREATE_SCHEMAS: "true"
+    JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET (minimo 32 caracteres)}
+    INTERNAL_API_KEY: ${INTERNAL_API_KEY:?defina INTERNAL_API_KEY (minimo 24 caracteres)}
+    AUTH_SERVICE_URL: http://auth:8081
+    CATALOG_SERVICE_URL: http://catalog:8082
+    APPOINTMENT_SERVICE_URL: http://appointment:8083
+    NOTIFICATION_SERVICE_URL: http://notification:8085
+    AUTH_DB_USER: appointy
+    AUTH_DB_PASSWORD: local
+    CATALOG_DB_USER: appointy
+    CATALOG_DB_PASSWORD: local
+    APPOINTMENT_DB_USER: appointy
+    APPOINTMENT_DB_PASSWORD: local
+    CLINICAL_DB_USER: appointy
+    CLINICAL_DB_PASSWORD: local
+    NOTIFICATION_DB_USER: appointy
+    NOTIFICATION_DB_PASSWORD: local
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: appointy, POSTGRES_PASSWORD: local, POSTGRES_DB: appointy }
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U appointy"], interval: 3s, retries: 20 }
+  auth:
+    <<: *servicio
+    build: { context: ., dockerfile: auth-service/Dockerfile }
+    environment: { <<: *env, PORT: "8081", ADMIN_EMAIL: "${ADMIN_EMAIL:-}", ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}" }
+  catalog:
+    <<: *servicio
+    build: { context: ., dockerfile: catalog-service/Dockerfile }
+    environment: { <<: *env, PORT: "8082" }
+  appointment:
+    <<: *servicio
+    build: { context: ., dockerfile: appointment-service/Dockerfile }
+    environment: { <<: *env, PORT: "8083" }
+  clinical:
+    <<: *servicio
+    build: { context: ., dockerfile: clinical-history-service/Dockerfile }
+    environment: { <<: *env, PORT: "8084" }
+  notification:
+    <<: *servicio
+    build: { context: ., dockerfile: notification-service/Dockerfile }
+    environment: { <<: *env, PORT: "8085" }
+  front:
+    build: { context: frontend }
+    environment:
+      PORT: "8080"
+      AUTH_URL: http://auth:8081
+      CATALOG_URL: http://catalog:8082
+      APPOINTMENT_URL: http://appointment:8083
+      CLINICAL_URL: http://clinical:8084
+      NOTIFICATION_URL: http://notification:8085
+    ports: ["8080:8080"]
+    depends_on: [auth, catalog, appointment, clinical, notification]

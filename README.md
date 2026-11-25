@@ -44,3 +44,21 @@ corepack pnpm run build             # tsc + vite build
 
 Cuentas de la demo (clave `Demo12345`): `paciente@demo.local`, `dra.rojas@demo.local`, `dr.mejia@demo.local`, `admin@demo.local`.
 La documentación de la API está en `/swagger-ui/index.html` de cada servicio, en `docs/openapi/` y en la colección `docs/postman/`.
+
+## Despliegue en Render (plan gratuito, para la sustentación)
+
+`render.yaml` describe 5 servicios Docker, el front (Nginx, que reenvía `/svc/<servicio>/api/` a cada microservicio) y una base PostgreSQL gratuita. En Render todos los servicios comparten un solo usuario de base y Flyway crea cada schema (`FLYWAY_CREATE_SCHEMAS=true`).
+
+Prueba local de las mismas imágenes, sin leer `.env` (front en http://localhost:8080):
+
+```bash
+JWT_SECRET=$(openssl rand -hex 32) INTERNAL_API_KEY=$(openssl rand -hex 16) ADMIN_EMAIL=admin@test.local ADMIN_PASSWORD=Cambiar123 docker compose up --build
+```
+
+Pasos en Render:
+
+1. Dashboard > Env Groups > New: nombre `appointy-secretos`, con `JWT_SECRET` (`openssl rand -hex 32`) e `INTERNAL_API_KEY` (`openssl rand -hex 16`).
+2. New > Blueprint, conectar el repositorio de GitHub y elegir `render.yaml`. Render pide `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `MAIL_FROM` (remitente verificado en Brevo) y `BREVO_API_KEY`.
+3. Esperar las 7 construcciones. Si algún nombre `appointy-<servicio>` ya estaba tomado, Render le añade un sufijo: corregir las URL en las variables `*_SERVICE_URL` y en `appointy-front` (`*_URL`).
+4. Antes de la sustentación abrir `/actuator/health` de cada servicio para despertarlos (se duermen tras 15 minutos sin tráfico y tardan de 30 a 60 s).
+5. La base gratuita expira a los 30 días. Al terminar, borrar los servicios y la base.

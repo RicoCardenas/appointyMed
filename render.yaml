@@ -1,0 +1,168 @@
+# Blueprint de Render para la sustentacion (todo en el plan gratuito). Ver README, seccion "Despliegue en Render".
+# Antes de crearlo, en Render: Dashboard > Env Groups > New, con nombre `appointy-secretos` y las variables
+# JWT_SECRET (minimo 32 caracteres) e INTERNAL_API_KEY (minimo 24), iguales para todos los servicios.
+# Si un nombre `appointy-<servicio>` ya esta tomado, Render le agrega un sufijo: ajusta las URL de abajo y las de `appointy-front`.
+databases:
+  - name: appointy-db
+    databaseName: appointy
+    user: appointy
+    plan: free
+    region: ohio
+
+services:
+  - type: web
+    name: appointy-auth
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./auth-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: "off"
+    envVars:
+      - fromGroup: appointy-secretos
+      - key: DB_HOST
+        fromDatabase: { name: appointy-db, property: host }
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: appointy
+      - key: AUTH_DB_USER
+        fromDatabase: { name: appointy-db, property: user }
+      - key: AUTH_DB_PASSWORD
+        fromDatabase: { name: appointy-db, property: password }
+      - key: FLYWAY_CREATE_SCHEMAS
+        value: "true"
+      - key: OPENAPI_ENABLED
+        value: "false"
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+  - type: web
+    name: appointy-catalog
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./catalog-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: "off"
+    envVars:
+      - fromGroup: appointy-secretos
+      - key: DB_HOST
+        fromDatabase: { name: appointy-db, property: host }
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: appointy
+      - key: CATALOG_DB_USER
+        fromDatabase: { name: appointy-db, property: user }
+      - key: CATALOG_DB_PASSWORD
+        fromDatabase: { name: appointy-db, property: password }
+      - key: FLYWAY_CREATE_SCHEMAS
+        value: "true"
+      - key: OPENAPI_ENABLED
+        value: "false"
+      - { key: APPOINTMENT_SERVICE_URL, value: "https://appointy-appointment.onrender.com" }
+  - type: web
+    name: appointy-appointment
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./appointment-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: "off"
+    envVars:
+      - fromGroup: appointy-secretos
+      - key: DB_HOST
+        fromDatabase: { name: appointy-db, property: host }
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: appointy
+      - key: APPOINTMENT_DB_USER
+        fromDatabase: { name: appointy-db, property: user }
+      - key: APPOINTMENT_DB_PASSWORD
+        fromDatabase: { name: appointy-db, property: password }
+      - key: FLYWAY_CREATE_SCHEMAS
+        value: "true"
+      - key: OPENAPI_ENABLED
+        value: "false"
+      - { key: CATALOG_SERVICE_URL, value: "https://appointy-catalog.onrender.com" }
+      - { key: NOTIFICATION_SERVICE_URL, value: "https://appointy-notification.onrender.com" }
+  - type: web
+    name: appointy-clinical
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./clinical-history-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: "off"
+    envVars:
+      - fromGroup: appointy-secretos
+      - key: DB_HOST
+        fromDatabase: { name: appointy-db, property: host }
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: appointy
+      - key: CLINICAL_DB_USER
+        fromDatabase: { name: appointy-db, property: user }
+      - key: CLINICAL_DB_PASSWORD
+        fromDatabase: { name: appointy-db, property: password }
+      - key: FLYWAY_CREATE_SCHEMAS
+        value: "true"
+      - key: OPENAPI_ENABLED
+        value: "false"
+      - { key: CATALOG_SERVICE_URL, value: "https://appointy-catalog.onrender.com" }
+      - { key: APPOINTMENT_SERVICE_URL, value: "https://appointy-appointment.onrender.com" }
+  - type: web
+    name: appointy-notification
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./notification-service/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: "off"
+    envVars:
+      - fromGroup: appointy-secretos
+      - key: DB_HOST
+        fromDatabase: { name: appointy-db, property: host }
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: appointy
+      - key: NOTIFICATION_DB_USER
+        fromDatabase: { name: appointy-db, property: user }
+      - key: NOTIFICATION_DB_PASSWORD
+        fromDatabase: { name: appointy-db, property: password }
+      - key: FLYWAY_CREATE_SCHEMAS
+        value: "true"
+      - key: OPENAPI_ENABLED
+        value: "false"
+      - { key: AUTH_SERVICE_URL, value: "https://appointy-auth.onrender.com" }
+      - { key: MAIL_ENABLED, value: "true" }
+      - { key: MAIL_PROVIDER, value: brevo }
+      - key: MAIL_FROM
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+  - type: web
+    name: appointy-front
+    runtime: docker
+    plan: free
+    region: ohio
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    healthCheckPath: /healthz
+    autoDeployTrigger: "off"
+    envVars:
+      - { key: AUTH_URL, value: "https://appointy-auth.onrender.com" }
+      - { key: CATALOG_URL, value: "https://appointy-catalog.onrender.com" }
+      - { key: APPOINTMENT_URL, value: "https://appointy-appointment.onrender.com" }
+      - { key: CLINICAL_URL, value: "https://appointy-clinical.onrender.com" }
+      - { key: NOTIFICATION_URL, value: "https://appointy-notification.onrender.com" }
