@@ -1,0 +1,8 @@
+# Publica los puertos de los servicios para las pruebas de Postman y de carga:
+#   docker compose -f docker-compose.yml -f docker-compose.pruebas.yml up -d
+services:
+  auth: { ports: ["8081:8081"] }
+  catalog: { ports: ["8082:8082"] }
+  appointment: { ports: ["8083:8083"] }
+  clinical: { ports: ["8084:8084"] }
+  notification: { ports: ["8085:8085"] }

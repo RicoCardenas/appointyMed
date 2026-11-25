@@ -26,3 +26,6 @@ logs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Material de entrega (Postman, resultados y articulo): se genera con scripts/ y no se versiona
+entregables/

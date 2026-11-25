@@ -8,6 +8,8 @@ spring:
     url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appointy}}
     username: ${AUTH_DB_USER:auth_svc}
     password: ${AUTH_DB_PASSWORD}
+    hikari:
+      connection-init-sql: SET search_path TO auth   # sin esto, el SQL nativo falla con un solo usuario de BD (Render)
   jackson:
     deserialization:
       # Un campo desconocido (p. ej. la cedula en la actualizacion del paciente) se rechaza con 400.

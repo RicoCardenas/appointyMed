@@ -8,6 +8,8 @@ spring:
     url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appointy}}
     username: ${CATALOG_DB_USER:catalog_svc}
     password: ${CATALOG_DB_PASSWORD}
+    hikari:
+      connection-init-sql: SET search_path TO catalog   # sin esto, el SQL nativo falla con un solo usuario de BD (Render)
   jackson:
     deserialization:
       fail-on-unknown-properties: true

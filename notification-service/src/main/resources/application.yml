@@ -8,6 +8,8 @@ spring:
     url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:appointy}}
     username: ${NOTIFICATION_DB_USER:notification_svc}
     password: ${NOTIFICATION_DB_PASSWORD}
+    hikari:
+      connection-init-sql: SET search_path TO notification   # sin esto, el SQL nativo falla con un solo usuario de BD (Render)
   jpa:
     open-in-view: false
     hibernate:

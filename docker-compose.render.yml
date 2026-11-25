@@ -1,0 +1,10 @@
+# Limita cada servicio a los recursos del plan gratuito de Render (0,1 CPU y 512 MB) para medir el comportamiento esperado alli:
+#   docker compose -f docker-compose.yml -f docker-compose.pruebas.yml -f docker-compose.render.yml up -d
+x-limite: &limite
+  deploy: { resources: { limits: { cpus: "0.1", memory: 512M } } }
+services:
+  auth: *limite
+  catalog: *limite
+  appointment: *limite
+  clinical: *limite
+  notification: *limite
