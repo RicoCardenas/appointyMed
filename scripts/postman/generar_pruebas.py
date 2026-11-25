@@ -41,8 +41,14 @@ def peticion(c, nombre, svc, metodo, ruta, token=None, cuerpo=None, estado=200, 
     if guardar:
         scripts += ["if (pm.response.code < 300) { const j = pm.response.json(); %s }" % ' '.join(
             "pm.collectionVariables.set('%s', %s);" % (k, v) for k, v in guardar.items())]
+    # Postman moderno necesita la URL desglosada (host, path y query), no solo el texto
+    base, _, qs = url.partition('?')
+    host, _, ruta_url = base.partition('/')
+    url_obj = {'raw': url, 'host': [host], 'path': ruta_url.split('/')}
+    if qs:
+        url_obj['query'] = [{'key': kv.split('=', 1)[0], 'value': kv.split('=', 1)[1]} for kv in qs.split('&')]
     item = {'name': nombre, 'event': [js(scripts)], 'response': [],
-            'request': {'method': metodo, 'header': cab, 'url': {'raw': url}}}
+            'request': {'method': metodo, 'header': cab, 'url': url_obj}}
     if antes:
         item['event'].insert(0, previa(antes))
     if cuerpo is not None:
