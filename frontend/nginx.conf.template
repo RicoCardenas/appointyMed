@@ -19,6 +19,13 @@ server {
 
     location = /healthz { access_log off; return 200 'ok'; }
 
+    # Salud publica de cada servicio: el front la pide al abrirse para despertar los servicios dormidos
+    location = /svc/auth/actuator/health { proxy_pass ${AUTH_URL}/actuator/health; }
+    location = /svc/catalog/actuator/health { proxy_pass ${CATALOG_URL}/actuator/health; }
+    location = /svc/appointment/actuator/health { proxy_pass ${APPOINTMENT_URL}/actuator/health; }
+    location = /svc/clinical/actuator/health { proxy_pass ${CLINICAL_URL}/actuator/health; }
+    location = /svc/notification/actuator/health { proxy_pass ${NOTIFICATION_URL}/actuator/health; }
+
     location /svc/auth/api/ { proxy_pass ${AUTH_URL}/api/; }
     location /svc/catalog/api/ { proxy_pass ${CATALOG_URL}/api/; }
     location /svc/appointment/api/ { proxy_pass ${APPOINTMENT_URL}/api/; }

@@ -317,6 +317,8 @@ Comportamiento:
 - Resultados: sin límites, 0 errores hasta 2000 hilos de lectura (p99 354 ms) y la invariante de reserva se cumple en 10 rondas de 20 competidores; el login (BCrypt) toma unos 217 ms y satura cerca de 37/s. Con 0,1 CPU el requisito de 500 ms solo se cumple con un usuario a la vez (el login tarda unos 8,5 s). Los tiempos entre servicios en `render.yaml` se ampliaron a 10 s de conexión y 60 s de lectura.
 - Posible mejora, no aplicada: bajar el costo de BCrypt o limitar su concurrencia; con 0,1 CPU el login es el cuello de botella de la demo.
 
+- Servicios dormidos en Render (2026-11-25): el front pide `/svc/<servicio>/actuator/health` de los 5 servicios al abrirse (`calentarServicios`, rutas de salud en Nginx) y un 502/503/504 sin error uniforme se muestra como "El servicio se esta despertando" (`SERVICIO_DESPERTANDO`) en lugar de "error inesperado". 33 pruebas del front pasan.
+
 ## Pendientes menores
 
 - Revisar `.github/modernize/` (restos de una herramienta de actualización de Java, sin relación con el proyecto).

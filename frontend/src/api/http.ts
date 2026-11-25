@@ -67,10 +67,23 @@ export async function llamar<T>(servicio: Servicio, ruta: string, o: Opciones = 
   }
   if (!respuesta.ok) {
     const e = (cuerpo ?? {}) as { codigo?: string; mensaje?: string; detalle?: string[] }
+    // 502/503/504 sin error uniforme: no responde el backend sino el proxy de la plataforma (servicio dormido o arrancando)
+    if ([502, 503, 504].includes(respuesta.status) && !e.codigo) {
+      throw new ApiError(respuesta.status, 'SERVICIO_DESPERTANDO', 'El servicio se esta despertando (el plan gratuito lo duerme tras 15 minutos sin uso). Espera un minuto e intenta de nuevo.')
+    }
     if (respuesta.status === 401 && token && e.codigo === 'NO_AUTENTICADO') alExpirar()
     throw new ApiError(respuesta.status, e.codigo ?? `HTTP_${respuesta.status}`, e.mensaje ?? 'Ocurrio un error inesperado', e.detalle ?? [])
   }
   return cuerpo as T
+}
+
+const SERVICIOS: Servicio[] = ['auth', 'catalog', 'appointment', 'clinical', 'notification']
+
+/** Despierta los servicios dormidos al abrir la app: pide su salud sin esperar la respuesta ni mostrar errores. */
+export function calentarServicios(): void {
+  for (const s of SERVICIOS) {
+    fetch(`/svc/${s}/actuator/health`, { cache: 'no-store' }).catch(() => {})
+  }
 }
 
 export interface Pagina<T> {

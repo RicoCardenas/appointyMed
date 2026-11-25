@@ -12,6 +12,8 @@ os.makedirs(salida, exist_ok=True)
 
 
 def escribir(nombre, texto):
+    if nombre.startswith('tabla'):   # '%' al final de cada fila: sin espacios sobrantes dentro de tabular
+        texto = ''.join(l + '%\n' for l in texto.splitlines())
     open(os.path.join(salida, nombre), 'w', encoding='utf-8').write(texto)
 
 
@@ -19,14 +21,17 @@ def f(x, d=1):
     return ('%.*f' % (d, x)).replace('.', ',') if isinstance(x, float) else str(x)
 
 
+login_filas = {}
 for sf, mc, ruta_carga, ruta_pm in conjuntos:
     carga = json.load(open(ruta_carga))
     postman = json.load(open(ruta_pm))
     esc = carga['escenarios']
-    escribir('tabla_lectura%s.tex' % sf, '\n'.join('%d & %s & %s & %s & %s & %s & %s \\\\' % (
-        r['hilos'], r['tipo'], f(r['rps']), f(r['p50_ms']), f(r['p95_ms']), f(r['p99_ms']), f(r['errores_pct'], 2)) for r in esc.get('lectura', [])) + '\n')
-    escribir('tabla_login%s.tex' % sf, '\n'.join('%d & %s & %s & %s & %s & %s \\\\' % (
-        r['hilos'], f(r['rps']), f(r['p50_ms']), f(r['p95_ms']), f(r['p99_ms']), f(r['errores_pct'], 2)) for r in esc.get('login', [])) + '\n')
+    filas_l = [' & '.join(str(x) for x in (r['hilos'], r['tipo'], f(r['rps']), f(r['p50_ms']), f(r['p95_ms']), f(r['p99_ms']), f(r['errores_pct'], 2))) + ' \\\\'
+               for r in esc.get('lectura', [])]
+    escribir('tabla_lectura%s.tex' % sf, '\\begin{tabular}{rlrrrrr}\n\\toprule\nHilos & Tipo & Pet./s & p50 & p95 & p99 & Err. (\\%) \\\\\n\\midrule\n' + '\n'.join(filas_l) + '\n\\bottomrule\n\\end{tabular}\n')
+    filas_g = [' & '.join(str(x) for x in (r['hilos'], f(r['rps']), f(r['p50_ms']), f(r['p95_ms']), f(r['p99_ms']), f(r['errores_pct'], 2))) + ' \\\\'
+               for r in esc.get('login', [])]
+    login_filas[sf] = filas_g
 
     def serie(clave, nombre):
         return ' '.join('(%d,%s)' % (r['hilos'], r[clave]) for r in esc.get(nombre, []))
@@ -48,4 +53,6 @@ for sf, mc, ruta_carga, ruta_pm in conjuntos:
     m += [('pmPeticiones', len(postman)), ('pmPruebas', pruebas), ('pmFallas', falla), ('pmMedia', f(sum(ms) / len(ms))), ('pmMax', ms[-1]),
           ('pmPcincuenta', ms[len(ms) // 2]), ('pmPnoventaycinco', ms[int(0.95 * (len(ms) - 1))]), ('pmBajo', sum(1 for x in ms if x < 500))]
     escribir('macros%s.tex' % sf, ''.join('\\newcommand{\\%s%s}{%s}\n' % (n, mc, v) for n, v in m))
+escribir('tabla_login_ab.tex', '\\begin{tabular}{rrrrrr}\n\\toprule\nHilos & Pet./s & p50 & p95 & p99 & Err. (\\%) \\\\\n\\midrule\n' + '\n'.join(login_filas.get('', [])) +
+         ('\n\\midrule\n' + '\n'.join(login_filas['_rl']) if '_rl' in login_filas else '') + '\n\\bottomrule\n\\end{tabular}\n')
 print('fragmentos escritos en', salida)

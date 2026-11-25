@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, configurarSesion, construirQuery, llamar } from '../api/http'
+import { ApiError, calentarServicios, configurarSesion, construirQuery, llamar } from '../api/http'
 
 function responder(estado: number, cuerpo?: unknown) {
   return vi.fn().mockResolvedValue({ ok: estado >= 200 && estado < 300, status: estado, json: async () => cuerpo })
@@ -49,10 +49,10 @@ describe('llamar', () => {
   })
 
   it('un cuerpo ilegible en un error igual produce ApiError', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 502, json: async () => { throw new Error('no json') } }))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => { throw new Error('no json') } }))
     const e = (await llamar('auth', '/x').catch((x) => x)) as ApiError
     expect(e).toBeInstanceOf(ApiError)
-    expect(e.codigo).toBe('HTTP_502')
+    expect(e.codigo).toBe('HTTP_500')
   })
 
   it('un 401 NO_AUTENTICADO con sesion avisa para cerrarla', async () => {
@@ -74,5 +74,38 @@ describe('llamar', () => {
   it('sin red es SIN_CONEXION', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fallo')))
     await expect(llamar('auth', '/x')).rejects.toMatchObject({ estado: 0, codigo: 'SIN_CONEXION' })
+  })
+})
+
+describe('servicio dormido (Render gratuito)', () => {
+  const sinJson = (estado: number) => vi.fn().mockResolvedValue({ ok: false, status: estado, json: async () => { throw new Error('no es JSON') } })
+
+  it.each([502, 503, 504])('un %i sin error uniforme se informa como servicio despertando', async (estado) => {
+    vi.stubGlobal('fetch', sinJson(estado))
+    const error = (await llamar('auth', '/auth/login', { metodo: 'POST', cuerpo: {} }).catch((e) => e)) as ApiError
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ estado, codigo: 'SERVICIO_DESPERTANDO' })
+    expect(error.message).toMatch(/despertando/i)
+  })
+
+  it('un 503 con error uniforme del backend conserva su codigo y mensaje', async () => {
+    vi.stubGlobal('fetch', responder(503, { codigo: 'APPOINTMENT_NO_DISPONIBLE', mensaje: 'appointment no respondio' }))
+    await expect(llamar('catalog', '/x')).rejects.toMatchObject({ estado: 503, codigo: 'APPOINTMENT_NO_DISPONIBLE', message: 'appointment no respondio' })
+  })
+
+  it('un 500 sin JSON sigue siendo un error inesperado', async () => {
+    vi.stubGlobal('fetch', sinJson(500))
+    await expect(llamar('auth', '/x')).rejects.toMatchObject({ estado: 500, codigo: 'HTTP_500' })
+  })
+})
+
+describe('calentarServicios', () => {
+  it('pide la salud de los 5 servicios sin esperar y sin fallar si alguno no responde', async () => {
+    const f = vi.fn().mockRejectedValue(new Error('dormido'))
+    vi.stubGlobal('fetch', f)
+    expect(() => calentarServicios()).not.toThrow()
+    await Promise.resolve()
+    const urls = f.mock.calls.map((c) => c[0]).sort()
+    expect(urls).toEqual(['appointment', 'auth', 'catalog', 'clinical', 'notification'].map((s) => `/svc/${s}/actuator/health`).sort())
   })
 })
