@@ -33,7 +33,13 @@ app:
     read-timeout-ms: ${AUTH_READ_TIMEOUT_MS:5000}
   mail:
     enabled: ${MAIL_ENABLED:false}   # false: no envia, solo registra la notificacion como enviada (simulado)
-    from: ${MAIL_FROM:no-responder@appointy.local}
+    provider: ${MAIL_PROVIDER:smtp}  # smtp | brevo (API HTTP por 443, para donde el SMTP esta bloqueado)
+    from: ${MAIL_FROM:no-responder@appointy.local}  # con brevo, debe ser un remitente verificado
+    brevo:
+      base-url: ${BREVO_BASE_URL:https://api.brevo.com}
+      api-key: ${BREVO_API_KEY:}
+      connect-timeout-ms: ${BREVO_CONNECT_TIMEOUT_MS:3000}
+      read-timeout-ms: ${BREVO_READ_TIMEOUT_MS:8000}
   notification:
     max-intentos: ${NOTIFICATION_MAX_INTENTOS:3}
     lote: ${NOTIFICATION_LOTE:100}
@@ -41,7 +47,7 @@ app:
     recordatorios-ms: ${JOB_RECORDATORIOS_MS:60000}
     reintentos-ms: ${JOB_REINTENTOS_MS:300000}
 
-# Solo se usa con app.mail.enabled=true
+# Solo se usa con app.mail.enabled=true y provider=smtp
 spring.mail:
   host: ${MAIL_HOST:localhost}
   port: ${MAIL_PORT:587}

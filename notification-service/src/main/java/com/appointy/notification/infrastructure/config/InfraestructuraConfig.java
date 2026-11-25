@@ -6,5 +6,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties({JwtProperties.class, InternalProperties.class, AuthProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, InternalProperties.class, AuthProperties.class, BrevoProperties.class})
 public class InfraestructuraConfig {}

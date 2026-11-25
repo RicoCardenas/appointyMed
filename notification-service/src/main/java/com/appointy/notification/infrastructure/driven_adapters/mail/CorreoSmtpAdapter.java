@@ -2,15 +2,15 @@ package com.appointy.notification.infrastructure.driven_adapters.mail;
 
 import com.appointy.notification.domain.exception.ServicioNoDisponibleException;
 import com.appointy.notification.domain.gateway.CorreoGateway;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-/** Envio real por SMTP (app.mail.enabled=true). Nunca registra el destinatario ni el cuerpo (RNF-05). */
+/** Envio real por SMTP (app.mail.enabled=true y app.mail.provider=smtp). Nunca registra el destinatario ni el cuerpo (RNF-05). */
 @Component
-@ConditionalOnProperty(name = "app.mail.enabled", havingValue = "true")
+@ConditionalOnExpression("'${app.mail.enabled:false}' == 'true' and '${app.mail.provider:smtp}' == 'smtp'")
 public class CorreoSmtpAdapter implements CorreoGateway {
 
     private final JavaMailSender enviador;

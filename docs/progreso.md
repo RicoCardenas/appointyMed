@@ -6,7 +6,7 @@ Rama `main`. El código anterior está en el historial hasta el commit `efb6897`
 
 Antes de ejecutar nada sobre la cuenta: estimar costo y pedir confirmación (CLAUDE.md). Pendientes de la Fase 7 que conviene decidir primero: un proxy inverso en producción que reproduzca los prefijos `/svc/<servicio>` del front (hoy los hace Vite en desarrollo), y la política de la sesión de 15 minutos sin refresh token.
 
-- Pendiente del equipo: `JWT_SECRET`, `INTERNAL_API_KEY` y `NOTIFICATION_DB_PASSWORD` en `.env`; opcional `MAIL_ENABLED=true` con `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM` para correo real.
+- Pendiente del equipo: `JWT_SECRET`, `INTERNAL_API_KEY` y `NOTIFICATION_DB_PASSWORD` en `.env`; opcional `MAIL_ENABLED=true` para correo real: con `MAIL_PROVIDER=brevo` (API HTTP por 443, recomendado en Render) `BREVO_API_KEY` y `MAIL_FROM` (remitente verificado en Brevo); con `MAIL_PROVIDER=smtp` (por defecto) `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`.
 - Si Maven falla con "Unresolved compilation problems" o "cannot access ...": la extensión Java de VS Code compila en `target/` a la vez. Correr Maven sobre una copia (ver `CLAUDE.md`, "Comandos").
 
 ## Fases
@@ -261,7 +261,7 @@ Comportamiento:
 - Idempotencia (RNF-16): UNIQUE(cita_id, tipo, programada_para). Las notificaciones inmediatas usan el inicio de la cita como `programada_para`, así que repetir la misma solicitud devuelve la misma notificación. Límite conocido: reprogramar a un horario al que la cita ya se movió antes (A a B a A a B) no genera un segundo correo.
 - Recordatorio (CU-34): al confirmar o reprogramar con más de 24 h de margen se crea una fila RECORDATORIO PENDIENTE con `programada_para` = inicio menos 24 h. Reprogramar o cancelar pasa los pendientes a CANCELADA (estado añadido, decisión 8). Job cada 60 s.
 - Reintentos (CU-35): job cada 5 min sobre FALLIDA con menos de 3 intentos (`NOTIFICATION_MAX_INTENTOS`); tras el tercero queda FALLIDA definitiva y solo se reenvía a mano. `ultimo_error` guarda un código, nunca el mensaje de la causa.
-- Correo: por defecto `MAIL_ENABLED=false` (adaptador simulado: marca ENVIADA y registra solo el asunto). Con `true` usa SMTP (`spring-boot-starter-mail`) con timeouts de 5 s. El indicador de salud de correo está desactivado para que una caída del SMTP no marque el servicio como DOWN.
+- Correo: por defecto `MAIL_ENABLED=false` (adaptador simulado: marca ENVIADA y registra solo el asunto). Con `true` usa SMTP (`spring-boot-starter-mail`, timeouts de 5 s) o, con `MAIL_PROVIDER=brevo`, la API HTTP de Brevo (`CorreoBrevoApiAdapter`, POST `/v3/smtp/email`, timeouts 3 s y 8 s). El indicador de salud de correo está desactivado para que una caída del SMTP no marque el servicio como DOWN.
 - La API enmascara el correo (`p***@dominio`) y no expone el cuerpo (RNF-05). El cuerpo solo lleva fecha, hora y código de la cita; no consulta a catalog.
 - Los jobs asumen una sola instancia (sin bloqueo de lote).
 
@@ -306,6 +306,8 @@ Comportamiento:
 
 - La lista de reglas de negocio RN-xx (el enunciado cita RN-06, 09, 11, 13 y 17) no se entregó: se aplican las reglas descritas en los CU.
 - Alcance y presupuesto del despliegue en AWS: se decide al llegar a la Fase 8.
+
+- Correo por API HTTP de Brevo (2026-11-25): Render gratuito bloquea los puertos SMTP 25, 465 y 587, así que se añadió un segundo adaptador de `CorreoGateway` por HTTPS (443) elegido con `MAIL_PROVIDER`. El dominio no cambia. Se descartó probar el SMTP por 2525 para no depender de algo no confirmado.
 
 ## Pendientes menores
 

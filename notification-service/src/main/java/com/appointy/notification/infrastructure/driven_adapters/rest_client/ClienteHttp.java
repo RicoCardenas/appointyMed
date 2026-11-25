@@ -7,11 +7,11 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 /** Construccion comun de los clientes /internal: timeouts de conexion y lectura (RNF-07). */
-final class ClienteHttp {
+public final class ClienteHttp {
 
     private ClienteHttp() {}
 
-    static RestClient construir(String baseUrl, int connectTimeoutMs, int readTimeoutMs) {
+    public static RestClient construir(String baseUrl, int connectTimeoutMs, int readTimeoutMs) {
         SimpleClientHttpRequestFactory fabrica = new SimpleClientHttpRequestFactory();
         fabrica.setConnectTimeout(Duration.ofMillis(connectTimeoutMs));
         fabrica.setReadTimeout(Duration.ofMillis(readTimeoutMs));
