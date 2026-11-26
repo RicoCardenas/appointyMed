@@ -161,6 +161,7 @@ services:
       - key: OPENAPI_ENABLED
         value: "false"
       - { key: AUTH_SERVICE_URL, value: "https://appointy-auth.onrender.com" }
+      - { key: APP_FRONT_URL, value: "https://appointy-front.onrender.com" }
       - { key: MAIL_ENABLED, value: "true" }
       - { key: MAIL_PROVIDER, value: brevo }
       - key: MAIL_FROM

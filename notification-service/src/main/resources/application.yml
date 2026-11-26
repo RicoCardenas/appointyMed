@@ -42,6 +42,7 @@ app:
       api-key: ${BREVO_API_KEY:}
       connect-timeout-ms: ${BREVO_CONNECT_TIMEOUT_MS:3000}
       read-timeout-ms: ${BREVO_READ_TIMEOUT_MS:8000}
+  front-url: ${APP_FRONT_URL:}         # URL publica del front; si esta, el correo HTML lleva el boton "Ver mis citas"
   notification:
     max-intentos: ${NOTIFICATION_MAX_INTENTOS:3}
     lote: ${NOTIFICATION_LOTE:100}

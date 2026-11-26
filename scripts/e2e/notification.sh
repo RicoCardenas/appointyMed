@@ -140,6 +140,6 @@ igual "la respuesta devuelve el mismo id" "$(curl -s -m 5 -D - -o /dev/null -H "
 
 echo "== Privacidad (RNF-05)"
 igual "el log no contiene correos" "$(grep -c 'e2e-pac@test.local' "$LOGN")" 0
-igual "el log no contiene el cuerpo" "$(grep -c 'Codigo de la cita' "$LOGN")" 0
+igual "el log no contiene el cuerpo" "$(grep -c 'Código de la cita' "$LOGN")" 0
 
 echo; echo "RESULTADO: $PASS correctas, $FAIL fallidas"; [ $FAIL = 0 ]

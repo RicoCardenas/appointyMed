@@ -71,6 +71,18 @@ class CorreoBrevoApiAdapterTest {
     }
 
     @Test
+    void enviaTambienLaVersionHtmlConElBotonDelFront() {
+        responder(201);
+        new CorreoBrevoApiAdapter(new BrevoProperties("http://127.0.0.1:" + puerto, CLAVE, 500, 500),
+                new MockEnvironment().withProperty("app.front-url", "https://front.test"))
+                .enviar("a@b.co", "Cita confirmada", "Hola,\n\nTu cita quedó confirmada.\n\nFecha: lunes");
+        assertTrue(cuerpoRecibido.get().contains("htmlContent"), cuerpoRecibido.get());
+        assertTrue(cuerpoRecibido.get().contains("textContent"), cuerpoRecibido.get());
+        assertTrue(cuerpoRecibido.get().contains("https://front.test/mis-citas"), cuerpoRecibido.get());
+        assertTrue(cuerpoRecibido.get().contains("Tu cita quedó confirmada."), cuerpoRecibido.get());
+    }
+
+    @Test
     void usaUnRemitentePorDefectoSiNoHayConfigurado() {
         responder(201);
         new CorreoBrevoApiAdapter(new BrevoProperties("http://127.0.0.1:" + puerto, CLAVE, 500, 500), new MockEnvironment())

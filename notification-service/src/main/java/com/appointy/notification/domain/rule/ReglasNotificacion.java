@@ -37,7 +37,12 @@ public final class ReglasNotificacion {
         }
     }
 
-    public static String asunto(TipoNotificacion tipo) {
+    /** Asunto con el tipo y el momento de la cita, para reconocerlo en la bandeja sin abrirlo. */
+    public static String asunto(TipoNotificacion tipo, String fecha, String hora) {
+        return titulo(tipo) + ": " + FormatoFecha.fechaCorta(fecha) + ", " + FormatoFecha.hora(hora);
+    }
+
+    private static String titulo(TipoNotificacion tipo) {
         switch (tipo) {
             case CONFIRMACION:
                 return "Cita confirmada";
@@ -46,22 +51,45 @@ public final class ReglasNotificacion {
             case CANCELACION:
                 return "Cita cancelada";
             default:
-                return "Recordatorio de cita";
+                return "Recordatorio de tu cita de mañana";
         }
     }
 
-    /** Cuerpo sin datos clinicos ni de otros pacientes: solo la fecha, la hora y el codigo de la cita. */
+    /**
+     * Cuerpo en texto plano, sin datos clinicos ni de otros pacientes: fecha, hora y codigo corto de la cita. Los parrafos van
+     * separados por una linea en blanco (saludo, titular, bloque "Etiqueta: valor", indicacion y nota final); el correo HTML se
+     * arma a partir de esa misma estructura y este texto es la version de respaldo.
+     */
     public static String cuerpo(TipoNotificacion tipo, String fecha, String hora, String citaId) {
-        String detalle = "Fecha: " + fecha + ", hora: " + hora + ". Codigo de la cita: " + citaId + ".";
+        String detalle = "Fecha: " + FormatoFecha.fechaLarga(fecha) + "\nHora: " + FormatoFecha.hora(hora)
+                + "\nCódigo de la cita: " + FormatoFecha.codigoCorto(citaId);
+        return "Hola,\n\n" + titular(tipo) + "\n\n" + detalle + "\n\n" + indicacion(tipo) + "\n\n" + NOTA_FINAL;
+    }
+
+    private static final String NOTA_FINAL = "Este mensaje es automático; por favor no respondas a este correo.";
+
+    private static String titular(TipoNotificacion tipo) {
         switch (tipo) {
             case CONFIRMACION:
-                return "Tu cita quedo confirmada. " + detalle;
+                return "Tu cita quedó confirmada.";
             case REPROGRAMACION:
-                return "Tu cita fue reprogramada. Nuevo horario. " + detalle;
+                return "Tu cita fue reprogramada. Este es tu nuevo horario.";
             case CANCELACION:
-                return "Tu cita fue cancelada. " + detalle;
+                return "Tu cita fue cancelada. La franja quedó libre.";
             default:
-                return "Te recordamos tu cita de manana. " + detalle;
+                return "Te recordamos que mañana tienes una cita.";
+        }
+    }
+
+    private static String indicacion(TipoNotificacion tipo) {
+        switch (tipo) {
+            case CONFIRMACION:
+            case REPROGRAMACION:
+                return "Si necesitas cambiarla o cancelarla, ingresa a Appointy Med, sección \"Mis citas\". Hazlo con tiempo para que otra persona pueda tomar la franja.";
+            case CANCELACION:
+                return "Si todavía necesitas atención, puedes reservar una nueva cita en Appointy Med, sección \"Reservar\".";
+            default:
+                return "Si no puedes asistir, cancélala desde \"Mis citas\" en Appointy Med para que otra persona pueda tomar tu lugar. Llega unos minutos antes.";
         }
     }
 

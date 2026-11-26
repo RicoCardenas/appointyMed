@@ -51,7 +51,7 @@ public class NotificacionUseCase {
         if (tipo == TipoNotificacion.REPROGRAMACION || tipo == TipoNotificacion.CANCELACION) {
             notificaciones.cancelarRecordatoriosPendientes(s.citaId());
         }
-        Notificacion nueva = Notificacion.nueva(ids.nuevoId(), s.citaId(), tipo, correo, ReglasNotificacion.asunto(tipo),
+        Notificacion nueva = Notificacion.nueva(ids.nuevoId(), s.citaId(), tipo, correo, ReglasNotificacion.asunto(tipo, s.fecha(), s.horaInicio()),
                 ReglasNotificacion.cuerpo(tipo, s.fecha(), s.horaInicio(), s.citaId()), inicio, ahora);
         Notificacion guardada = notificaciones.guardar(nueva);
         programarRecordatorio(s, tipo, correo, inicio, ahora);
@@ -67,7 +67,7 @@ public class NotificacionUseCase {
             return;
         }
         notificaciones.guardar(Notificacion.nueva(ids.nuevoId(), s.citaId(), TipoNotificacion.RECORDATORIO, correo,
-                ReglasNotificacion.asunto(TipoNotificacion.RECORDATORIO),
+                ReglasNotificacion.asunto(TipoNotificacion.RECORDATORIO, s.fecha(), s.horaInicio()),
                 ReglasNotificacion.cuerpo(TipoNotificacion.RECORDATORIO, s.fecha(), s.horaInicio(), s.citaId()), momento, ahora));
     }
 

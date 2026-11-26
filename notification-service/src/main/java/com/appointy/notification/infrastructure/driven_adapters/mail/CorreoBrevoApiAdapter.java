@@ -12,7 +12,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 /**
- * Envio real por la API HTTP de Brevo (app.mail.enabled=true y app.mail.provider=brevo). El remitente debe estar
+ * Envio real por la API HTTP de Brevo (HTML con texto plano de respaldo) (app.mail.enabled=true y app.mail.provider=brevo). El remitente debe estar
  * verificado en Brevo. Nunca registra el destinatario ni el cuerpo (RNF-05); el fallo siempre es 503.
  */
 @Component
@@ -22,16 +22,19 @@ public class CorreoBrevoApiAdapter implements CorreoGateway {
     private final RestClient cliente;
     private final String llave;
     private final String remitente;
+    private final String urlFront;
 
     public CorreoBrevoApiAdapter(BrevoProperties propiedades, Environment entorno) {
         this.cliente = ClienteHttp.construir(propiedades.baseUrl(), propiedades.connectTimeoutMs(), propiedades.readTimeoutMs());
         this.llave = propiedades.apiKey();
         this.remitente = entorno.getProperty("app.mail.from", "no-responder@appointy.local");
+        this.urlFront = entorno.getProperty("app.front-url", "");
     }
 
     @Override
     public void enviar(String destino, String asunto, String cuerpo) {
-        Mensaje mensaje = new Mensaje(new Persona(remitente), List.of(new Persona(destino)), asunto, cuerpo);
+        Mensaje mensaje = new Mensaje(new Persona(remitente), List.of(new Persona(destino)), asunto, cuerpo,
+                PlantillaCorreoHtml.generar(asunto, cuerpo, urlFront));
         try {
             cliente.post().uri("/v3/smtp/email").header("api-key", llave).body(mensaje).retrieve().toBodilessEntity();
         } catch (RestClientException e) {
@@ -41,5 +44,5 @@ public class CorreoBrevoApiAdapter implements CorreoGateway {
 
     record Persona(String email) {}
 
-    record Mensaje(Persona sender, List<Persona> to, String subject, String textContent) {}
+    record Mensaje(Persona sender, List<Persona> to, String subject, String textContent, String htmlContent) {}
 }

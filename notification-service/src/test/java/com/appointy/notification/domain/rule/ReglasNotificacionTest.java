@@ -48,11 +48,44 @@ class ReglasNotificacionTest {
     @Test
     void construyeAsuntoYCuerpoPorTipo() {
         for (TipoNotificacion t : TipoNotificacion.values()) {
-            assertFalse(ReglasNotificacion.asunto(t).isBlank());
+            assertFalse(ReglasNotificacion.asunto(t, "2026-11-20", "08:30").isBlank());
             String cuerpo = ReglasNotificacion.cuerpo(t, "2026-11-20", "08:30", UUID1);
-            assertTrue(cuerpo.contains("2026-11-20") && cuerpo.contains("08:30") && cuerpo.contains(UUID1));
+            assertTrue(cuerpo.contains("Fecha: viernes 20 de noviembre de 2026"), cuerpo);
+            assertTrue(cuerpo.contains("Hora: 8:30 a. m."), cuerpo);
+            assertTrue(cuerpo.contains("Código de la cita: " + UUID1.substring(0, 8).toUpperCase()), cuerpo);
+            assertFalse(cuerpo.contains(UUID1), "el codigo largo no debe aparecer");
+            assertTrue(cuerpo.contains("no respondas"), cuerpo);
         }
-        assertEquals("Cita cancelada", ReglasNotificacion.asunto(TipoNotificacion.CANCELACION));
+    }
+
+    @Test
+    void elAsuntoIncluyeElTipoYElMomentoDeLaCita() {
+        assertEquals("Cita confirmada: mié 2 dic, 8:30 a. m.", ReglasNotificacion.asunto(TipoNotificacion.CONFIRMACION, "2026-12-02", "08:30"));
+        assertEquals("Cita reprogramada: mié 2 dic, 8:30 a. m.", ReglasNotificacion.asunto(TipoNotificacion.REPROGRAMACION, "2026-12-02", "08:30"));
+        assertEquals("Cita cancelada: mié 2 dic, 8:30 a. m.", ReglasNotificacion.asunto(TipoNotificacion.CANCELACION, "2026-12-02", "08:30"));
+        assertEquals("Recordatorio de tu cita de mañana: mié 2 dic, 8:30 a. m.", ReglasNotificacion.asunto(TipoNotificacion.RECORDATORIO, "2026-12-02", "08:30"));
+    }
+
+    @Test
+    void cadaTipoTieneSuTitularYSuIndicacion() {
+        String conf = ReglasNotificacion.cuerpo(TipoNotificacion.CONFIRMACION, "2026-12-02", "08:30", UUID1);
+        assertTrue(conf.contains("Tu cita quedó confirmada.") && conf.contains("Mis citas"), conf);
+        String repro = ReglasNotificacion.cuerpo(TipoNotificacion.REPROGRAMACION, "2026-12-02", "08:30", UUID1);
+        assertTrue(repro.contains("Tu cita fue reprogramada.") && repro.contains("nuevo horario"), repro);
+        String canc = ReglasNotificacion.cuerpo(TipoNotificacion.CANCELACION, "2026-12-02", "08:30", UUID1);
+        assertTrue(canc.contains("Tu cita fue cancelada.") && canc.contains("reservar"), canc);
+        String rec = ReglasNotificacion.cuerpo(TipoNotificacion.RECORDATORIO, "2026-12-02", "08:30", UUID1);
+        assertTrue(rec.contains("mañana tienes una cita") && rec.contains("cancélala"), rec);
+    }
+
+    @Test
+    void elCuerpoSeOrganizaEnParrafosSeparadosPorLineaEnBlanco() {
+        String cuerpo = ReglasNotificacion.cuerpo(TipoNotificacion.CONFIRMACION, "2026-12-02", "08:30", UUID1);
+        String[] parrafos = cuerpo.split("\n\n");
+        assertEquals("Hola,", parrafos[0]);
+        assertEquals("Tu cita quedó confirmada.", parrafos[1]);
+        assertTrue(parrafos[2].startsWith("Fecha: "), parrafos[2]);
+        assertEquals(3, parrafos[2].split("\n").length);
     }
 
     @Test
