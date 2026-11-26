@@ -27,7 +27,7 @@ export function Profesionales() {
           <ul className="lista" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {lista.datos.contenido.map((p) => (
               <li key={p.id} className="item">
-                <div><div className="item-titulo">{p.nombres} {p.apellidos}</div><div className="item-sub">Registro {p.registroMedico}</div></div>
+                <div className="item-cita"><span className="avatar avatar-chico" aria-hidden>{(p.nombres[0] ?? '') + (p.apellidos[0] ?? '')}</span><div><div className="item-titulo">{p.nombres} {p.apellidos}</div><div className="item-sub">Registro {p.registroMedico}</div></div></div>
                 <div className="acciones">
                   <Insignia tono={p.activo ? 'exito' : 'neutro'}>{p.activo ? 'Activo' : 'Inactivo'}</Insignia>
                   <Boton variante="secundario" className="btn-chico" aria-expanded={abierto === p.id} onClick={() => setAbierto(abierto === p.id ? null : p.id)}>Configurar</Boton>
@@ -140,9 +140,18 @@ function Detalle({ profesional, alCambiar }: { profesional: Profesional; alCambi
       <div>
         <h3 style={{ marginBottom: 8 }}>Horario semanal</h3>
         {horarios.datos?.length ? (
-          <ul style={{ margin: '0 0 12px', paddingLeft: 18 }}>
-            {horarios.datos.map((h) => <li key={h.id}>{DIAS[h.diaSemana]} {h.horaInicio} a {h.horaFin}, franjas de {h.duracionFranjaMin} min {!h.activo && <Insignia>inactivo</Insignia>}</li>)}
-          </ul>
+          <dl className="horario-sem">
+            {[...new Set(horarios.datos.map((h) => h.diaSemana))].sort().map((dia) => (
+              <div key={dia}>
+                <dt>{DIAS[dia]}</dt>
+                <dd>
+                  {horarios.datos!.filter((h) => h.diaSemana === dia).map((h) => (
+                    <span key={h.id}>{h.horaInicio} a {h.horaFin} · {centros.datos?.find((c) => c.id === h.centroId)?.nombre ?? 'Centro'} · {h.duracionFranjaMin} min {!h.activo && <Insignia>inactivo</Insignia>}</span>
+                  ))}
+                </dd>
+              </div>
+            ))}
+          </dl>
         ) : <p className="ayuda" style={{ marginBottom: 12 }}>Sin horarios todavia.</p>}
         <NuevoHorario profesionalId={profesional.id} centros={(centros.datos ?? []).filter((c) => cen.includes(c.id))} alCrear={() => horarios.recargar()} />
       </div>

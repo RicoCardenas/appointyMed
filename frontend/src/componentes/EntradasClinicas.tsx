@@ -1,14 +1,14 @@
 import type { Entrada, Resumen } from '../api/tipos'
 import { instante } from '../util/formato'
-import { Insignia } from './ui'
+import { Cifras, Insignia } from './ui'
 
 export function ResumenCifras({ r }: { r: Resumen }) {
   return (
-    <div className="cifras">
-      <div className="cifra"><strong>{r.atenciones}</strong><span>{r.atenciones === 1 ? 'atencion' : 'atenciones'}</span></div>
-      <div className="cifra"><strong>{r.correcciones}</strong><span>{r.correcciones === 1 ? 'correccion' : 'correcciones'}</span></div>
-      <div className="cifra"><strong>{r.ultimaAtencionEn ? instante(r.ultimaAtencionEn) : 'sin registro'}</strong><span>ultima atencion</span></div>
-    </div>
+    <Cifras items={[
+      { clave: 'a', n: r.atenciones, texto: r.atenciones === 1 ? 'atencion' : 'atenciones' },
+      { clave: 'c', n: r.correcciones, texto: r.correcciones === 1 ? 'correccion' : 'correcciones' },
+      { clave: 'u', n: r.ultimaAtencionEn ? instante(r.ultimaAtencionEn) : 'sin registro', texto: 'ultima atencion' },
+    ]} />
   )
 }
 

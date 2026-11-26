@@ -13,9 +13,9 @@ export function Catalogo() {
   const PESTANAS: [Pestana, string][] = [['especialidades', 'Especialidades'], ['centros', 'Centros'], ['festivos', 'Festivos']]
   return (
     <Pagina titulo="Catalogo" descripcion="Especialidades y centros de atencion. Los festivos vienen de un servicio externo y no se agendan citas en ellos.">
-      <div className="acciones" role="tablist" aria-label="Catalogo" style={{ marginBottom: 20 }}>
+      <div className="pestanas" role="tablist" aria-label="Catalogo">
         {PESTANAS.map(([k, t]) => (
-          <Boton key={k} role="tab" aria-selected={pestana === k} variante={pestana === k ? 'primario' : 'secundario'} onClick={() => setPestana(k)}>{t}</Boton>
+          <button key={k} type="button" role="tab" className="pestana" aria-selected={pestana === k} onClick={() => setPestana(k)}>{t}</button>
         ))}
       </div>
       {pestana === 'especialidades' && <Especialidades />}
@@ -150,7 +150,7 @@ function Festivos() {
       {lista.cargando ? <Esqueleto /> : lista.error != null ? <ErrorAviso error={lista.error} alReintentar={lista.recargar} /> : (
         <>
           <Aviso>Al generar franjas se omiten estos dias. Las franjas ya generadas antes no se retiran.</Aviso>
-          <div className="lista">{lista.datos?.map((f) => <div key={f.fecha} className="item"><span className="item-titulo">{fechaLarga(f.fecha)}</span><span>{f.nombre}</span></div>)}</div>
+          <div className="lista">{lista.datos?.map((f) => <div key={f.fecha} className="item item-festivo"><span className="item-titulo">{fechaLarga(f.fecha)}</span><span>{f.nombre}</span></div>)}</div>
         </>
       )}
     </>

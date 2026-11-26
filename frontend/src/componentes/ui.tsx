@@ -79,6 +79,21 @@ export function ErrorAviso({ error, alReintentar }: { error: unknown; alReintent
   )
 }
 
+interface Cifra { clave: string; n: ReactNode; texto: string }
+
+/** Franja de cifras. Con `alElegir` cada cifra es un filtro (boton con aria-pressed); sin el, solo informa. */
+export function Cifras({ items, etiqueta, activa, alElegir }: { items: Cifra[]; etiqueta?: string; activa?: (clave: string) => boolean; alElegir?: (clave: string) => void }) {
+  return (
+    <div className="cifras" role={alElegir ? 'group' : undefined} aria-label={alElegir ? etiqueta : undefined}>
+      {items.map(({ clave, n, texto }) => alElegir ? (
+        <button key={clave} type="button" className="cifra" aria-pressed={activa?.(clave) ?? false} onClick={() => alElegir(clave)}><strong>{n}</strong><span>{texto}</span></button>
+      ) : (
+        <div key={clave} className="cifra"><strong>{n}</strong><span>{texto}</span></div>
+      ))}
+    </div>
+  )
+}
+
 export function Insignia({ tono = 'neutro', children }: { tono?: 'neutro' | 'exito' | 'aviso' | 'peligro' | 'acento'; children: ReactNode }) {
   return <span className={`insignia insignia-${tono}`}>{children}</span>
 }

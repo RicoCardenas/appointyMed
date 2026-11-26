@@ -5,6 +5,13 @@ import { Aviso, Boton, Campo, ErrorAviso, Esqueleto, Pagina } from '../../compon
 import { mensajeDeError } from '../../util/formato'
 import { useAsync } from '../../util/useAsync'
 
+const ETIQUETAS: Record<string, string> = {
+  anticipacion_minima_horas: 'Anticipacion minima (horas)',
+  limite_cancelacion_horas: 'Limite para cancelar (horas antes)',
+  horizonte_max_dias: 'Horizonte de agendamiento (dias)',
+  duracion_franja_min: 'Duracion de la franja (minutos)',
+}
+
 export function Parametros() {
   const lista = useAsync(() => catalogo.parametros(), [])
   const [valores, setValores] = useState<Record<string, string>>({})
@@ -27,10 +34,10 @@ export function Parametros() {
   return (
     <Pagina titulo="Parametros" descripcion="Reglas del servicio: anticipacion minima, limite de cancelacion, horizonte de agendamiento y duracion de franja.">
       {lista.cargando ? <Esqueleto /> : lista.error != null ? <ErrorAviso error={lista.error} alReintentar={lista.recargar} /> : (
-        <form className="form" onSubmit={enviar}>
+        <form className="panel form-parametros" onSubmit={enviar}>
           {error && <Aviso tipo="error">{error}</Aviso>}
           {lista.datos?.map((p) => (
-            <Campo key={p.clave} id={`par-${p.clave}`} etiqueta={p.clave.replaceAll('_', ' ')} ayuda={p.descripcion ?? undefined} value={valores[p.clave] ?? ''} onChange={(e) => setValores((v) => ({ ...v, [p.clave]: e.target.value }))} required />
+            <Campo key={p.clave} id={`par-${p.clave}`} etiqueta={ETIQUETAS[p.clave] ?? p.clave.replaceAll('_', ' ')} inputMode="numeric" ayuda={p.descripcion ?? undefined} value={valores[p.clave] ?? ''} onChange={(e) => setValores((v) => ({ ...v, [p.clave]: e.target.value }))} required />
           ))}
           <div><Boton type="submit" cargando={guardando}>Guardar parametros</Boton></div>
         </form>

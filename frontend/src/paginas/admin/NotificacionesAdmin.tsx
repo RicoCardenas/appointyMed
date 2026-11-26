@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { notificaciones } from '../../api/servicios'
 import { useToast } from '../../componentes/Toasts'
-import { Boton, ErrorAviso, Esqueleto, Insignia, Pagina, Paginador, Seleccion, Vacio } from '../../componentes/ui'
+import { Boton, Cifras, ErrorAviso, Esqueleto, Insignia, Pagina, Paginador, Seleccion, Vacio } from '../../componentes/ui'
 import { instante, mensajeDeError } from '../../util/formato'
 import { useAsync } from '../../util/useAsync'
 
@@ -37,12 +37,13 @@ export function NotificacionesAdmin() {
         <Boton variante="secundario" cargando={ejecutando === 'reintentos'} onClick={() => ejecutar('reintentos')}>Reintentar fallidas ahora</Boton>
       </>}>
       {stats.datos && (
-        <div className="cifras">
-          <div className="cifra"><strong>{stats.datos.enviadas}</strong><span>enviadas</span></div>
-          <div className="cifra"><strong>{stats.datos.pendientes}</strong><span>pendientes</span></div>
-          <div className="cifra"><strong>{stats.datos.fallidas}</strong><span>fallidas</span></div>
-          <div className="cifra"><strong>{stats.datos.canceladas}</strong><span>canceladas</span></div>
-        </div>
+        <Cifras etiqueta="Filtrar por estado" activa={(k) => estado === k} alElegir={(k) => { setEstado(estado === k ? '' : k); setPagina(0) }}
+          items={[
+            { clave: 'ENVIADA', n: stats.datos.enviadas, texto: 'enviadas' },
+            { clave: 'PENDIENTE', n: stats.datos.pendientes, texto: 'pendientes' },
+            { clave: 'FALLIDA', n: stats.datos.fallidas, texto: 'fallidas' },
+            { clave: 'CANCELADA', n: stats.datos.canceladas, texto: 'canceladas' },
+          ]} />
       )}
       <div className="fila-filtros">
         <Seleccion id="n-estado" etiqueta="Estado" value={estado} onChange={(e) => { setEstado(e.target.value); setPagina(0) }}>

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { auth } from '../../api/servicios'
 import type { Cuenta, Rol } from '../../api/tipos'
 import { useToast } from '../../componentes/Toasts'
-import { Aviso, Boton, Campo, ErrorAviso, Esqueleto, Insignia, Pagina, Paginador, Seleccion, Vacio } from '../../componentes/ui'
+import { Aviso, Boton, Campo, Cifras, ErrorAviso, Esqueleto, Insignia, Pagina, Paginador, Seleccion, Vacio } from '../../componentes/ui'
 import { instante, mensajeDeError } from '../../util/formato'
 import { useAsync } from '../../util/useAsync'
 
@@ -31,12 +31,14 @@ export function Cuentas() {
     <Pagina titulo="Cuentas" descripcion="Pacientes, profesionales y personal administrativo." acciones={<Boton onClick={() => setCreando(!creando)}>{creando ? 'Cerrar' : 'Nueva cuenta de personal'}</Boton>}>
       {creando && <div className="panel" style={{ marginBottom: 20 }}><h2>Nueva cuenta de personal</h2><CrearCuenta alCrear={() => { setCreando(false); lista.recargar() }} /></div>}
       {stats.datos && (
-        <div className="cifras">
-          <div className="cifra"><strong>{stats.datos.pacientes}</strong><span>pacientes</span></div>
-          <div className="cifra"><strong>{stats.datos.profesionales}</strong><span>profesionales</span></div>
-          <div className="cifra"><strong>{stats.datos.administrativos}</strong><span>administrativos</span></div>
-          <div className="cifra"><strong>{stats.datos.inactivos}</strong><span>inactivas</span></div>
-        </div>
+        <Cifras etiqueta="Filtrar cuentas" activa={(k) => (k === 'INACTIVAS' ? activo === 'false' : rol === k)}
+          alElegir={(k) => { if (k === 'INACTIVAS') setActivo(activo === 'false' ? '' : 'false'); else setRol(rol === k ? '' : k); setPagina(0) }}
+          items={[
+            { clave: 'PACIENTE', n: stats.datos.pacientes, texto: 'pacientes' },
+            { clave: 'PROFESIONAL', n: stats.datos.profesionales, texto: 'profesionales' },
+            { clave: 'ADMINISTRATIVO', n: stats.datos.administrativos, texto: 'administrativos' },
+            { clave: 'INACTIVAS', n: stats.datos.inactivos, texto: 'inactivas' },
+          ]} />
       )}
       <div className="fila-filtros">
         <Seleccion id="f-rol" etiqueta="Rol" value={rol} onChange={(e) => { setRol(e.target.value); setPagina(0) }}>
@@ -55,7 +57,7 @@ export function Cuentas() {
                 {lista.datos.contenido.map((c) => (
                   <tr key={c.usuarioId}>
                     <td data-etiqueta="Correo">{c.correo}</td>
-                    <td data-etiqueta="Rol">{ROLES[c.rol]}</td>
+                    <td data-etiqueta="Rol"><Insignia tono={c.rol === 'ADMINISTRATIVO' ? 'acento' : 'neutro'}>{ROLES[c.rol]}</Insignia></td>
                     <td data-etiqueta="Creada">{instante(c.creadoEn)}</td>
                     <td data-etiqueta="Estado"><Insignia tono={c.activo ? 'exito' : 'neutro'}>{c.activo ? 'Activa' : 'Inactiva'}</Insignia></td>
                     <td><Boton variante="fantasma" className="btn-chico" onClick={() => cambiar(c)}>{c.activo ? 'Desactivar' : 'Activar'}</Boton></td>

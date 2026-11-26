@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { citas } from '../../api/servicios'
 import type { Cita } from '../../api/tipos'
 import { useToast } from '../../componentes/Toasts'
-import { Boton, Confirmar, ErrorAviso, Esqueleto, Insignia, Pagina, Paginador, Seleccion, Vacio } from '../../componentes/ui'
+import { Boton, Cifras, Confirmar, ErrorAviso, Esqueleto, Insignia, Pagina, Paginador, Seleccion, Vacio } from '../../componentes/ui'
 import { ESTADOS_CITA, fechaLarga, mensajeDeError } from '../../util/formato'
 import { useAsync } from '../../util/useAsync'
 import { useNombres } from '../../util/useNombres'
@@ -39,13 +39,13 @@ export function CitasAdmin() {
   return (
     <Pagina titulo="Citas" descripcion="Todas las citas del sistema, de la mas reciente a la mas antigua.">
       {stats.datos && (
-        <div className="cifras" role="group" aria-label="Filtrar por estado">
-          {([['CONFIRMADA', stats.datos.confirmadas, 'confirmadas'], ['COMPLETADA', stats.datos.completadas, 'atendidas'], ['NO_ASISTIDA', stats.datos.noAsistidas, 'no asistieron'], ['CANCELADA', stats.datos.canceladas, 'canceladas']] as const).map(([clave, n, etiqueta]) => (
-            <button key={clave} type="button" className="cifra" aria-pressed={estado === clave} onClick={() => { setEstado(estado === clave ? '' : clave); setPagina(0) }}>
-              <strong>{n}</strong><span>{etiqueta}</span>
-            </button>
-          ))}
-        </div>
+        <Cifras etiqueta="Filtrar por estado" activa={(k) => estado === k} alElegir={(k) => { setEstado(estado === k ? '' : k); setPagina(0) }}
+          items={[
+            { clave: 'CONFIRMADA', n: stats.datos.confirmadas, texto: 'confirmadas' },
+            { clave: 'COMPLETADA', n: stats.datos.completadas, texto: 'atendidas' },
+            { clave: 'NO_ASISTIDA', n: stats.datos.noAsistidas, texto: 'no asistieron' },
+            { clave: 'CANCELADA', n: stats.datos.canceladas, texto: 'canceladas' },
+          ]} />
       )}
       <div className="fila-filtros">
         <Seleccion id="f-estado" etiqueta="Estado" value={estado} onChange={(e) => { setEstado(e.target.value); setPagina(0) }}>
