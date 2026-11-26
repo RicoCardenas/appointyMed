@@ -72,7 +72,7 @@ export function AtencionForm({ citaId, entradaACorregir, alGuardar, alCancelar }
   }
 
   return (
-    <form className="form" style={{ maxWidth: 640, flexBasis: '100%' }} onSubmit={enviar}>
+    <form className="form-atencion" onSubmit={enviar}>
       <p className="ayuda">{entradaACorregir ? 'La correccion crea una entrada nueva; la original se conserva en la historia.' : 'La atencion no se puede borrar ni editar: si hay un error, se corrige con una entrada nueva.'}</p>
       {error && <Aviso tipo="error">{error}</Aviso>}
       <Campo id="motivo" etiqueta="Motivo de consulta" value={v.motivo} onChange={poner('motivo')} required maxLength={5000} />

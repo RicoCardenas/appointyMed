@@ -6,8 +6,10 @@ import { calentarServicios } from './api/http'
 import App from './App'
 import { ToastProvider } from './componentes/Toasts'
 import { SesionProvider } from './sesion/Sesion'
+import { iniciarTema } from './util/tema'
 import './estilos.css'
 
+iniciarTema()
 calentarServicios()
 
 createRoot(document.getElementById('raiz')!).render(

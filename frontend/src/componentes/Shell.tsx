@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import type { Rol } from '../api/tipos'
 import { INICIO_POR_ROL, useSesion } from '../sesion/Sesion'
+import { TemaBoton } from './TemaBoton'
 import { Boton } from './ui'
 
 const NAV: Record<Rol, { a: string; texto: string; Icono: LucideIcon }[]> = {
@@ -40,6 +41,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </Link>
         <div className="usuario">
           <span className="rol">{ROLES[sesion.rol]}</span>
+          <TemaBoton />
           <Boton variante="fantasma" onClick={() => cerrar()} aria-label="Cerrar sesion"><LogOut size={16} aria-hidden /> Salir</Boton>
         </div>
       </header>

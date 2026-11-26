@@ -1,5 +1,5 @@
-import { Loader2 } from 'lucide-react'
-import { useEffect, useRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 import { mensajeDeError } from '../util/formato'
 
 type Variante = 'primario' | 'secundario' | 'fantasma' | 'peligro'
@@ -26,10 +26,22 @@ function Envoltura({ etiqueta, ayuda, error, id, children }: CampoBase & { id: s
   )
 }
 
-export function Campo({ etiqueta, ayuda, error, id, ...r }: CampoBase & InputHTMLAttributes<HTMLInputElement> & { id: string }) {
+export function Campo({ etiqueta, ayuda, error, id, type, ...r }: CampoBase & InputHTMLAttributes<HTMLInputElement> & { id: string }) {
+  const [visible, setVisible] = useState(false)
+  const esClave = type === 'password'
+  const input = (
+    <input id={id} type={esClave && visible ? 'text' : type} aria-invalid={!!error || undefined} aria-describedby={error ? `${id}-error` : ayuda ? `${id}-ayuda` : undefined} {...r} />
+  )
   return (
     <Envoltura etiqueta={etiqueta} ayuda={ayuda} error={error} id={id}>
-      <input id={id} aria-invalid={!!error || undefined} aria-describedby={error ? `${id}-error` : ayuda ? `${id}-ayuda` : undefined} {...r} />
+      {esClave ? (
+        <div className="campo-clave">
+          {input}
+          <button type="button" className="ver-clave" aria-label={`Mostrar ${etiqueta.toLowerCase()}`} aria-pressed={visible} onClick={() => setVisible((v) => !v)}>
+            {visible ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+          </button>
+        </div>
+      ) : input}
     </Envoltura>
   )
 }

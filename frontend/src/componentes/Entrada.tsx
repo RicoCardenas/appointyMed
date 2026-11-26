@@ -1,5 +1,6 @@
 import { CalendarCheck, FileHeart, Smartphone, Stethoscope } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { TemaBoton } from './TemaBoton'
 
 const PUNTOS = [
   { icono: CalendarCheck, texto: 'Eliges una franja libre y nadie mas puede tomarla al mismo tiempo.' },
@@ -23,6 +24,7 @@ export function Entrada({ children, ancho }: { children: ReactNode; ancho?: numb
         </div>
       </aside>
       <section className="entrada-form">
+        <div className="entrada-tema"><TemaBoton /></div>
         <div className="entrada-caja" style={ancho ? { width: `min(${ancho}px, 100%)` } : undefined}>{children}</div>
       </section>
     </main>

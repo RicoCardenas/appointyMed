@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { citas } from '../../api/servicios'
@@ -16,6 +17,12 @@ export function Agenda() {
   const lista = useAsync(() => citas.agenda(todas ? undefined : fecha), [fecha, todas])
   const nombres = useNombres(useMemo(() => lista.datos ?? [], [lista.datos]))
   const paciente = useNombresPacientes((lista.datos ?? []).map((c) => c.pacienteId))
+  // Con "Desde hoy" las citas se agrupan por dia; con un dia elegido hay un solo grupo.
+  const grupos = useMemo(() => {
+    const mapa = new Map<string, Cita[]>()
+    for (const c of lista.datos ?? []) mapa.set(c.fecha ?? fecha, [...(mapa.get(c.fecha ?? fecha) ?? []), c])
+    return [...mapa.entries()]
+  }, [lista.datos, fecha])
   const [registrando, setRegistrando] = useState<string | null>(null)
   const [pendienteMarcar, setPendienteMarcar] = useState<Cita | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -36,9 +43,9 @@ export function Agenda() {
   return (
     <Pagina titulo="Agenda" descripcion="Tus citas confirmadas. Despues de atender, registra la atencion y marca la cita." acciones={
       <div className="acciones">
-        <Boton variante="secundario" onClick={() => { setTodas(false); setFecha(sumarDias(fecha, -1)) }} aria-label="Dia anterior">←</Boton>
+        <Boton variante="secundario" onClick={() => { setTodas(false); setFecha(sumarDias(fecha, -1)) }} aria-label="Dia anterior"><ChevronLeft size={18} aria-hidden /></Boton>
         <div style={{ width: 170 }}><label className="solo-lectores" htmlFor="ag-fecha">Fecha</label><input id="ag-fecha" type="date" value={fecha} onChange={(e) => { setTodas(false); setFecha(e.target.value) }} /></div>
-        <Boton variante="secundario" onClick={() => { setTodas(false); setFecha(sumarDias(fecha, 1)) }} aria-label="Dia siguiente">→</Boton>
+        <Boton variante="secundario" onClick={() => { setTodas(false); setFecha(sumarDias(fecha, 1)) }} aria-label="Dia siguiente"><ChevronRight size={18} aria-hidden /></Boton>
         <Boton variante={todas ? 'primario' : 'secundario'} aria-pressed={todas} onClick={() => setTodas(!todas)}>Desde hoy</Boton>
       </div>
     }>
@@ -47,32 +54,40 @@ export function Agenda() {
       {lista.cargando ? <Esqueleto /> : lista.error != null ? <ErrorAviso error={lista.error} alReintentar={lista.recargar} /> : !lista.datos?.length ? (
         <Vacio titulo="Sin citas confirmadas">{todas ? 'No tienes citas confirmadas por venir.' : 'No tienes citas ese dia. Prueba otro dia o mira todas desde hoy.'}</Vacio>
       ) : (
-        <ul className="lista" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-          {lista.datos.map((c) => (
-            <li key={c.id} className="item">
-              <div>
-                <div className="item-titulo">{todas && c.fecha ? `${fechaLarga(c.fecha)} · ` : ''}{c.horaInicio} a {c.horaFin}</div>
-                <div className="item-sub">
-                  <Link to={`/pacientes/${c.pacienteId}`}>{paciente(c.pacienteId)}</Link> · {nombres.especialidad(c.especialidadId)} · {nombres.centro(c.centroId)}
-                </div>
-              </div>
-              <div className="acciones">
-                <Insignia tono="acento">{ESTADOS_CITA[c.estado]}</Insignia>
-                <Boton className="btn-chico" onClick={() => setRegistrando(registrando === c.id ? null : c.id)}>Registrar atencion</Boton>
-                <Boton variante="secundario" className="btn-chico" onClick={() => marcar(c, 'COMPLETADA')}>Atendida</Boton>
-                <Boton variante="fantasma" className="btn-chico" onClick={() => setPendienteMarcar(c)}>No asistio</Boton>
-              </div>
-              {pendienteMarcar?.id === c.id && (
-                <Aviso tipo="aviso" accion={<div className="acciones"><Boton variante="peligro" className="btn-chico" onClick={() => marcar(c, 'NO_ASISTIDA')}>Si, no asistio</Boton><Boton variante="fantasma" className="btn-chico" onClick={() => setPendienteMarcar(null)}>Volver</Boton></div>}>
-                  Marcar que el paciente no asistio? Esto cierra la cita.
-                </Aviso>
-              )}
-              {registrando === c.id && (
-                <AtencionForm citaId={c.id} alCancelar={() => setRegistrando(null)} alGuardar={() => { avisar('Atencion registrada.'); setRegistrando(null) }} />
-              )}
-            </li>
+        <>
+          {grupos.map(([dia, items]) => (
+            <section key={dia} className="grupo-dia">
+              {todas && <h2 className="grupo-titulo">{fechaLarga(dia)}</h2>}
+              <ul className="lista" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {items.map((c) => (
+                  <li key={c.id} className="item">
+                    <div className="item-cita">
+                      <div className="hora">{c.horaInicio}<span>a {c.horaFin}</span></div>
+                      <div>
+                        <div className="item-titulo"><Link to={`/pacientes/${c.pacienteId}`}>{paciente(c.pacienteId)}</Link></div>
+                        <div className="item-sub">{nombres.especialidad(c.especialidadId)} · {nombres.centro(c.centroId)}</div>
+                      </div>
+                    </div>
+                    <div className="acciones">
+                      <Insignia tono="acento">{ESTADOS_CITA[c.estado]}</Insignia>
+                      <Boton className="btn-chico" onClick={() => setRegistrando(registrando === c.id ? null : c.id)}>Registrar atencion</Boton>
+                      <Boton variante="secundario" className="btn-chico" onClick={() => marcar(c, 'COMPLETADA')}>Atendida</Boton>
+                      <Boton variante="fantasma" className="btn-chico" onClick={() => setPendienteMarcar(c)}>No asistio</Boton>
+                    </div>
+                    {pendienteMarcar?.id === c.id && (
+                      <Aviso tipo="aviso" accion={<div className="acciones"><Boton variante="peligro" className="btn-chico" onClick={() => marcar(c, 'NO_ASISTIDA')}>Si, no asistio</Boton><Boton variante="fantasma" className="btn-chico" onClick={() => setPendienteMarcar(null)}>Volver</Boton></div>}>
+                        Marcar que el paciente no asistio? Esto cierra la cita.
+                      </Aviso>
+                    )}
+                    {registrando === c.id && (
+                      <AtencionForm citaId={c.id} alCancelar={() => setRegistrando(null)} alGuardar={() => { avisar('Atencion registrada.'); setRegistrando(null) }} />
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </>
       )}
     </Pagina>
   )

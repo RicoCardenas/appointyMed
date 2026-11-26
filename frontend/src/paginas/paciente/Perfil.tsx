@@ -10,22 +10,23 @@ export function Perfil() {
   return (
     <Pagina titulo="Mi perfil">
       {perfil.cargando ? <Esqueleto /> : perfil.error != null ? <ErrorAviso error={perfil.error} alReintentar={perfil.recargar} /> : perfil.datos && (
-        <div className="dos-col">
-          <div className="panel">
-            <h2>Datos de contacto</h2>
-            <Contacto inicial={perfil.datos} alGuardar={perfil.recargar} />
+        <>
+          <div className="perfil-cab">
+            <span className="avatar" aria-hidden>{(perfil.datos.nombres[0] ?? '') + (perfil.datos.apellidos[0] ?? '')}</span>
+            <div>
+              <h2>{perfil.datos.nombres} {perfil.datos.apellidos}</h2>
+              <p className="item-sub">Cedula {perfil.datos.cedula} · Nacimiento {fechaLarga(perfil.datos.fechaNacimiento)}</p>
+              <p className="ayuda" style={{ marginTop: 4 }}>Estos datos no se pueden cambiar aqui. Si hay un error, pide la correccion al personal administrativo.</p>
+            </div>
           </div>
-          <div className="panel">
-            <h2>Identidad</h2>
-            <dl style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '6px 14px', margin: 0 }}>
-              <dt className="ayuda">Nombre</dt><dd style={{ margin: 0 }}>{perfil.datos.nombres} {perfil.datos.apellidos}</dd>
-              <dt className="ayuda">Cedula</dt><dd style={{ margin: 0 }}>{perfil.datos.cedula}</dd>
-              <dt className="ayuda">Nacimiento</dt><dd style={{ margin: 0 }}>{fechaLarga(perfil.datos.fechaNacimiento)}</dd>
-            </dl>
-            <p className="ayuda" style={{ marginTop: 12 }}>Estos datos no se pueden cambiar aqui. Si hay un error, pide la correccion al personal administrativo.</p>
+          <div className="dos-col">
+            <div className="panel">
+              <h2>Datos de contacto</h2>
+              <Contacto inicial={perfil.datos} alGuardar={perfil.recargar} />
+            </div>
+            <div className="panel"><h2>Cambiar clave</h2><CambiarClave /></div>
           </div>
-          <div className="panel"><h2>Cambiar clave</h2><CambiarClave /></div>
-        </div>
+        </>
       )}
     </Pagina>
   )
