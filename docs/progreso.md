@@ -301,6 +301,7 @@ Comportamiento:
 27. Las pruebas de controladores usan MockMvc sin contexto de Spring (`standaloneSetup`) y las de adaptadores JPA usan repositorios simulados: así corren sin base de datos. La autorización por rol se prueba en los scripts `scripts/e2e/*.sh`.
 25. El correo del paciente lo resuelve notification en auth (`/internal/usuarios/{id}/contacto`); la especificación decía que llegaba en la llamada, pero appointment solo envía ids (decisión 7).
 26. Correo simulado por defecto (`MAIL_ENABLED=false`) para que el proyecto corra localmente sin credenciales SMTP.
+28. Mejoras del front en la rama `front-mejoras` (2026-11-26): (a) Reservar avisa si el día elegido es festivo, con el nombre que da `GET /festivos` (Nager.Date), y oculta las horas porque el servicio no agenda en festivos; si la API de festivos falla se ignora y queda el aviso general. appointment no conoce los festivos: solo catalog los omite al generar franjas. (b) Las cifras de Citas, Cuentas y Notificaciones son filtros (componente `Cifras`). (c) Botón de tema con tres estados (automático, claro, oscuro) guardado en `localStorage`, y tokens con `light-dark()`. (d) Campos de clave con botón mostrar u ocultar. (e) Tamaños: cuerpo 16 px, controles de 44 px y botones chicos de 44 px en pantallas táctiles. (f) Login y registro con panel de marca; Perfil con cabecera de identidad; Agenda agrupada por día; horario semanal agrupado por día en Profesionales; pestañas de Catálogo con teclado (flechas, Home y End).
 
 ## Supuestos abiertos
 

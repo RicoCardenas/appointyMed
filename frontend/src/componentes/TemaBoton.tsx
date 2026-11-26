@@ -1,18 +1,23 @@
-import { Moon, Sun } from 'lucide-react'
+import { Monitor, Moon, Sun } from 'lucide-react'
 import { useState } from 'react'
-import { aplicarTema, temaActual, type Tema } from '../util/tema'
+import { aplicarPreferencia, preferenciaActual, siguientePreferencia, type Preferencia } from '../util/tema'
 
-/** Alterna entre modo claro y oscuro. El icono muestra a donde se cambia. */
+const NOMBRE: Record<Preferencia, string> = { auto: 'automatico', claro: 'claro', oscuro: 'oscuro' }
+const ICONO = { auto: Monitor, claro: Sun, oscuro: Moon }
+
+/** Recorre automatico, claro y oscuro. El icono muestra la preferencia en uso. */
 export function TemaBoton() {
-  const [tema, setTema] = useState<Tema>(temaActual)
-  const destino: Tema = tema === 'oscuro' ? 'claro' : 'oscuro'
+  const [pref, setPref] = useState<Preferencia>(preferenciaActual)
+  const siguiente = siguientePreferencia(pref)
+  const Icono = ICONO[pref]
   function cambiar() {
-    aplicarTema(destino)
-    setTema(destino)
+    aplicarPreferencia(siguiente)
+    setPref(siguiente)
   }
+  const texto = `Tema ${NOMBRE[pref]}. Cambiar a ${NOMBRE[siguiente]}`
   return (
-    <button type="button" className="btn btn-fantasma btn-icono" onClick={cambiar} aria-label={`Cambiar a modo ${destino}`} title={`Modo ${destino}`}>
-      {tema === 'oscuro' ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
+    <button type="button" className="btn btn-fantasma btn-icono" onClick={cambiar} aria-label={texto} title={texto}>
+      <Icono size={18} aria-hidden />
     </button>
   )
 }

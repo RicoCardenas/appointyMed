@@ -1,17 +1,25 @@
-export type Tema = 'claro' | 'oscuro'
+/** Preferencia de tema: "auto" sigue al sistema; claro y oscuro lo fuerzan. */
+export type Preferencia = 'auto' | 'claro' | 'oscuro'
 
 const CLAVE = 'appointy.tema'
+const ORDEN: Preferencia[] = ['auto', 'claro', 'oscuro']
 
-/** Tema en uso: el elegido por la persona o, si no ha elegido, el del sistema. */
-export function temaActual(): Tema {
-  const elegido = document.documentElement.dataset.tema
-  if (elegido === 'claro' || elegido === 'oscuro') return elegido
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro'
+export function preferenciaActual(): Preferencia {
+  const d = document.documentElement.dataset.tema
+  return d === 'claro' || d === 'oscuro' ? d : 'auto'
 }
 
-export function aplicarTema(tema: Tema) {
-  document.documentElement.dataset.tema = tema
-  try { localStorage.setItem(CLAVE, tema) } catch { /* sin almacenamiento: el tema dura la visita */ }
+export function siguientePreferencia(p: Preferencia): Preferencia {
+  return ORDEN[(ORDEN.indexOf(p) + 1) % ORDEN.length]
+}
+
+export function aplicarPreferencia(p: Preferencia) {
+  if (p === 'auto') delete document.documentElement.dataset.tema
+  else document.documentElement.dataset.tema = p
+  try {
+    if (p === 'auto') localStorage.removeItem(CLAVE)
+    else localStorage.setItem(CLAVE, p)
+  } catch { /* sin almacenamiento: la eleccion dura la visita */ }
 }
 
 /** Recupera la eleccion guardada antes de pintar. Solo guarda la preferencia visual, nada clinico. */

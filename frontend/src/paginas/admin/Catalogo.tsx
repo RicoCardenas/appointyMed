@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { catalogo } from '../../api/servicios'
 import type { Centro, Especialidad } from '../../api/tipos'
 import { useToast } from '../../componentes/Toasts'
@@ -10,17 +10,31 @@ type Pestana = 'especialidades' | 'centros' | 'festivos'
 
 export function Catalogo() {
   const [pestana, setPestana] = useState<Pestana>('especialidades')
+  const botones = useRef<Record<string, HTMLButtonElement | null>>({})
   const PESTANAS: [Pestana, string][] = [['especialidades', 'Especialidades'], ['centros', 'Centros'], ['festivos', 'Festivos']]
+
+  // Patron de pestanas: flechas y Home/End mueven la seleccion; solo la activa entra en el orden de tabulacion.
+  function teclas(e: KeyboardEvent) {
+    const i = PESTANAS.findIndex(([k]) => k === pestana)
+    const destino = e.key === 'ArrowRight' ? (i + 1) % PESTANAS.length : e.key === 'ArrowLeft' ? (i + PESTANAS.length - 1) % PESTANAS.length : e.key === 'Home' ? 0 : e.key === 'End' ? PESTANAS.length - 1 : -1
+    if (destino < 0) return
+    e.preventDefault()
+    setPestana(PESTANAS[destino][0])
+    botones.current[PESTANAS[destino][0]]?.focus()
+  }
+
   return (
     <Pagina titulo="Catalogo" descripcion="Especialidades y centros de atencion. Los festivos vienen de un servicio externo y no se agendan citas en ellos.">
-      <div className="pestanas" role="tablist" aria-label="Catalogo">
+      <div className="pestanas" role="tablist" aria-label="Catalogo" onKeyDown={teclas}>
         {PESTANAS.map(([k, t]) => (
-          <button key={k} type="button" role="tab" className="pestana" aria-selected={pestana === k} onClick={() => setPestana(k)}>{t}</button>
+          <button key={k} ref={(el) => { botones.current[k] = el }} id={`tab-${k}`} type="button" role="tab" className="pestana" aria-selected={pestana === k} aria-controls={`panel-${k}`} tabIndex={pestana === k ? 0 : -1} onClick={() => setPestana(k)}>{t}</button>
         ))}
       </div>
-      {pestana === 'especialidades' && <Especialidades />}
-      {pestana === 'centros' && <Centros />}
-      {pestana === 'festivos' && <Festivos />}
+      <div role="tabpanel" id={`panel-${pestana}`} aria-labelledby={`tab-${pestana}`}>
+        {pestana === 'especialidades' && <Especialidades />}
+        {pestana === 'centros' && <Centros />}
+        {pestana === 'festivos' && <Festivos />}
+      </div>
     </Pagina>
   )
 }

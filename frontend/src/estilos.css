@@ -1,63 +1,30 @@
 @import '@fontsource-variable/figtree';
 
-/* Tokens: ver DESIGN.md en la raiz. OKLCH, restringido; el acento solo para acciones, seleccion y foco. */
+/* Tokens: ver DESIGN.md en la raiz. OKLCH, restringido; el acento solo para acciones, seleccion y foco.
+   Cada token lleva su par claro y oscuro con light-dark(); color-scheme decide cual se usa:
+   por defecto sigue al sistema y [data-tema] lo fuerza (boton de tema). */
 :root {
-  --bg: oklch(0.985 0.004 95);
-  --panel: oklch(1 0 0);
-  --rail: oklch(0.965 0.01 195);
-  --ink: oklch(0.24 0.02 220);
-  --ink-2: oklch(0.46 0.02 220);
-  --line: oklch(0.9 0.008 210);
-  --accent: oklch(0.5 0.1 195);
-  --accent-strong: oklch(0.43 0.095 195);
-  --accent-soft: oklch(0.95 0.03 195);
-  --on-accent: oklch(0.99 0 0);
-  --ok: oklch(0.45 0.12 150); --ok-bg: oklch(0.95 0.04 150);
-  --warn: oklch(0.45 0.1 70); --warn-bg: oklch(0.95 0.06 85);
-  --bad: oklch(0.47 0.17 25); --bad-bg: oklch(0.95 0.035 25);
+  color-scheme: light dark;
+  --bg: light-dark(oklch(0.985 0.004 95), oklch(0.2 0.012 220));
+  --panel: light-dark(oklch(1 0 0), oklch(0.245 0.014 220));
+  --rail: light-dark(oklch(0.965 0.01 195), oklch(0.225 0.014 215));
+  --ink: light-dark(oklch(0.24 0.02 220), oklch(0.94 0.008 210));
+  --ink-2: light-dark(oklch(0.46 0.02 220), oklch(0.74 0.015 210));
+  --line: light-dark(oklch(0.9 0.008 210), oklch(0.34 0.015 215));
+  --accent: light-dark(oklch(0.5 0.1 195), oklch(0.72 0.1 195));
+  --accent-strong: light-dark(oklch(0.43 0.095 195), oklch(0.78 0.1 195));
+  --accent-soft: light-dark(oklch(0.95 0.03 195), oklch(0.3 0.04 195));
+  --on-accent: light-dark(oklch(0.99 0 0), oklch(0.18 0.02 200));
+  --ok: light-dark(oklch(0.45 0.12 150), oklch(0.8 0.12 150)); --ok-bg: light-dark(oklch(0.95 0.04 150), oklch(0.3 0.05 150));
+  --warn: light-dark(oklch(0.45 0.1 70), oklch(0.82 0.12 80)); --warn-bg: light-dark(oklch(0.95 0.06 85), oklch(0.32 0.06 80));
+  --bad: light-dark(oklch(0.47 0.17 25), oklch(0.78 0.13 25)); --bad-bg: light-dark(oklch(0.95 0.035 25), oklch(0.31 0.06 25));
+  --sombra: 0 1px 2px light-dark(oklch(0.3 0.02 220 / 0.06), oklch(0 0 0 / 0.3)), 0 4px 14px light-dark(oklch(0.3 0.02 220 / 0.06), oklch(0 0 0 / 0.25));
   --radio: 8px; --radio-panel: 12px;
-  --sombra: 0 1px 2px oklch(0.3 0.02 220 / 0.06), 0 4px 14px oklch(0.3 0.02 220 / 0.06);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --t: 160ms;
-  color-scheme: light;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-tema='claro']) {
-    --bg: oklch(0.2 0.012 220);
-    --panel: oklch(0.245 0.014 220);
-    --rail: oklch(0.225 0.014 215);
-    --ink: oklch(0.94 0.008 210);
-    --ink-2: oklch(0.74 0.015 210);
-    --line: oklch(0.34 0.015 215);
-    --accent: oklch(0.72 0.1 195);
-    --accent-strong: oklch(0.78 0.1 195);
-    --accent-soft: oklch(0.3 0.04 195);
-    --on-accent: oklch(0.18 0.02 200);
-    --ok: oklch(0.8 0.12 150); --ok-bg: oklch(0.3 0.05 150);
-    --warn: oklch(0.82 0.12 80); --warn-bg: oklch(0.32 0.06 80);
-    --bad: oklch(0.78 0.13 25); --bad-bg: oklch(0.31 0.06 25);
-    --sombra: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 14px oklch(0 0 0 / 0.25);
-    color-scheme: dark;
-  }
-}
-:root[data-tema='oscuro'] {
-  --bg: oklch(0.2 0.012 220);
-  --panel: oklch(0.245 0.014 220);
-  --rail: oklch(0.225 0.014 215);
-  --ink: oklch(0.94 0.008 210);
-  --ink-2: oklch(0.74 0.015 210);
-  --line: oklch(0.34 0.015 215);
-  --accent: oklch(0.72 0.1 195);
-  --accent-strong: oklch(0.78 0.1 195);
-  --accent-soft: oklch(0.3 0.04 195);
-  --on-accent: oklch(0.18 0.02 200);
-  --ok: oklch(0.8 0.12 150); --ok-bg: oklch(0.3 0.05 150);
-  --warn: oklch(0.82 0.12 80); --warn-bg: oklch(0.32 0.06 80);
-  --bad: oklch(0.78 0.13 25); --bad-bg: oklch(0.31 0.06 25);
-  --sombra: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 14px oklch(0 0 0 / 0.25);
-  color-scheme: dark;
-}
+:root[data-tema='claro'] { color-scheme: light; }
+:root[data-tema='oscuro'] { color-scheme: dark; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -296,7 +263,14 @@ button.cifra:hover { background: var(--rail); }
   .fila-filtros .campo { width: 100%; }
 }
 
+/* Movimiento reducido: sin desplazamientos ni giros; el estado se sigue viendo con fundidos y color. */
+@keyframes aparece { from { opacity: 0; } }
+@keyframes latir { 50% { opacity: 0.4; } }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+  * { scroll-behavior: auto !important; }
+  .btn:active:not(:disabled), .franja:active { transform: none; }
+  .btn, .franja { transition-property: background-color, border-color, color, opacity; }
+  .toast { animation-name: aparece; }
+  .girar { animation: latir 1.2s ease-in-out infinite; }
   .esqueleto-fila { animation: none; }
 }
