@@ -45,6 +45,126 @@ corepack pnpm run build             # tsc + vite build
 Cuentas de la demo (clave `Demo12345`): `paciente@demo.local`, `dra.rojas@demo.local`, `dr.mejia@demo.local`, `admin@demo.local`.
 La documentación de la API está en `/swagger-ui/index.html` de cada servicio, en `docs/openapi/` y en la colección `docs/postman/`.
 
+## Modelo de datos (MER)
+
+Una base PostgreSQL (`appointy`) con un schema por servicio: 17 tablas. Dentro de un schema hay llaves foráneas; entre servicios solo hay referencias lógicas por identificador (sin FK, RNF-14 y RNF-15), marcadas con `ref.`.
+
+```mermaid
+erDiagram
+    %% schema auth
+    usuario ||--o| paciente_perfil : "perfil"
+    usuario {
+        uuid id PK
+        string correo UK
+        string rol
+        bool activo
+    }
+    paciente_perfil {
+        uuid usuario_id PK, FK
+        string cedula UK
+        string nombres
+        date fecha_nacimiento
+    }
+    token_revocado {
+        string jti PK
+        timestamp expira_en
+    }
+    %% schema catalog
+    profesional ||--o{ profesional_especialidad : "atiende"
+    especialidad ||--o{ profesional_especialidad : "incluye"
+    profesional ||--o{ profesional_centro : "trabaja en"
+    centro ||--o{ profesional_centro : "tiene"
+    profesional_centro ||--o{ horario_atencion : "define"
+    profesional_centro ||--o{ bloqueo : "bloquea"
+    profesional {
+        uuid id PK
+        uuid usuario_id UK "ref. usuario"
+        string registro_medico UK
+        bool activo
+    }
+    especialidad {
+        uuid id PK
+        string nombre UK
+        bool activo
+    }
+    centro {
+        uuid id PK
+        string nombre
+        string ciudad
+        bool activo
+    }
+    profesional_especialidad {
+        uuid profesional_id PK, FK
+        uuid especialidad_id PK, FK
+    }
+    profesional_centro {
+        uuid profesional_id PK, FK
+        uuid centro_id PK, FK
+    }
+    horario_atencion {
+        uuid id PK
+        int dia_semana
+        time hora_inicio
+        time hora_fin
+    }
+    bloqueo {
+        uuid id PK
+        date fecha_inicio
+        date fecha_fin
+    }
+    parametro_servicio {
+        string clave PK
+        string valor
+    }
+    %% schema appointment
+    franja ||--o{ cita : "se reserva en"
+    cita ||--o{ historial_cita : "registra"
+    franja {
+        uuid id PK
+        uuid profesional_id "ref. profesional"
+        uuid centro_id "ref. centro"
+        date fecha
+        string estado
+        long version
+    }
+    cita {
+        uuid id PK
+        uuid franja_id FK
+        uuid paciente_id "ref. usuario"
+        string estado
+        long version
+    }
+    historial_cita {
+        uuid id PK
+        uuid cita_id FK
+        string estado_anterior
+        string estado_nuevo
+    }
+    %% schema clinical
+    entrada_clinica |o--o{ entrada_clinica : "corrige a"
+    entrada_clinica {
+        uuid id PK
+        uuid cita_id "ref. cita"
+        uuid paciente_id "ref. usuario"
+        string diagnostico
+        uuid corrige_a_id FK
+    }
+    log_acceso_clinico {
+        uuid id PK
+        uuid usuario_id "ref. usuario"
+        string accion
+        string resultado
+    }
+    %% schema notification
+    notificacion {
+        uuid id PK
+        uuid cita_id "ref. cita"
+        string tipo
+        string estado
+        int intentos
+    }
+```
+
 ## Despliegue en Render (plan gratuito, para la sustentación)
 
 `render.yaml` describe 5 servicios Docker, el front (Nginx, que reenvía `/svc/<servicio>/api/` a cada microservicio) y una base PostgreSQL gratuita. En Render todos los servicios comparten un solo usuario de base y Flyway crea cada schema (`FLYWAY_CREATE_SCHEMAS=true`).

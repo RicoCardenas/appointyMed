@@ -319,6 +319,8 @@ Comportamiento:
 
 - Servicios dormidos en Render (2026-11-25): el front pide `/svc/<servicio>/actuator/health` de los 5 servicios al abrirse (`calentarServicios`, rutas de salud en Nginx) y un 502/503/504 sin error uniforme se muestra como "El servicio se esta despertando" (`SERVICIO_DESPERTANDO`) en lugar de "error inesperado". 33 pruebas del front pasan.
 
+- Modelo de datos (2026-11-25): MER de los 5 schemas (17 tablas) en el README (Mermaid) y en el artículo IEEE (figura TikZ); el artículo suma 6 figuras de resultados (cobertura, Postman, latencia, rendimiento, login y contención).
+
 ## Pendientes menores
 
 - Revisar `.github/modernize/` (restos de una herramienta de actualización de Java, sin relación con el proyecto).
