@@ -6,6 +6,7 @@ import App from '../App'
 import { Paginador } from '../componentes/ui'
 import { ToastProvider } from '../componentes/Toasts'
 import { SesionProvider } from '../sesion/Sesion'
+import { hoyIso, sumarDias } from '../util/formato'
 
 function json(estado: number, cuerpo: unknown) {
   return { ok: estado < 400, status: estado, json: async () => cuerpo }
@@ -86,5 +87,25 @@ describe('Paginador', () => {
     rerender(<Paginador pagina={2} totalPaginas={3} total={25} alCambiar={cambiar} />)
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled()
     expect(screen.getByText('Pagina 3 de 3')).toBeInTheDocument()
+  })
+})
+
+describe('Reservar con festivos', () => {
+  it('avisa que el dia elegido es festivo y no muestra "sin horas"', async () => {
+    sessionStorage.setItem('appointy.sesion', JSON.stringify({ token: 't', usuarioId: 'u1', rol: 'PACIENTE', expiraEn: Date.now() + 600_000 }))
+    const manana = sumarDias(hoyIso(), 1)
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (url.includes('/festivos')) return json(200, [{ fecha: manana, nombre: 'Dia de prueba' }])
+      if (url.includes('/profesionales/p1/centros')) return json(200, [{ id: 'c1', nombre: 'Sede Norte', direccion: 'Calle 1', ciudad: 'Bogota', telefono: '1', activo: true }])
+      if (url.includes('/especialidades/e1/profesionales')) return json(200, [{ id: 'p1', nombres: 'Camila', apellidos: 'Rojas', registroMedico: 'RM', activo: true }])
+      if (url.includes('/especialidades')) return json(200, [{ id: 'e1', nombre: 'Cardiologia', activo: true }])
+      return json(200, [])
+    }))
+    montar('/reservar')
+    await userEvent.selectOptions(await screen.findByLabelText('Especialidad'), 'e1')
+    await userEvent.selectOptions(await screen.findByLabelText('Profesional'), 'p1')
+    expect(await screen.findByText(/Ese dia es festivo: Dia de prueba/)).toBeInTheDocument()
+    expect(screen.queryByText('No hay horas libres ese dia')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ver el dia siguiente' })).toBeInTheDocument()
   })
 })

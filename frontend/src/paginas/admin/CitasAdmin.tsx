@@ -39,11 +39,12 @@ export function CitasAdmin() {
   return (
     <Pagina titulo="Citas" descripcion="Todas las citas del sistema, de la mas reciente a la mas antigua.">
       {stats.datos && (
-        <div className="cifras">
-          <div className="cifra"><strong>{stats.datos.confirmadas}</strong><span>confirmadas</span></div>
-          <div className="cifra"><strong>{stats.datos.completadas}</strong><span>atendidas</span></div>
-          <div className="cifra"><strong>{stats.datos.noAsistidas}</strong><span>no asistieron</span></div>
-          <div className="cifra"><strong>{stats.datos.canceladas}</strong><span>canceladas</span></div>
+        <div className="cifras" role="group" aria-label="Filtrar por estado">
+          {([['CONFIRMADA', stats.datos.confirmadas, 'confirmadas'], ['COMPLETADA', stats.datos.completadas, 'atendidas'], ['NO_ASISTIDA', stats.datos.noAsistidas, 'no asistieron'], ['CANCELADA', stats.datos.canceladas, 'canceladas']] as const).map(([clave, n, etiqueta]) => (
+            <button key={clave} type="button" className="cifra" aria-pressed={estado === clave} onClick={() => { setEstado(estado === clave ? '' : clave); setPagina(0) }}>
+              <strong>{n}</strong><span>{etiqueta}</span>
+            </button>
+          ))}
         </div>
       )}
       <div className="fila-filtros">
@@ -53,7 +54,7 @@ export function CitasAdmin() {
         </Seleccion>
       </div>
       {lista.cargando ? <Esqueleto /> : lista.error != null ? <ErrorAviso error={lista.error} alReintentar={lista.recargar} /> : !lista.datos?.contenido.length ? (
-        <Vacio titulo="No hay citas con ese filtro">Prueba con otro estado.</Vacio>
+        estado ? <Vacio titulo="No hay citas con ese estado">Prueba con otro estado.</Vacio> : <Vacio titulo="Aun no hay citas">Cuando los pacientes reserven, apareceran aqui.</Vacio>
       ) : (
         <>
           <div className="tabla-envoltura">

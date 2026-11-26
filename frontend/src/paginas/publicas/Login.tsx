@@ -1,7 +1,7 @@
-import { Stethoscope } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { auth } from '../../api/servicios'
+import { Entrada } from '../../componentes/Entrada'
 import { Aviso, Boton, Campo } from '../../componentes/ui'
 import { INICIO_POR_ROL, useSesion } from '../../sesion/Sesion'
 import { mensajeDeError } from '../../util/formato'
@@ -29,10 +29,8 @@ export function Login() {
   }
 
   return (
-    <main className="entrada">
-      <div className="entrada-caja">
-        <div className="marca"><span className="marca-icono" aria-hidden><Stethoscope size={16} /></span>Appointy Med</div>
-        <div className="panel">
+    <Entrada>
+        <div>
           <h1 style={{ marginBottom: 6 }}>Iniciar sesion</h1>
           <p className="desc" style={{ marginBottom: 20 }}>Agenda, reprograma o cancela tus citas, o entra a tu espacio de trabajo.</p>
           {aviso && <Aviso tipo="aviso">{aviso}</Aviso>}
@@ -43,8 +41,7 @@ export function Login() {
             <Boton type="submit" cargando={cargando} disabled={!correo || !clave}>Entrar</Boton>
           </form>
         </div>
-        <p className="ayuda" style={{ textAlign: 'center' }}>Eres paciente y no tienes cuenta? <Link to="/registro">Crea la tuya</Link></p>
-      </div>
-    </main>
+        <p className="ayuda" style={{ marginTop: 20 }}>Eres paciente y no tienes cuenta? <Link to="/registro">Crea la tuya</Link></p>
+    </Entrada>
   )
 }

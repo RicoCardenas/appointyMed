@@ -2,7 +2,7 @@ import { CheckCircle2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { catalogo, citas } from '../../api/servicios'
-import type { Centro, Cita, Franja } from '../../api/tipos'
+import type { Centro, Cita, Festivo, Franja } from '../../api/tipos'
 import { useToast } from '../../componentes/Toasts'
 import { Aviso, Boton, Campo, ErrorAviso, Esqueleto, Pagina, Seleccion, Vacio } from '../../componentes/ui'
 import { fechaLarga, hoyIso, mensajeDeError, sumarDias } from '../../util/formato'
@@ -28,11 +28,27 @@ export function Reservar() {
     [profesionalId, centroId, fecha],
   )
 
+  // Festivos del anio elegido (API externa, con cache en catalog). Si no responde, se ignora y queda el aviso general.
+  const anio = Number(fecha.slice(0, 4))
+  const festivos = useAsync<Festivo[]>(
+    () => (profesionalId && anio > 1999 ? catalogo.festivos(anio) : Promise.resolve([])),
+    [profesionalId, anio],
+  )
+  const festivo = festivos.datos?.find((f) => f.fecha === fecha)
+
+  function siguienteDiaLibre() {
+    let d = sumarDias(fecha, 1)
+    for (let i = 0; i < 14 && festivos.datos?.some((f) => f.fecha === d); i++) d = sumarDias(d, 1)
+    setFecha(d)
+    setFranjaId('')
+  }
+
   // Con un solo centro no hay nada que elegir.
   useEffect(() => {
     if (centros.datos?.length === 1 && !centroId) setCentroId(centros.datos[0].id)
   }, [centros.datos, centroId])
 
+  const especialidad = especialidades.datos?.find((e) => e.id === especialidadId)
   const profesional = profesionales.datos?.find((p) => p.id === profesionalId)
   const centro = centros.datos?.find((c) => c.id === centroId)
   const franja = franjas.datos?.find((f) => f.id === franjaId)
@@ -76,7 +92,8 @@ export function Reservar() {
   return (
     <Pagina titulo="Reservar una cita" descripcion="Elige especialidad y profesional; veras solo las franjas libres.">
       {especialidades.error != null && <ErrorAviso error={especialidades.error} alReintentar={especialidades.recargar} />}
-      <div className="pasos" style={{ maxWidth: 720 }}>
+      <div className="reserva">
+      <div className="pasos">
         <div className="paso">
           <h2>1. Especialidad y profesional</h2>
           <div className="rejilla">
@@ -112,7 +129,11 @@ export function Reservar() {
           <div className="paso">
             <h2>3. Hora</h2>
             <p className="paso-resumen">{fechaLarga(fecha)}</p>
-            {franjas.cargando ? <Esqueleto filas={2} /> : franjas.error != null ? (
+            {festivo ? (
+              <Aviso tipo="aviso" accion={<Boton variante="secundario" className="btn-chico" onClick={siguienteDiaLibre}>Ver el dia siguiente</Boton>}>
+                <span><strong>Ese dia es festivo: {festivo.nombre}.</strong> No se agendan citas en festivos; elige otra fecha.</span>
+              </Aviso>
+            ) : franjas.cargando ? <Esqueleto filas={2} /> : franjas.error != null ? (
               <ErrorAviso error={franjas.error} alReintentar={franjas.recargar} />
             ) : franjas.datos && franjas.datos.length > 0 ? (
               <div className="franjas" role="group" aria-label="Horas disponibles">
@@ -127,15 +148,18 @@ export function Reservar() {
         )}
 
         {errorReserva && <Aviso tipo="error">{errorReserva}</Aviso>}
+      </div>
 
-        {franja && (
-          <div className="panel">
-            <h2>Confirmar</h2>
-            <p>{fechaLarga(franja.fecha)}, {franja.horaInicio} a {franja.horaFin}</p>
-            <p className="item-sub" style={{ margin: '4px 0 16px' }}>{profesional?.nombres} {profesional?.apellidos} · {centro?.nombre}</p>
-            <Boton cargando={reservando} onClick={reservar}>Confirmar cita</Boton>
-          </div>
-        )}
+      <aside className="resumen" aria-label="Resumen de tu cita">
+        <h2>Tu cita</h2>
+        <dl>
+          <dt>Especialidad</dt><dd>{especialidad?.nombre ?? <span className="pendiente">Por elegir</span>}</dd>
+          <dt>Profesional</dt><dd>{profesional ? `${profesional.nombres} ${profesional.apellidos}` : <span className="pendiente">Por elegir</span>}</dd>
+          <dt>Centro</dt><dd>{centro ? `${centro.nombre} · ${centro.ciudad}` : <span className="pendiente">Por elegir</span>}</dd>
+          <dt>Fecha y hora</dt><dd>{franja ? `${fechaLarga(franja.fecha)}, ${franja.horaInicio} a ${franja.horaFin}` : <span className="pendiente">Elige una hora libre</span>}</dd>
+        </dl>
+        <Boton cargando={reservando} disabled={!franja} onClick={reservar}>Confirmar cita</Boton>
+      </aside>
       </div>
     </Pagina>
   )

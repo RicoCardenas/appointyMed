@@ -10,7 +10,7 @@ Superficie: **Operate** (app para completar tareas). Dirección: clínica serena
 - Modo oscuro por `prefers-color-scheme` con los mismos roles (escena de uso: administrativos de día, pacientes de noche en el celular).
 
 ## Tipografía
-Una familia: **Figtree** variable (humanista, amable, legible a tamaños pequeños), autoalojada con `@fontsource-variable/figtree`. Escala rem fija con razón 1.2: 0.8125, 0.9375 (cuerpo en tablas), 1, 1.125, 1.375, 1.75. Cifras tabulares en fechas, horas y tablas. Interlineado inverso al tamaño. Medida de prosa 65ch.
+Una familia: **Figtree** variable (humanista, amable, legible a tamaños pequeños), autoalojada con `@fontsource-variable/figtree`. Escala rem fija con razón 1.2: 0.875 (secundario), 0.9375 (cuerpo en tablas), 1 (cuerpo), 1.125, 1.375, 1.75. Cifras tabulares en fechas, horas y tablas. Interlineado inverso al tamaño. Medida de prosa 65ch.
 
 ## Espacio y forma
 Base de 4 px; separación generosa entre grupos y apretada dentro. Radio 8 px en controles, 12 px en paneles. Sombras con desplazamiento y desenfoque suaves; sin halos de color, sin sombras duras. Sin tarjetas anidadas: las listas son filas, no mosaicos de iconos.

@@ -1,7 +1,7 @@
-import { Stethoscope } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '../../api/servicios'
+import { Entrada } from '../../componentes/Entrada'
 import { Aviso, Boton, Campo } from '../../componentes/ui'
 import { useToast } from '../../componentes/Toasts'
 import { hoyIso, mensajeDeError } from '../../util/formato'
@@ -34,10 +34,8 @@ export function Registro() {
   }
 
   return (
-    <main className="entrada">
-      <div className="entrada-caja" style={{ width: 'min(620px, 100%)' }}>
-        <div className="marca"><span className="marca-icono" aria-hidden><Stethoscope size={16} /></span>Appointy Med</div>
-        <div className="panel">
+    <Entrada ancho={620}>
+        <div>
           <h1 style={{ marginBottom: 6 }}>Crear cuenta de paciente</h1>
           <p className="desc" style={{ marginBottom: 20 }}>La cedula, los nombres y la fecha de nacimiento no se pueden cambiar despues: solo el personal administrativo puede corregirlos.</p>
           {error && <Aviso tipo="error">{error}</Aviso>}
@@ -56,7 +54,6 @@ export function Registro() {
             <div className="acciones"><Boton type="submit" cargando={cargando}>Crear cuenta</Boton><Link to="/login">Ya tengo cuenta</Link></div>
           </form>
         </div>
-      </div>
-    </main>
+    </Entrada>
   )
 }
